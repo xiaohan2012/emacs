@@ -1,3 +1,30 @@
+* use-package
+
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+
+
+;; Adds the Melpa archive to the list of available repositories
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/") t)
+
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+;; Initializes the package infrastructure
+(package-initialize)
+
+;; If there are no archived package contents, refresh them
+(when (not package-archive-contents)
+  (package-refresh-contents))
+
+;; install 'use-package if not installed
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+#+END_SRC
+
+#+RESULTS:
+
 * Appearance
 ** theme
 
@@ -29,6 +56,15 @@
    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))   
    #+END_SRC
 
+** rainbow
+
+#+BEGIN_SRC emacs-lisp
+
+(use-package rainbow-mode
+:ensure t
+:init (rainbow-mode 1))
+#+END_SRC
+
 
 * General enhancement
 ** which-key
@@ -55,30 +91,53 @@
 
 #+END_SRC
 
-* Window/buffer switching
+* Window
+
 ** switch-window
 
 #+BEGIN_SRC emacs-lisp
-(use-package switch-window
+  ;; (use-package switch-window
 
-  :ensure t
-  :init
-  (global-set-key (kbd "C-x o") 'switch-window)
-  (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
-  (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
-  (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
-  (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
+  ;;   :ensure t
+  ;;   :init
+  ;;   (global-set-key (kbd "C-x o") 'switch-window)
+  ;;   (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
+  ;;   (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
+  ;;   (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
+  ;;   (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
 
-  (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
-  (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
-  (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
-  (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
+  ;;   (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
+  ;;   (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
+  ;;   (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
 
-  (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
-  (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
+  ;;   (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
 
-  (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
+  ;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
 #+END_SRC
+
+* buffers
+
+** ibuffer
+   
+
+   some goodies: use =p= and =n= to move up and down
+
+ #+BEGIN_SRC emacs-lisp
+   (global-set-key (kbd "C-x C-b") 'ibuffer)
+ #+END_SRC
+
+** export mode
+
+   do not ask for confirmation when killing buffers
+
+#+BEGIN_SRC emacs-lisp
+(setq ibuffer-expert t)
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Projectile
 
@@ -91,9 +150,7 @@
   )
 #+END_SRC
 
-* IDO
-  
-
+* IDO 
 ** preparation
 
 #+BEGIN_SRC emacs-lisp
@@ -133,6 +190,27 @@
   :bind
   ("M-x" . smex))
 #+END_SRC
+
+** buffer switching
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-x b") 'ido-switch-buffer)
+#+END_SRC
+
+#+RESULTS:
+: ido-switch-buffer
+
+* avy
+
+#+BEGIN_SRC emacs-lisp
+(use-package avy
+:ensure t
+:bind
+("M-s" . avy-goto-char))
+#+END_SRC
+
+#+RESULTS:
+: avy-goto-char
 
 * Python
 ** elpy
@@ -228,11 +306,21 @@ package-install does not work for now
    :ensure t
    )
    #+END_SRC
-* Miscellenous
+* config reload/edit
 
-** reload config.org
-
+** edit
 #+BEGIN_SRC emacs-lisp
+(defun config-visit ()
+"visit ~/.emacs.d/config.org"
+(interactive)
+(find-file "~/.emacs.d/config.org"))
+(global-set-key (kbd "C-c e") 'config-visit)
+#+END_SRC
+
+#+RESULTS:
+: config-visit
+
+** reload
 
 #+BEGIN_SRC emacs-lisp
 (defun config-reload ()
@@ -241,8 +329,8 @@ package-install does not work for now
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
 (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
+* Miscellenous
 
-#+END_SRC
 
 ** not sorted yet
 
@@ -284,3 +372,4 @@ package-install does not work for now
 (show-paren-mode 1)
 
 #+END_SRC
+
