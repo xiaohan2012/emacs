@@ -11,9 +11,6 @@
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
-;; Initializes the package infrastructure
-(package-initialize)
-
 ;; If there are no archived package contents, refresh them
 (when (not package-archive-contents)
   (package-refresh-contents))
@@ -65,6 +62,15 @@
 :init (rainbow-mode 1))
 #+END_SRC
 
+* settings for non-GUI emacs
+
+** some key bindings
+
+   the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
+
+   #+begin_src emacs-lisp
+   (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
+   #+end_src
 
 * General enhancement
 ** which-key
@@ -95,6 +101,8 @@
 
 ** switch-window
 
+let's not use it for now since it works better for => 2= windows.
+
 #+BEGIN_SRC emacs-lisp
   ;; (use-package switch-window
 
@@ -117,6 +125,25 @@
   ;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
 #+END_SRC
 
+** window splitting and following
+
+   #+begin_src emacs-lisp
+   (defun split-window-and-follow-vertically ()
+   (interactive)
+   (split-window-below)
+   (balance-windows)
+   (other-window 1))
+   (global-set-key (kbd "C-x 2") 'split-window-and-follow-vertically)
+
+   (defun split-window-and-follow-horizontally ()
+   (interactive)
+   (split-window-right)
+   (balance-windows)
+   (other-window 1))
+   (global-set-key (kbd "C-x 3") 'split-window-and-follow-horizontally)
+   #+end_src
+   #+end_src
+   
 * buffers
 
 ** ibuffer
@@ -138,7 +165,13 @@
 
 #+RESULTS:
 : t
+** kill current buffer
+   #+begin_src emacs-lisp
+   (global-set-key (kbd "C-c k") 'kill-this-buffer)
+   #+end_src
 
+   #+RESULTS:
+   : kill-this-buffer
 * Projectile
 
 #+BEGIN_SRC emacs-lisp
@@ -330,8 +363,12 @@ package-install does not work for now
 (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
 * Miscellenous
+** show line/column number
 
-
+#+begin_src emacs-lisp
+(line-number-mode 1)
+(column-number-mode 1)
+#+end_src
 ** not sorted yet
 
 #+BEGIN_SRC emacs-lisp
@@ -373,3 +410,16 @@ package-install does not work for now
 
 #+END_SRC
 
+
+* text maniputation
+** line/region copying/deletion
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
+(global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
+(global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
+(global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
+#+end_src
+
+#+RESULTS:
+: avy-copy-line
