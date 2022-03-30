@@ -1,0 +1,286 @@
+* Appearance
+** theme
+
+#+BEGIN_SRC emacs-lisp
+(use-package material-theme
+  :ensure t
+  )
+#+END_SRC
+
+** cursor
+*** beacon
+#+BEGIN_SRC emacs-lisp
+(use-package beacon
+  :ensure t
+  :init
+  (beacon-mode 1))
+#+END_SRC
+
+#+RESULTS:
+
+** rainbow-delimiters
+
+   coloring parenthesis by their levels
+
+   #+BEGIN_SRC emacs-lisp
+   (use-package rainbow-delimiters
+   :ensure t
+   :init
+   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))   
+   #+END_SRC
+
+
+* General enhancement
+** which-key
+   
+   shows what keys are possible given what you have already typed
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :ensure t
+  :init
+  (which-key-mode))
+
+#+END_SRC
+
+* ORG
+
+** org-bullets
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode))))
+
+#+END_SRC
+
+* Window/buffer switching
+** switch-window
+
+#+BEGIN_SRC emacs-lisp
+(use-package switch-window
+
+  :ensure t
+  :init
+  (global-set-key (kbd "C-x o") 'switch-window)
+  (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
+  (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
+  (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
+  (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
+
+  (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
+  (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
+  (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
+  (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
+
+  (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
+  (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
+
+  (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
+#+END_SRC
+
+* Projectile
+
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode +1)
+  )
+#+END_SRC
+
+* IDO
+  
+
+** preparation
+
+#+BEGIN_SRC emacs-lisp
+(use-package ido
+  :ensure t
+  :config
+  (setq ido-enable-flex-matching nil
+	ido-create-new-buffer 'always
+	ido-everywhere t)
+  (add-to-list 'ido-ignore-files "\.bak")
+  (add-to-list 'ido-ignore-files "\.log")
+  (add-to-list 'ido-ignore-files ".venv")
+  (ido-mode 1)
+  )
+#+END_SRC
+
+#+RESULTS:
+: t
+** vertical IDO
+
+   #+BEGIN_SRC  emacs-lisp
+(use-package ido-vertical-mode
+  :ensure t
+  :requires ido
+  :config
+  (ido-vertical-mode 1)
+  (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+  )   
+   #+END_SRC
+
+** smex
+   
+#+BEGIN_SRC emacs-lisp
+(use-package smex
+  :ensure t
+  :init (smex-initialize)
+  :bind
+  ("M-x" . smex))
+#+END_SRC
+
+* Python
+** elpy
+** ein
+
+#+BEGIN_SRC emacs-lisp
+(use-package ein
+  :ensure t
+  )
+
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(use-package elpy
+  :ensure t
+  :init
+  (defun activate-virtualenv ()
+    "= pyenv-activate the current directory + '.venv'
+in the future, the name of virtualenv should be specified as input
+"
+    (interactive)
+    (message "activating virtualenv")
+    (pyvenv-activate
+     (expand-file-name
+      ".venv" default-directory))
+    (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+    )
+  ;; :commands (activate-virtualenv)
+  ;; :bind (("C-c p a" . activate-virtualenv))
+  :config
+  (elpy-enable)
+  (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
+	elpy-rpc-backend "jedi"
+	elpy-modules (delq 'elpy-module-flymake elpy-modules)
+	)
+  (add-hook 'elpy-mode-hook 'flycheck-mode)
+  )
+
+
+#+END_SRC
+** misc
+
+   what do they do?
+
+#+BEGIN_SRC emacs-lisp
+(setq
+ python-shell-interpreter "jupyter"
+ python-shell-interpreter-args "console --simple-prompt"
+ python-shell-prompt-detect-failure-warning nil)
+
+#+END_SRC
+
+* Other languages
+** Matlab
+
+need to install matlab-mode manually, 
+package-install does not work for now
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
+(load-library "matlab-load")
+#+END_SRC
+  
+** YAML
+
+   #+BEGIN_SRC emacs-lisp   
+   (use-package yaml-mode
+   :ensure t
+   :config
+   (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+   )
+   #+END_SRC
+* Yasnippet
+** preparation
+
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :config
+  (setq yas-snippet-dirs
+	'("~/.emacs.d/snippets"
+	  "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
+	  "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
+	  ))
+  (yas-global-mode 1)
+  )
+#+END_SRC
+
+** add some off-the-shelf snippets by the community
+
+   #+BEGIN_SRC emacs-lisp
+   (use-package yasnippet-snippets
+   :ensure t
+   )
+   #+END_SRC
+* Miscellenous
+
+** reload config.org
+
+#+BEGIN_SRC emacs-lisp
+
+#+BEGIN_SRC emacs-lisp
+(defun config-reload ()
+  "Reloads ~/.emacs.d/config.org at runtime"
+  (interactive)
+  (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+(global-set-key (kbd "C-c r") 'config-reload)
+#+END_SRC
+
+#+END_SRC
+
+** not sorted yet
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "M-o")  'mode-line-other-buffer)
+(electric-pair-mode)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(when window-system
+  (scroll-bar-mode -1))
+
+					
+(setq split-width-threshold 1 )   ; horizontal split window
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(global-set-key (kbd "<s-return>") 'ansi-term)  ; why does not work? which key is super key?
+
+(setq scroll-conservatively 100)
+
+(defvar my-term-shell "/bin/zsh")
+(defadvice ansi-term (before force-bash)
+  (interactive (list my-term-shell)))
+(ad-activate 'ansi-term)
+
+(setq inhibit-startup-message t)
+
+(setq ring-bell-function 'ignore) ; no warning sound
+
+(when window-system
+  (global-hl-line-mode t)
+  (global-prettify-symbols-mode t)
+  )
+
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+
+
+(show-paren-mode 1)
+
+#+END_SRC
