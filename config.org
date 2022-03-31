@@ -94,18 +94,7 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 
 
-#+RESULTS:
-
-* settings for non-GUI emacs
-
-** some key bindings
-
-   the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
-
-   #+begin_src emacs-lisp
-   (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
-   #+end_src
-
+#+RESULTS
 * general enhancement
 ** which-key
    
@@ -140,6 +129,14 @@ avoid opening a new window when editing a code snippet
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode))))
 
 #+END_SRC
+
+** some key bindings
+
+   the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
+
+   #+begin_src emacs-lisp
+     ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
+   #+end_src
 
 * window
 
@@ -299,6 +296,20 @@ let's not use it for now since it works better for => 2= windows.
 
 #+RESULTS:
 : avy-goto-char
+
+* sublimity
+
+#+begin_src emacs-lisp
+  (use-package sublimity
+    :ensure t
+    :config
+    (sublimity-mode 1))
+#+end_src
+
+why not showing in non-GUI Emacs?
+
+#+RESULTS:
+: t
 
 * Python
 ** elpy
@@ -580,3 +591,28 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 
+* dmenu
+
+run a command in shell
+
+#+begin_src emacs-lisp
+(use-package dmenu
+    :ensure t
+    :bind
+    ("C-c d m" . 'dmenu))
+#+end_src
+
+#+RESULTS:
+: dmenu
+* symon
+
+#+begin_src emacs-lisp
+
+  (use-package symon
+    :ensure t
+    :bind
+    ("C-c s" . symon-mode))
+#+end_src
+
+#+RESULTS:
+: symon-mode
