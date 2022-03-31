@@ -297,14 +297,28 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : avy-goto-char
 
-* sublimity
-
+* TODO sublimity (make it work)
+  
 #+begin_src emacs-lisp
-  (use-package sublimity
-    :ensure t
-    :config
-    (sublimity-mode 1))
+	  ;; (use-package sublimity
+	  ;;   :ensure t
+	  ;;   :config
+	  ;;   (sublimity-mode 1))
+
+	  ;; (use-package sublimity-scroll
+	  ;;   :ensure t
+	  ;;   :config
+	  ;;   (sublimity-mode 1))
+  ;; (require 'sublimity)
+  ;; (require 'sublimity-scroll)
+  ;; (sublimity-mode 1)
+	;; (require 'sublimity-scroll)
+
+
 #+end_src
+
+#+RESULTS:
+: t
 
 why not showing in non-GUI Emacs?
 
@@ -369,9 +383,13 @@ need to install matlab-mode manually,
 package-install does not work for now
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
-(load-library "matlab-load")
+  (when (eq system-type 'gnu/linux)
+    (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
+    (load-library "matlab-load"))
+
 #+END_SRC
+
+#+RESULTS:
   
 ** YAML
 
@@ -428,6 +446,10 @@ package-install does not work for now
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
 (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
+
+#+RESULTS:
+: config-reload
+
 * miscellenous
 ** show line/column number
 
@@ -561,7 +583,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : t
-
 
 * mode line
 ** spaceline
