@@ -22,7 +22,7 @@
 
 #+RESULTS:
 
-* Appearance
+* appearance
 ** theme
 
 #+BEGIN_SRC emacs-lisp
@@ -51,6 +51,7 @@
    :ensure t
    :init
    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))   
+; or (rainbow-delimiters-mode 1) for global mode
    #+END_SRC
 
 ** rainbow
@@ -62,6 +63,37 @@
 :init (rainbow-mode 1))
 #+END_SRC
 
+* dashboard
+
+#+begin_src emacs-lisp
+  (use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook)
+  (setq dashboard-items '((recents . 10)))
+  (setq dashboard-banner-logo-title "Hello Han."))
+#+end_src
+
+#+RESULTS:
+: t
+
+* auto completion
+
+** company
+
+#+begin_src emacs-lisp
+(use-package company
+:ensure t
+:init
+(add-hook 'after-init-hook 'global-company-mode)) ;; global mode, do we need it
+#+end_src
+
+should we use =auto-complete-mode=? the recommendation seems to be quite limited.
+
+
+
+#+RESULTS:
+
 * settings for non-GUI emacs
 
 ** some key bindings
@@ -72,7 +104,7 @@
    (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
    #+end_src
 
-* General enhancement
+* general enhancement
 ** which-key
    
    shows what keys are possible given what you have already typed
@@ -86,6 +118,16 @@
 #+END_SRC
 
 * ORG
+** basic
+
+avoid opening a new window when editing a code snippet
+
+#+begin_src emacs-lisp
+(setq org-src-window-setup 'current-window)
+#+end_src
+
+#+RESULTS:
+: current-window
 
 ** org-bullets
 
@@ -97,7 +139,7 @@
 
 #+END_SRC
 
-* Window
+* window
 
 ** switch-window
 
@@ -172,7 +214,18 @@ let's not use it for now since it works better for => 2= windows.
 
    #+RESULTS:
    : kill-this-buffer
-* Projectile
+** kill all buffers
+
+   #+begin_src emacs-lisp
+   (defun kill-all-buffers ()
+   (interactive)
+   (mapc 'kill-buffer (buffer-list)))
+   (global-set-key (kbd "C-M-k") 'kill-all-buffers)
+   #+end_src
+
+   #+RESULTS:
+   : kill-all-buffers
+* projectile
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
@@ -316,7 +369,7 @@ package-install does not work for now
    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
    )
    #+END_SRC
-* Yasnippet
+* yasnippet
 ** preparation
 
 #+BEGIN_SRC emacs-lisp
@@ -362,7 +415,7 @@ package-install does not work for now
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
 (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
-* Miscellenous
+* miscellenous
 ** show line/column number
 
 #+begin_src emacs-lisp
@@ -373,7 +426,6 @@ package-install does not work for now
 
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "M-o")  'mode-line-other-buffer)
-(electric-pair-mode)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (when window-system
@@ -410,16 +462,91 @@ package-install does not work for now
 
 #+END_SRC
 
-
 * text maniputation
 ** line/region copying/deletion
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
+(global-set-key (kbd "C-c c l") 'avy-copy-line)  ; copy a line
 (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
-(global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
+(global-set-key (kbd "C-c c r") 'avy-copy-region)  ; copy a region
 (global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
 #+end_src
 
 #+RESULTS:
-: avy-copy-line
+: avy-kill-region
+** subword
+
+when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /subword/.
+
+#+begin_src emacs-lisp
+(global-subword-mode 1)
+#+end_src
+
+#+RESULTS:
+
+** electric pair mode
+
+#+begin_src emacs-lisp
+  (setq electric-pair-pairs '(
+			      (?\( . ?\))
+			      (?\[ . ?\])
+			      (?\{ . ?\})
+			      ;; (?\' . ?\')  ; 
+			      (?\" . ?\")
+  ))
+  (electric-pair-mode t)
+#+end_src
+
+#+RESULTS:
+: t
+
+** kill-whole-word and kill-whole-line
+
+#+begin_src emacs-lisp
+  (defun my-kill-whole-word ()
+  (interactive)
+  (backward-word)
+  (kill-word 1)
+  )
+  ;; (defun my-kill-whole-line ()
+  ;; (interactive)
+  ;; (beginning-of-line)
+  ;; (kill-line 1)
+  ;; )
+
+  (global-set-key (kbd "C-c w w") 'my-kill-whole-word)
+  ;; (global-set-key (kbd "C-c w l") 'my-kill-whole-line)
+#+end_src
+
+#+RESULTS:
+: my-kill-whole-word
+
+** copy-whole-line
+
+   #+begin_src emacs-lisp
+     (defun copy-whole-line ()
+       (interactive)
+       (save-excursion
+	 (kill-new
+	  (buffer-substring
+	   (point-at-bol)
+	   (point-at-eol))))
+       )
+     (global-set-key (kbd "C-c w l") 'copy-whole-line)
+   #+end_src
+
+   #+RESULTS:
+   : copy-whole-line
+
+** hungry-delete
+
+#+begin_src emacs-lisp
+(use-package hungry-delete
+:ensure t
+:config (global-hungry-delete-mode))
+#+end_src
+
+#+RESULTS:
+: t
+
+
