@@ -88,6 +88,8 @@
 (add-hook 'after-init-hook 'global-company-mode)) ;; global mode, do we need it
 #+end_src
 
+#+RESULTS:
+
 should we use =auto-complete-mode=? the recommendation seems to be quite limited.
 
 
@@ -549,4 +551,32 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : t
 
+
+* mode line
+** spaceline
+
+#+begin_src emacs-lisp
+(use-package spaceline
+:ensure t
+:config
+(require 'spaceline-config)
+(setq powerline-default-separator (quote arrow))
+(spaceline-spacemacs-theme))
+#+end_src
+
+** diminish
+
+#+begin_src emacs-lisp
+  (use-package diminish
+  :ensure t
+  :init 
+  (diminish 'hungry-delete-mode)
+  (diminish 'which-key-mode)
+  (diminish 'rainbow-mode)
+  (diminish 'beacon-mode)
+  (diminish 'subword-mode)
+  )
+#+End_src
+
+#+RESULTS:
 
