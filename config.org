@@ -7,6 +7,10 @@
 - hungry delete not usable in elpy-mode?
 - replace =func(a=1, b=2)= with =func(a=self.a, b=self.)= automatically
 - put parenthesis on value, e.g., /a = asdfasdfasasdfadf/ => /a = (asdfasdfasasdfadf)/
+- ein:
+  - when open a new nb, do not open two windows
+  - when closing a nb, close the window as well
+  - bg color (yellowish) in traceback
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -79,7 +83,8 @@
   :ensure t
   :config
   (dashboard-setup-startup-hook)
-  (setq dashboard-items '((recents . 10)))
+  (setq dashboard-items '((recents . 10)
+			  (projects . 3)))
   (setq dashboard-banner-logo-title "Hello Han."))
 #+end_src
 
@@ -205,7 +210,7 @@ let's not use it for now since it works better for => 2= windows.
    (global-set-key (kbd "C-x C-b") 'ibuffer)
  #+END_SRC
 
-** export mode
+** expert mode
 
    do not ask for confirmation when killing buffers
 
@@ -215,13 +220,19 @@ let's not use it for now since it works better for => 2= windows.
 
 #+RESULTS:
 : t
-** kill current buffer
+** kill current buffer and close the window
+
    #+begin_src emacs-lisp
-   (global-set-key (kbd "C-c k") 'kill-this-buffer)
+	(defun kill-and-close-this-buffer ()
+	  (interactive)
+	  (kill-this-buffer)
+	  (delete-window))
+
+	(global-set-key (kbd "C-c k") 'kill-and-close-this-buffer)
    #+end_src
 
    #+RESULTS:
-   : kill-this-buffer
+   : kill-and-close-this-buffer
 ** kill all buffers
 
    #+begin_src emacs-lisp
@@ -471,42 +482,46 @@ package-install does not work for now
 ** not sorted yet
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "M-o")  'mode-line-other-buffer)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(when window-system
-  (scroll-bar-mode -1))
+  (global-set-key (kbd "M-o")  'mode-line-other-buffer)
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (when window-system
+    (scroll-bar-mode -1))
 
 					
-(setq split-width-threshold 1 )   ; horizontal split window
+  (setq split-width-threshold 1 )   ; horizontal split window
 
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-(global-set-key (kbd "<s-return>") 'ansi-term)  ; why does not work? which key is super key?
-
-(setq scroll-conservatively 100)
-
-(defvar my-term-shell "/bin/zsh")
-(defadvice ansi-term (before force-bash)
-  (interactive (list my-term-shell)))
-(ad-activate 'ansi-term)
-
-(setq inhibit-startup-message t)
-
-(setq ring-bell-function 'ignore) ; no warning sound
-
-(when window-system
-  (global-hl-line-mode t)
-  (global-prettify-symbols-mode t)
-  )
-
-(setq make-backup-files nil)
-(setq auto-save-default nil)
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
 
-(show-paren-mode 1)
+
+  (setq scroll-conservatively 100)
+
+  (defvar my-term-shell "/bin/zsh")
+  (defadvice ansi-term (before force-bash)
+    (interactive (list my-term-shell)))
+  (ad-activate 'ansi-term)
+  (global-set-key (kbd "<s-return>") 'ansi-term)  ; why does not work? which key is super key?
+
+  (setq inhibit-startup-message t)
+
+  (setq ring-bell-function 'ignore) ; no warning sound
+
+  (when window-system
+    (global-hl-line-mode t)
+    (global-prettify-symbols-mode t)
+    )
+
+  (setq make-backup-files nil)
+  (setq auto-save-default nil)
+
+
+  (show-paren-mode 1)
 
 #+END_SRC
+
+#+RESULTS:
+: t
 
 * text maniputation
 ** line/region copying/deletion
