@@ -11,6 +11,9 @@
   - when open a new nb, do not open two windows
   - when closing a nb, close the window as well
   - bg color (yellowish) in traceback
+  - in traceback, linkify the file names and line numbers (is there a package to do that)
+  - jump to definition not working
+- print('prev_layers:', prev_layers)
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -125,7 +128,7 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 * ORG
 ** basic
 
-avoid opening a new window when editing a code snippet
+*** avoid opening a new window when editing a code snippet
 
 #+begin_src emacs-lisp
 (setq org-src-window-setup 'current-window)
@@ -133,7 +136,6 @@ avoid opening a new window when editing a code snippet
 
 #+RESULTS:
 : current-window
-
 ** org-bullets
 
 #+BEGIN_SRC emacs-lisp
@@ -150,8 +152,14 @@ avoid opening a new window when editing a code snippet
 
    #+begin_src emacs-lisp
      ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
-   #+end_src
+   #+end_src 
+** TODO hide sublevels (does not work on Mac)
 
+    #+begin_src emacs-lisp
+      (hide-sublevels 1)
+    #+end_src
+
+    #+RESULTS:
 * window
 
 ** switch-window
@@ -471,6 +479,19 @@ package-install does not work for now
 
 #+RESULTS:
 : config-reload
+* terminals
+
+
+#+BEGIN_SRC emacs-lisp  
+  (defvar my-term-shell "/bin/zsh")
+  (defadvice ansi-term (before force-bash)
+    (interactive (list my-term-shell)))
+  (ad-activate 'ansi-term)
+  (global-set-key (kbd "C-c t m") 'ansi-term)  ; why does not work? which key is super key?
+#+END_SRC
+
+#+RESULTS:
+: ansi-term
 
 * miscellenous
 ** show line/column number
@@ -497,11 +518,6 @@ package-install does not work for now
 
   (setq scroll-conservatively 100)
 
-  (defvar my-term-shell "/bin/zsh")
-  (defadvice ansi-term (before force-bash)
-    (interactive (list my-term-shell)))
-  (ad-activate 'ansi-term)
-  (global-set-key (kbd "<s-return>") 'ansi-term)  ; why does not work? which key is super key?
 
   (setq inhibit-startup-message t)
 
