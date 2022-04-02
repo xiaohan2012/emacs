@@ -42,7 +42,7 @@
 ** theme
 
 #+BEGIN_SRC emacs-lisp
-(use-package material-theme
+(use-package monokai-theme
   :ensure t
   )
 #+END_SRC
@@ -278,6 +278,7 @@ let's not use it for now since it works better for => 2= windows.
   (add-to-list 'ido-ignore-files ".venv")
   (add-to-list 'ido-ignore-files "__pycache__")
   (add-to-list 'ido-ignore-files "\.pytest_cache")
+  (add-to-list 'ido-ignore-files "\.pkl")
   (ido-mode 1)
   )
 #+END_SRC
