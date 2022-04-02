@@ -5,7 +5,7 @@
 - importmagic in python
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
 - hungry delete not usable in elpy-mode?
-- replace =func(a=1, b=2)= with =func(a=self.a, b=self.)= automatically
+- replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
 - put parenthesis on value, e.g., /a = asdfasdfasasdfadf/ => /a = (asdfasdfasasdfadf)/
 - ein:
   - when open a new nb, do not open two windows
@@ -14,6 +14,7 @@
   - in traceback, linkify the file names and line numbers (is there a package to do that)
   - jump to definition not working
 - print('prev_layers:', prev_layers)
+- version control my yasnippets
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -46,6 +47,8 @@
   :ensure t
   )
 #+END_SRC
+
+#+RESULTS:
 
 ** cursor
 *** beacon
@@ -153,13 +156,20 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+begin_src emacs-lisp
      ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
    #+end_src 
-** TODO hide sublevels (does not work on Mac)
+** DONE hide sublevels (does not work on Mac)
 
     #+begin_src emacs-lisp
-      (hide-sublevels 1)
+      (defun org-hide-sublevels ()
+	(interactive)
+	(hide-sublevels 1))
+
+      (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+
     #+end_src
 
     #+RESULTS:
+    : org-hide-sublevels
+
 * window
 
 ** switch-window
@@ -680,3 +690,15 @@ run a command in shell
 
 #+RESULTS:
 : symon-mode
+
+* searching
+  ** text search
+  #+begin_src  emacs-lisp
+	(use-package swiper
+	  :ensure t
+	  :bind
+	  ("C-s" . swiper))
+  #+end_src
+
+  #+RESULTS:
+  : swiper
