@@ -5,7 +5,7 @@
 - importmagic in python
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
 - hungry delete not usable in elpy-mode?
-- replace =func(a=1, b=2)= with =func(a=self.a, b=self.)= automatically
+- replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
 - put parenthesis on value, e.g., /a = asdfasdfasasdfadf/ => /a = (asdfasdfasasdfadf)/
 - ein:
   - when open a new nb, do not open two windows
@@ -14,6 +14,7 @@
   - in traceback, linkify the file names and line numbers (is there a package to do that)
   - jump to definition not working
 - print('prev_layers:', prev_layers)
+- version control my yasnippets
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -42,10 +43,12 @@
 ** theme
 
 #+BEGIN_SRC emacs-lisp
-(use-package material-theme
+(use-package monokai-theme
   :ensure t
   )
 #+END_SRC
+
+#+RESULTS:
 
 ** cursor
 *** beacon
