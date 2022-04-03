@@ -1,20 +1,23 @@
 * wish list
-- key binding to yapf-fix-code
+
 - function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
-- elpy test jump to error, or navigation in test output in general
-- importmagic in python
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
-- hungry delete not usable in elpy-mode?
 - replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
 - put parenthesis on value, e.g., /a = asdfasdfasasdfadf/ => /a = (asdfasdfasasdfadf)/
+- elpy:
+  - code folding is not working
+  - hungry delete not usable in elpy-mode?
+  - importmagic
+  - in test: jump to error, or navigation in test output in general
+  - key binding to yapf-fix-code    
 - ein:
   - when open a new nb, do not open two windows
   - when closing a nb, close the window as well
-  - bg color (yellowish) in traceback
   - in traceback, linkify the file names and line numbers (is there a package to do that)
-  - jump to definition not working
-- print('prev_layers:', prev_layers)
-- version control my yasnippets
+  - jump to definition not working for my own functions
+- python in general    
+  - function for =print({var}:', {var})=
+
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -263,15 +266,30 @@ let's not use it for now since it works better for => 2= windows.
    #+RESULTS:
    : kill-all-buffers
 * projectile
-
+** install
 #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t
-  :config
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (projectile-mode +1)
-  )
+  (use-package projectile
+    :ensure t
+    :config
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+    (projectile-mode +1)
+    )
 #+END_SRC
+
+** set project type to python-pip
+
+   #+begin_src emacs-lisp
+     (defun projectile-project-type-to-python-pip ()
+       (interactive)
+       (setq projectile-project-type 'python-pip)
+       )
+     (global-set-key (kbd "C-c t p p") 'projectile-project-type-to-python-pip)
+
+   #+end_src
+
+   #+RESULTS:
+   : projectile-project-type-to-python-pip
+
 
 * IDO 
 ** preparation
@@ -367,7 +385,36 @@ why not showing in non-GUI Emacs?
 : t
 
 * Python
-** elpy
+** activate virtualenv
+
+   #+begin_src emacs-lisp
+     (defun activate-virtualenv ()
+       "pyenv-activate the current directory + '.venv'
+	 in the future, the name of virtualenv should be specified as input
+	 "
+       (interactive)
+       (message "activating virtualenv")
+       (pyvenv-activate
+	(expand-file-name
+	 ".venv" default-directory))
+       (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+       )
+
+     (global-set-key (kbd "C-c a v") 'activate-virtualenv)
+   #+end_src
+
+   #+RESULTS:
+   : activate-virtualenv
+   
+** flycheck
+
+   #+begin_src emacs-lisp
+     (use-package flycheck
+       :ensure t)
+   #+end_src
+
+   #+RESULTS:
+
 ** ein
 
 #+BEGIN_SRC emacs-lisp
@@ -376,47 +423,37 @@ why not showing in non-GUI Emacs?
   )
 
 #+END_SRC
+** elpy
 
 #+BEGIN_SRC emacs-lisp
-(use-package elpy
-  :ensure t
-  :init
-  (defun activate-virtualenv ()
-    "= pyenv-activate the current directory + '.venv'
-in the future, the name of virtualenv should be specified as input
-"
-    (interactive)
-    (message "activating virtualenv")
-    (pyvenv-activate
-     (expand-file-name
-      ".venv" default-directory))
-    (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+  (use-package elpy
+    :ensure t
+    :config
+    (elpy-enable)
+    (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
+	  elpy-rpc-backend "jedi"
+	  ;; elpy-rpc-project-specific 't
+	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
+	  )
+    (add-hook 'elpy-mode-hook 'flycheck-mode)
     )
-  ;; :commands (activate-virtualenv)
-  ;; :bind (("C-c p a" . activate-virtualenv))
-  :config
-  (elpy-enable)
-  (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
-	elpy-rpc-backend "jedi"
-	elpy-modules (delq 'elpy-module-flymake elpy-modules)
-	)
-  (add-hook 'elpy-mode-hook 'flycheck-mode)
-  )
 
 
 #+END_SRC
-** misc
 
-   what do they do?
+#+RESULTS:
+: t
+** elpy tips
 
-#+BEGIN_SRC emacs-lisp
-(setq
- python-shell-interpreter "jupyter"
- python-shell-interpreter-args "console --simple-prompt"
- python-shell-prompt-detect-failure-warning nil)
+*** navigation
+      
+   - =M-.= and =M-,= to goto-def and goback
+   - =C-c C-o= to list all functions
+   - =M-?= to search for symbols in the current project
 
-#+END_SRC
+*** syntax checking
 
+    - =C-c C-v=: list the errors/warnings (if any) in another window
 * Other languages
 ** Matlab
 
