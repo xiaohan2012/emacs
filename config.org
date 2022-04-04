@@ -9,7 +9,8 @@
   - hungry delete not usable in elpy-mode?
   - importmagic
   - in test: jump to error, or navigation in test output in general
-  - key binding to yapf-fix-code    
+  - key binding to yapf-fix-code
+  - if a test passes, close the *compilation* buffer
 - ein:
   - when open a new nb, do not open two windows
   - when closing a nb, close the window as well
@@ -93,7 +94,7 @@
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-items '((recents . 10)
-			  (projects . 3)))
+			  (projects . 5)))
   (setq dashboard-banner-logo-title "Hello Han."))
 #+end_src
 
@@ -618,6 +619,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      (?\{ . ?\})
 			      ;; (?\' . ?\')  ; 
 			      (?\" . ?\")
+			      (?\` . ?\`)
   ))
   (electric-pair-mode t)
 #+end_src
@@ -633,19 +635,14 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (backward-word)
   (kill-word 1)
   )
-  ;; (defun my-kill-whole-line ()
-  ;; (interactive)
-  ;; (beginning-of-line)
-  ;; (kill-line 1)
-  ;; )
 
   (global-set-key (kbd "C-c w w") 'my-kill-whole-word)
-  ;; (global-set-key (kbd "C-c w l") 'my-kill-whole-line)
 #+end_src
 
 #+RESULTS:
 : my-kill-whole-word
-
+** TODO copy-whole-word
+   
 ** copy-whole-line
 
    #+begin_src emacs-lisp

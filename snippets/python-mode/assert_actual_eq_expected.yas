@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: assert_actual_eq_expected
+# key: aae
+# --
+assert actual == expected
