@@ -18,7 +18,8 @@
   - jump to definition not working for my own functions
 - python in general    
   - function for =print({var}:', {var})=
-
+- how to get the file path interactively? without going to the actual file?
+  
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -173,6 +174,26 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
     #+RESULTS:
     : org-hide-sublevels
+
+* file
+  ** copy current file path
+
+  #+begin_src emacs-lisp
+    (defun my-put-file-name-on-clipboard ()
+      "Put the current file name on the clipboard"
+      (interactive)
+      (let ((filename (if (equal major-mode 'dired-mode)
+			  default-directory
+			(buffer-file-name))))
+	(when filename
+	  (with-temp-buffer
+	    (insert filename)
+	    (clipboard-kill-region (point-min) (point-max)))
+	  (message filename))))
+  #+end_src
+
+  #+RESULTS:
+  : my-put-file-name-on-clipboard
 
 * window
 
