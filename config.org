@@ -549,7 +549,8 @@ need to install matlab-mode manually,
 package-install does not work for now
 
 #+BEGIN_SRC emacs-lisp
-  (when (eq system-type 'gnu/linux)
+  (when (and (eq system-type 'gnu/linux)
+	     (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
     (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
     (load-library "matlab-load"))
 
@@ -570,16 +571,15 @@ package-install does not work for now
 ** preparation
 
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :ensure t
-  :config
-  (setq yas-snippet-dirs
-	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
-	  "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
-	  ))
-  (yas-global-mode 1)
-  )
+  (use-package yasnippet
+    :ensure t
+    :config
+    (setq yas-snippet-dirs
+	  '("~/.emacs.d/snippets"))
+    ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
+    ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
+    (yas-global-mode 1)
+    )
 #+END_SRC
 
 ** add some off-the-shelf snippets by the community
