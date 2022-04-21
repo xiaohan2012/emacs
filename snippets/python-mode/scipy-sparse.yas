@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: scipy.sparse
+# key: sp
+# --
+
+from scipy import sparse as sp

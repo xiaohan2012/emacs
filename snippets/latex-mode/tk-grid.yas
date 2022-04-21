@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tk-grid
+# key: tkgrid
+# --
+
+\draw[thick, gray] ($1) grid +($2);
