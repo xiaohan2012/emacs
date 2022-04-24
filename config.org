@@ -11,6 +11,7 @@
   - in test: jump to error, or navigation in test output in general
   - key binding to yapf-fix-code
   - if a test passes, close the *compilation* buffer
+  - navigate by indentation
 - ein:
   - when open a new nb, do not open two windows
   - when closing a nb, close the window as well

@@ -37,6 +37,10 @@
 :ensure t
 :init (rainbow-mode 1))
 
+(use-package emojify
+  :ensure t
+  :hook (after-init . global-emojify-mode))
+
 (use-package dashboard
 :ensure t
 :config
