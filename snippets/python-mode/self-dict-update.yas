@@ -1,0 +1,8 @@
+.
+# -*- mode: snippet -*-
+# name: self-dict-update
+# key: selfdict
+# --
+kwargs = locals()
+del kwargs['self']
+self.__dict__.update(**kwargs)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: fixture
+# key: fixture
+# --
+@pytest.fixture

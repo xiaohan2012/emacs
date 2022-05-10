@@ -1,5 +1,8 @@
 * wish list
 
+- [[https://github.com/magnars/multiple-cursors.el][multicursor]]
+- [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
+- check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
 - function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
 - replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
@@ -21,7 +24,9 @@
   - function for =print({var}:', {var})=
 - shortcut to open config/settings file
 - delete parenthesis by pairs
-- ivy shortcut switch to multi-chars    
+- ivy shortcut switch to multi-chars
+- conditional add symbols to electricmode
+  - e.g., $ should be added when in Latex, while shouldn't be in for other modes
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -434,7 +439,7 @@ let's not use it for now since it works better for => 2= windows.
 (use-package avy
 :ensure t
 :bind
-("M-s" . avy-goto-char))
+("M-s" . avy-goto-char-timer))
 #+END_SRC
 
 #+RESULTS:
@@ -669,19 +674,6 @@ package-install does not work for now
 
 #+RESULTS:
 : config-reload
-* terminals
-
-
-#+BEGIN_SRC emacs-lisp  
-  (defvar my-term-shell "/bin/zsh")
-  (defadvice ansi-term (before force-bash)
-    (interactive (list my-term-shell)))
-  (ad-activate 'ansi-term)
-  (global-set-key (kbd "C-c t m") 'ansi-term)  ; why does not work? which key is super key?
-#+END_SRC
-
-#+RESULTS:
-: ansi-term
 
 ** open ~/.zshrc file
 
@@ -693,6 +685,25 @@ package-install does not work for now
      (global-set-key (kbd "C-c z") 'zshrc-visit)   
 
    #+end_src
+
+* terminals
+
+
+#+BEGIN_SRC emacs-lisp  
+  (defvar my-term-shell "/bin/zsh")
+  (defadvice ansi-term (before force-bash)
+    (interactive (list my-term-shell)))
+  (ad-activate 'ansi-term)
+  (global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
+#+END_SRC
+
+#+RESULTS:
+: ansi-term
+
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
+#+end_src
 
    
 * miscellenous
@@ -773,7 +784,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      ;; (?\' . ?\')  ; 
 			      (?\" . ?\")
 			      (?\` . ?\`)
-			      (?\$ . ?\$)
+			      ;; (?\$ . ?\$)
   ))
   (electric-pair-mode t)
 #+end_src
@@ -873,11 +884,11 @@ run a command in shell
   (use-package symon
     :ensure t
     :bind
-    ("C-c s" . symon-mode))
+    ("C-c s m" . symon-mode))
 #+end_src
 
 #+RESULTS:
-: symon-mode
+: t
 
 * searching
   ** text search
