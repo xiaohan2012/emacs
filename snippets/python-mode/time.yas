@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: time
+# key: time
+# --
+from time import time
+s = time()
+elasped = time() - s

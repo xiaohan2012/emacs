@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: import-logzero
+# key: logz
+# --
+from logzero import logger
