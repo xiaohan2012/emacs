@@ -1,0 +1,111 @@
+# -*- mode: snippet -*-
+# name: raytune
+# key: raytune
+
+# --
+
+import sys
+import logzero
+import ray
+import pathlib
+import pandas as pd
+from os.path import join as pjoin
+from time import time
+from ray import tune
+from ray.tune.suggest.optuna import OptunaSearch
+from sklearn.model_selection import train_test_split
+from logzero import logger
+
+
+# import your dataset and evaluation utils
+
+
+ROOT_DIR = "/path/to/dataset"
+
+
+def one_run(config):
+    logzero.loglevel(logzero.INFO)
+
+    ds_name = config["dataset"]
+
+    ds = Dataset(name=ds_name, datadir=pjoin(ROOT_DIR, "data"))
+    ds.load()
+
+    trn_X, dev_X, trn_Y, dev_Y = train_test_split(
+        ds.trn_X, ds.trn_Y, train_size=0.7, random_state=1234
+    )
+
+    alg = None  # create your learning algorithm
+
+    s = time()
+    alg.fit(ds.trn_X, ds.trn_Y)
+    elasped_time = time() - s
+    
+    pred = alg.predict(dev_X)
+    evaluator = Evaluator(metrics=["your metrics to use"])
+    perf = evaluator.report(pred, dev_Y)
+
+    tune.report(
+        fit_time=elasped_time,
+        **perf        
+    )
+
+
+def main():
+    dataset = sys.argv[1]
+
+    num_cpus = 8
+    num_samples = 16
+    metric_for_ranking = ""
+    mode = "max"
+    ray.init(num_cpus=num_cpus, ignore_reinit_error=True)
+
+    search_space = {
+        "lambd": tune.loguniform(1e0, 1e2),
+        "tolerance": tune.loguniform(1e-5, 1e-2),
+    }
+    logger.info("dataset: {}".format(dataset))
+    search_space["dataset"] = dataset
+
+    search_alg = OptunaSearch(
+        metric=metric_for_ranking,
+        mode=mode,
+    )
+    # asha_scheduler = ASHAScheduler(
+    #     time_attr='fit_time',
+    #     metric=metric_for_ranking,
+    #     mode=mode,
+    #     max_t=100,
+    #     grace_period=10,
+    #     reduction_factor=3,
+    #     brackets=1)
+    analysis = tune.run(
+        one_run,
+        config=search_space,
+        num_samples=num_samples,
+        raise_on_failed_trial=False,  # may some failures maybe acceptable
+        search_alg=search_alg,
+    )
+    best_config = analysis.get_best_config(metric=metric_for_ranking, mode=mode)
+    logger.info("best_config: {}".format(best_config))
+    ray.shutdown()
+
+    logger.info("now we train and eval the classifier using tuned hyperparameters")
+    # now we report test scores using the classifier with tuned hyperparamers
+    tuned_alg = None # create your leanring algorihtm using best_config
+
+    test_perf = train_and_eval(
+        Dataset(name=dataset, datadir=pjoin(ROOT_DIR, "data")), tuned_alg
+    )
+    logger.info("performance on test data:")
+    logger.info(pd.DataFrame.from_records([test_perf]).to_markdown())
+
+    output_path = pjoin(ROOT_DIR, "outputs", dataset, "test_scores.json")
+    makedir(output_path, usedir=True)
+    save_json(test_perf, output_path)
+    logger.info("result saved to {}".format(output_path))
+
+
+if __name__ == "__main__":
+    main()
+
