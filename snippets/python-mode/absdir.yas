@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: absdir
+# key: absdir
+# --
+import pathlib
+pathlib.Path(__file__).parent.resolve()

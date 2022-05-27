@@ -841,6 +841,15 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : t
 
+** delete a pair (of parenthesis, bracket, etc)
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c d p") 'delete-pair)
+#+end_src
+
+#+RESULTS:
+: delete-pair
+
 * mode line
 ** spaceline
 
