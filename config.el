@@ -52,7 +52,10 @@
 (use-package company
 :ensure t
 :init
-(add-hook 'after-init-hook 'global-company-mode)) ;; global mode, do we need it
+(add-hook 'after-init-hook 'global-company-mode)
+;; :bind
+;; (:map company-active-map ("<tab>" . company-complete-selection))
+) ;; global mode, do we need it
 
 (use-package which-key
   :ensure t
@@ -74,6 +77,9 @@
 
 (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((python . t)))
+
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
@@ -90,12 +96,6 @@
 	(insert filename)
 	(clipboard-kill-region (point-min) (point-max)))
       (message filename))))
-
-(defun onboarding-org-visit ()
-"visit ~/docs/notes/onboarding.org"
-(interactive)
-(find-file "~/docs/notes/onboarding.org"))
-(global-set-key (kbd "C-c o o") 'onboarding-org-visit)
 
 (defun dmrs-org-visit ()
 "visit ~/docs/notes/dmrs.org"
@@ -212,7 +212,7 @@
 (use-package avy
 :ensure t
 :bind
-("M-s" . avy-goto-char))
+("M-s" . avy-goto-char-timer))
 
 ;; (use-package sublimity
 	;;   :ensure t
@@ -335,17 +335,19 @@
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
 (global-set-key (kbd "C-c r") 'config-reload)
 
-(defvar my-term-shell "/bin/zsh")
-(defadvice ansi-term (before force-bash)
-  (interactive (list my-term-shell)))
-(ad-activate 'ansi-term)
-(global-set-key (kbd "C-c t m") 'ansi-term)  ; why does not work? which key is super key?
-
 (defun zshrc-visit ()
   "visit ~/.zshrc"
   (interactive)
   (find-file "~/.zshrc"))
 (global-set-key (kbd "C-c z") 'zshrc-visit)
+
+(defvar my-term-shell "/bin/zsh")
+(defadvice ansi-term (before force-bash)
+  (interactive (list my-term-shell)))
+(ad-activate 'ansi-term)
+(global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
+
+(global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
 
 (line-number-mode 1)
 (column-number-mode 1)
@@ -395,7 +397,7 @@
 			    ;; (?\' . ?\')  ; 
 			    (?\" . ?\")
 			    (?\` . ?\`)
-			    (?\$ . ?\$)
+			    ;; (?\$ . ?\$)
 ))
 (electric-pair-mode t)
 
@@ -446,7 +448,7 @@
 (use-package symon
   :ensure t
   :bind
-  ("C-c s" . symon-mode))
+  ("C-c s m" . symon-mode))
 
 (use-package swiper
   :ensure t

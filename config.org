@@ -127,13 +127,18 @@
 ** company
 
 #+begin_src emacs-lisp
-(use-package company
-:ensure t
-:init
-(add-hook 'after-init-hook 'global-company-mode)) ;; global mode, do we need it
+  (use-package company
+  :ensure t
+  :init
+  (add-hook 'after-init-hook 'global-company-mode)
+  ;; :bind
+  ;; (:map company-active-map ("<tab>" . company-complete-selection))
+  ) ;; global mode, do we need it
+
 #+end_src
 
 #+RESULTS:
+: company-complete-selection
 
 should we use =auto-complete-mode=? the recommendation seems to be quite limited.
 
@@ -195,6 +200,17 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
     #+RESULTS:
     : org-hide-sublevels
 
+** programming language support
+
+*** python
+
+    #+begin_src emacs-lisp
+      (org-babel-do-load-languages
+       'org-babel-load-languages '((python . t)))
+    #+end_src
+
+    #+RESULTS:
+
 * markdown
 
   #+begin_src emacs-lisp
@@ -226,17 +242,6 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
   #+RESULTS:
   : my-put-file-name-on-clipboard
-** shortcut: open onboarding.org
-   #+begin_src emacs-lisp
-     (defun onboarding-org-visit ()
-     "visit ~/docs/notes/onboarding.org"
-     (interactive)
-     (find-file "~/docs/notes/onboarding.org"))
-     (global-set-key (kbd "C-c o o") 'onboarding-org-visit)
-   #+end_src
-
-   #+RESULTS:
-   : onboarding-org-visit
 
 ** shortcut: open dmrs.org file
 
