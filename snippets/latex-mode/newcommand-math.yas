@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: newcommandmath
+# key: ncm
+# --
+\newcommand{$1}{\ensuremath{$2}}

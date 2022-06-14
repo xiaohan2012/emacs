@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: show-parquet
+# key: showparq
+# --
+   #+begin_src python :results value raw :return tabulate(df, headers=df.columns, tablefmt='orgtbl')
+     from tabulate import tabulate
+     import pandas as pd
+
+     path = "$1"
+     df = pd.read_parquet(path)
+     return (df.head().to_markdown(index=False))
+     #+end_src

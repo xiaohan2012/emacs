@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: yaml-script
+# key: yamls
+# --
+
+#+begin_src yaml
+$1
+#+end_src

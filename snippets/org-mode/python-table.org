@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: python-table
+# key: pytbl
+# --
+
+#+begin_src python :results value raw :return tabulate(df, headers=df.columns, tablefmt='orgtbl')
+from tabulate import tabulate
+import pandas as pd
+
+df = pd.DataFrame.from_records(rows)
+return (df.to_markdown(index=False))
+#+end_src

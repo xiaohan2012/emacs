@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: positive-things
+# key: pos
+# --
+
+positive things
+
+- $1
+- $2
+- $3
