@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: dollar-text
+# key: dl
+# --
+$$1$

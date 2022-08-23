@@ -27,6 +27,20 @@
 - ivy shortcut switch to multi-chars
 - conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
+* setup
+** environment variables
+
+      #+begin_src emacs-lisp
+	(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/local/bin/")
+
+	(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/bin/")
+   #+end_src
+
+   #+RESULTS:
+   | /usr/bin/ | /Library/TeX/texbin/ | /usr/local/bin/ | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
+
 * use-package
 
 #+BEGIN_SRC emacs-lisp
@@ -211,6 +225,28 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
     #+RESULTS:
 
+** preview latex
+
+   #+begin_src emacs-lisp
+     ;; Making emacs find latex (so that C-c C-x C-l works on orgmode)
+     ;; On MacOS
+     (setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+     (add-to-list 'exec-path "/Library/TeX/texbin/")
+   #+end_src
+
+   #+RESULTS:
+   | /Library/TeX/texbin/ | /Users/hanxiao/code/mz-ds-deep-learning/.venv/bin | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
+
+** image display
+
+   #+begin_src emacs-lisp
+     (setq org-image-actual-width nil)
+     (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+   #+end_src
+
+   #+RESULTS:
+   : t
+
 * markdown
 
   #+begin_src emacs-lisp
@@ -254,15 +290,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
   #+RESULTS:
   : my-put-file-name-on-clipboard
-** shortcut: open dmrs.org file
+** shortcut: open dairy file
 
    #+begin_src emacs-lisp
-     (defun dmrs-org-visit ()
-     "visit ~/docs/notes/dmrs.org"
+     (defun dairy-org-visit ()
+     "visit ~/docs/notes/dairy2022.org"
      (interactive)
-     (find-file "~/docs/notes/dmrs.org"))
-     (global-set-key (kbd "C-c o d") 'dmrs-org-visit)
+     (find-file "~/docs/notes/dairy2022.org"))
+     (global-set-key (kbd "C-c o d") 'dairy-org-visit)
    #+end_src   
+
+   #+RESULTS:
+   : dairy-org-visit
+
 ** dired-subtree
 
    #+begin_src emacs-lisp
@@ -637,11 +677,21 @@ why not showing in non-GUI Emacs?
 ** ein
 
 #+BEGIN_SRC emacs-lisp
-(use-package ein
-  :ensure t
-  )
+  (use-package ein
+    :ensure t
+    :custom
+    ;; use below to show inline images
+    ;; reference: https://github.com/peterewills/emacs-ipython-notebook
+    (ein:output-area-inlined-images t) ;; not necessary in older versions
+    (ein:slice-image t)
+    (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+    )
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** elpy
 
 #+BEGIN_SRC emacs-lisp
@@ -966,10 +1016,10 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : t
 
-** delete a pair (of parenthesis, bracket, etc)
+** +delete a pair (of parenthesis, bracket, etc)+
 
 #+begin_src emacs-lisp
-  (global-set-key (kbd "C-c d p") 'delete-pair)
+  ;; (global-set-key (kbd "C-c d p") 'delete-pair)
 #+end_src
 
 #+RESULTS:
@@ -1099,6 +1149,26 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
    #+RESULTS:
    : surround-chunk-by-back-tick
+
+** smartparen
+
+   [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
+
+#+begin_src emacs-lisp
+  (use-package smartparens-config
+    :ensure smartparens
+    :config (progn (show-smartparens-global-mode t)))
+
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+  (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+  (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+  ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
+#+end_src
+
+#+RESULTS:
+: sp-end-of-sexp
 
 * mode line
 ** spaceline
