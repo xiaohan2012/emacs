@@ -2,6 +2,10 @@
 
 - [[https://github.com/magnars/multiple-cursors.el][multicursor]]
 - [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
+- emacs doom: https://github.com/doomemacs/doomemacs
+  - a pre-configured emacs
+  - the auto-completion looks really cool
+- buffer tabs: how to have browser-like tabs for buffers
 - check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
 - function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
@@ -246,6 +250,24 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
    #+RESULTS:
    : t
+
+** org-journal for dairy keeping
+
+#+begin_src emacs-lisp
+  (use-package org-journal
+    :ensure t
+    :defer t
+    :init
+    ;; Change default prefix key; needs to be set before loading org-journal
+    (setq org-journal-prefix-key "C-c j ")
+    :config
+    (setq org-journal-dir "~/org/journal/"
+	  org-journal-date-format "%A, %d %B %Y"
+	  org-journal-time-format "日记"))
+#+end_src
+
+#+RESULTS:
+: t
 
 * markdown
 
