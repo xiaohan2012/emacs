@@ -141,6 +141,18 @@
 (setq org-image-actual-width nil)
 (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
 
+
+(use-package org-journal
+  :ensure t
+  :defer t
+  :init
+  ;; Change default prefix key; needs to be set before loading org-journal
+  (setq org-journal-prefix-key "C-c j ")
+  :config
+  (setq org-journal-dir "~/org/journal/"
+	org-journal-date-format "%A, %d %B %Y"
+	org-journal-time-format "日记"))
+
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
@@ -173,6 +185,7 @@
 (find-file "~/docs/notes/corset2.0.org"))
 
 (global-set-key (kbd "C-c o c") 'corset-org-visit)
+
 
 (use-package dired-subtree
   :ensure t)
@@ -753,6 +766,7 @@ Version 2020-10-17"
 (global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
 (global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
 
+
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
   (interactive)
@@ -760,6 +774,18 @@ Version 2020-10-17"
          (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
     (kill-new path-with-line-number)
     (message (concat path-with-line-number " copied to clipboard"))))
+
+(use-package smartparens-config
+  :ensure smartparens
+  :config (progn (show-smartparens-global-mode t)))
+
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+(global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+(global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+;; (global-set-key (kbd "C-down") 'sp-down-sexp)
+
 
 (use-package spaceline
 :ensure t
