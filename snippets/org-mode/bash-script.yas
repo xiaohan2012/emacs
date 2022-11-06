@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: bash-script
+# key: bss
+# --
+#+begin_src bash
+$1
+#+end_src

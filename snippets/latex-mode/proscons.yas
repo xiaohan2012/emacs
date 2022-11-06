@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: proscons
+# key: proscons
+# --
+\begin{frame}
+  \frametitle{pros and cons}
+
+  \hl{pros:}
+  \begin{itemize}
+  \item {$1}
+  \end{itemize}
+  
+  \hl{cons:}
+  \begin{itemize}
+  \item {$2}
+  \end{itemize}
+\end{frame}

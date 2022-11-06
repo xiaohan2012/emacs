@@ -1,3 +1,9 @@
+(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+(add-to-list 'exec-path "/usr/local/bin/")
+
+(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+(add-to-list 'exec-path "/usr/bin/")
+
 (require 'package)
 
 
@@ -15,6 +21,9 @@
 ;; install 'use-package if not installed
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
+
+(use-package quelpa
+  :ensure t)
 
 (use-package monokai-theme
   :ensure t
@@ -41,6 +50,8 @@
   :ensure t
   :hook (after-init . global-emojify-mode))
 
+(set-face-attribute 'default nil :height 150)
+
 (use-package dashboard
 :ensure t
 :config
@@ -49,13 +60,55 @@
 			(recents . 5)))
 (setq dashboard-banner-logo-title "Hello Han."))
 
-(use-package company
-:ensure t
-:init
-(add-hook 'after-init-hook 'global-company-mode)
-;; :bind
-;; (:map company-active-map ("<tab>" . company-complete-selection))
-) ;; global mode, do we need it
+;; (use-package company
+;; :ensure t
+;; ;; :init
+;; ;; (add-hook 'after-init-hook 'global-company-mode)
+;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+;; ;; :bind
+;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
+;; ) ;; global mode, do we need it
+
+(use-package corfu
+  :ensure t
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  ;; (corfu-separator ?\s)          ;; Orderless field separator
+  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+  ;; Enable Corfu only for certain modes.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.
+  ;; This is recommended since Dabbrev can be used globally (M-/).
+  ;; See also `corfu-excluded-modes'.
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
 
 (use-package which-key
   :ensure t
@@ -80,10 +133,21 @@
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))
 
+;; Making emacs find latex (so that C-c C-x C-l works on orgmode)
+;; On MacOS
+(setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+(add-to-list 'exec-path "/Library/TeX/texbin/")
+
+(setq org-image-actual-width nil)
+(pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
   :init (setq markdown-command "multimarkdown"))
+
+(custom-set-variables
+ '(markdown-command "/usr/local/bin/pandoc"))
 
 (defun my-put-file-name-on-clipboard ()
   "Put the current file name on the clipboard"
@@ -97,11 +161,111 @@
 	(clipboard-kill-region (point-min) (point-max)))
       (message filename))))
 
-(defun dmrs-org-visit ()
-"visit ~/docs/notes/dmrs.org"
+(defun dairy-org-visit ()
+"visit ~/docs/notes/dairy2022.org"
 (interactive)
-(find-file "~/docs/notes/dmrs.org"))
-(global-set-key (kbd "C-c o d") 'dmrs-org-visit)
+(find-file "~/docs/notes/dairy2022.org"))
+(global-set-key (kbd "C-c o d") 'dairy-org-visit)
+
+(defun corset-org-visit ()
+"visit ~/docs/notes/corset2.0.org"
+(interactive)
+(find-file "~/docs/notes/corset2.0.org"))
+
+(global-set-key (kbd "C-c o c") 'corset-org-visit)
+
+(use-package dired-subtree
+  :ensure t)
+
+(use-package dired-filter
+  :ensure t)
+
+(use-package neotree
+  :ensure t
+  :init
+  (setq neo-window-width 30)
+  )
+
+(defun my-open-file-at-cursor ()
+  "Open the file path under cursor.
+If there is text selection, uses the text selection for path.
+If the path starts with “http://”, open the URL in browser.
+Input path can be {relative, full path, URL}.
+Path may have a trailing “:‹n›” that indicates line number, or “:‹n›:‹m›” with line and column number. If so, jump to that line number.
+If path does not have a file extension, automatically try with “.el” for elisp files.
+This command is similar to `find-file-at-point' but without prompting for confirmation.
+
+URL `http://xahlee.info/emacs/emacs/emacs_open_file_path_fast.html'
+Version 2020-10-17"
+  (interactive)
+  (let* (
+	 ($inputStr
+	  (if (use-region-p)
+	      (buffer-substring-no-properties (region-beginning) (region-end))
+	    (let ($p0 $p1 $p2
+		      ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
+		      ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\"))
+	      (setq $p0 (point))
+	      (skip-chars-backward $pathStops)
+	      (setq $p1 (point))
+	      (goto-char $p0)
+	      (skip-chars-forward $pathStops)
+	      (setq $p2 (point))
+	      (goto-char $p0)
+	      (buffer-substring-no-properties $p1 $p2))))
+	 ($path
+	  (replace-regexp-in-string
+	   "^file:///" "/"
+	   (replace-regexp-in-string
+	    ":\\'" "" $inputStr))))
+    (if (string-match-p "\\`https?://" $path)
+	(if (fboundp 'xahsite-url-to-filepath)
+	    (let (($x (xahsite-url-to-filepath $path)))
+	      (if (string-match "^http" $x )
+		  (browse-url $x)
+		(find-file $x)))
+	  (progn (browse-url $path)))
+      (progn ; not starting “http://”
+	(if (string-match "#" $path )
+	    (let (
+		  ( $fpath (substring $path 0 (match-beginning 0)))
+		  ( $fractPart (substring $path (1+ (match-beginning 0)))))
+	      (if (file-exists-p $fpath)
+		  (progn
+		    (find-file $fpath)
+		    (goto-char (point-min))
+		    (search-forward $fractPart ))
+		(when (y-or-n-p (format "file no exist: 「%s」. Create?" $fpath))
+		  (find-file $fpath))))
+	  (if (string-match "^\\`\\(.+?\\):\\([0-9]+\\)\\(:[0-9]+\\)?\\'" $path)
+	      (let (
+		    ($fpath (match-string 1 $path))
+		    ($line-num (string-to-number (match-string 2 $path))))
+		(if (file-exists-p $fpath)
+		    (progn
+		      (find-file $fpath)
+		      (goto-char (point-min))
+		      (forward-line (1- $line-num)))
+		  (when (y-or-n-p (format "file no exist: 「%s」. Create?" $fpath))
+		    (find-file $fpath))))
+	    (if (file-exists-p $path)
+		(progn ; open f.ts instead of f.js
+		  (let (($ext (file-name-extension $path))
+			($fnamecore (file-name-sans-extension $path)))
+		    (if (and (string-equal $ext "js")
+			     (file-exists-p (concat $fnamecore ".ts")))
+			(find-file (concat $fnamecore ".ts"))
+		      (find-file $path))))
+	      (if (file-exists-p (concat $path ".el"))
+		  (find-file (concat $path ".el"))
+		(when (y-or-n-p (format "file no exist: 「%s」. Create?" $path))
+		  (find-file $path ))))))))))
+
+(global-set-key (kbd "C-c o f") 'my-open-file-at-cursor)
+
+(use-package bookmark-view
+  :ensure t
+  )
 
 (use-package switch-window
 
@@ -247,6 +411,12 @@
 
 (use-package ein
   :ensure t
+  :custom
+  ;; use below to show inline images
+  ;; reference: https://github.com/peterewills/emacs-ipython-notebook
+  (ein:output-area-inlined-images t) ;; not necessary in older versions
+  (ein:slice-image t)
+  (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
   )
 
 (use-package elpy
@@ -259,6 +429,12 @@
 	elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	)
   (add-hook 'elpy-mode-hook 'flycheck-mode)
+  :bind
+  ;; remap the keys for some navigation functions
+  ("C-s-n" . 'elpy-nav-forward-block)
+  ("C-s-p" . 'elpy-nav-backward-block)
+  ("C-s-f" . 'elpy-nav-forward-indent)
+  ("C-s-b" . 'elpy-nav-backward-indent)
   )
 
 (use-package cython-mode
@@ -296,6 +472,35 @@
 
 (setq-default TeX-master "main") ; all master files called "main".
 
+;; (add-hook latex-mode-hook
+;; 	  (lambda()
+;; 	    (local-unset-key (kbd "C-M-a"))))
+
+(add-hook 'LaTex-mode-hook
+	  (lambda()
+	    (define-key LaTex-mode-map (kbd "C-M-a") nil)))
+
+(defun wrap-by-href ()
+  "wrap a text by by \\href"
+  (interactive)
+  (save-excursion
+    (goto-char (region-beginning))
+    (insert (concat "\\href{}{")))
+  (save-excursion
+    (goto-char (region-end))
+    (insert "}"))
+  (goto-char (+ (region-beginning) 6)) ; go to the first {} to insert the link
+  )
+
+
+;; how to define the key only for latex mode?
+;; tried to the following
+;; (add-hook 'LaTeX-mode-hook
+;; 	  (lambda () (local-set-key (kbd "C-c h r") #'wrap-by-href)))
+;; (eval-after-load 'latex 
+;;   '(define-key LaTeX-mode-map [(kbd "C-c h r")] 'wrap-by-href))
+(global-set-key (kbd "C-c h r") 'wrap-by-href)
+
 (when (and (eq system-type 'gnu/linux)
 	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
   (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
@@ -306,6 +511,9 @@
 :config
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 )
+
+(use-package dockerfile-mode
+  :ensure t)
 
 (use-package yasnippet
   :ensure t
@@ -348,6 +556,16 @@
 (global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
 
 (global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
+
+(quelpa '(popon
+	  :fetcher git
+	  :url "https://codeberg.org/akib/emacs-popon.git"))
+
+
+
+(quelpa '(corfu-terminal
+	  :fetcher git
+	  :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
 
 (line-number-mode 1)
 (column-number-mode 1)
@@ -416,12 +634,132 @@
      (buffer-substring
       (point-at-bol)
       (point-at-eol))))
+  (message "a line is copied")
   )
 (global-set-key (kbd "C-c w l") 'copy-whole-line)
 
 (use-package hungry-delete
 :ensure t
 :config (global-hungry-delete-mode))
+
+;; (global-set-key (kbd "C-c d p") 'delete-pair)
+
+(defun copy-chunk-at-point ()
+  "copy a path at point if it exists."
+  (interactive)
+  (let* (
+	 ($inputStr
+	  (if (use-region-p)
+	      (buffer-substring-no-properties (region-beginning) (region-end))
+	    (let ($p0 $p1 $p2
+		      ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
+		      ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\"))
+	      (setq $p0 (point))
+	      (skip-chars-backward $pathStops)
+	      (setq $p1 (point))
+	      (goto-char $p0)
+	      (skip-chars-forward $pathStops)
+	      (setq $p2 (point))
+	      (goto-char $p0)
+	      (buffer-substring-no-properties $p1 $p2))))
+	 ($path
+	  (replace-regexp-in-string
+	   "^file:///" "/"
+	   (replace-regexp-in-string
+	    ":\\'" "" $inputStr))))
+    (with-temp-buffer
+      (insert $inputStr)
+      (clipboard-kill-region (point-min) (point-max)))
+    (message (format "copied '%s'" $inputStr))
+    ))
+(global-set-key (kbd "C-c c c") 'copy-chunk-at-point)
+
+(defun surround-chunk-by-stuff ($stuff-to-insert)
+  "surround a text chunk by single quote"
+  ;; (interactive)
+  (if (use-region-p)
+      (buffer-substring-no-properties (region-beginning) (region-end))
+    (let ($curPos $startPos $endPos
+		  $startStuff $endStuff
+		  ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
+		  ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
+		  ;; ($stuff-to-insert (read-string "what string?"))
+		  )
+      ;; try to support different start and end chars, eg parenthesis and brackets
+      ;; however, it shows:
+      ;; if: Symbol’s value as variable is void: $sutff-to-insert
+      (setq $startStuff $stuff-to-insert)
+      (setq $endStuff $stuff-to-insert)
+      ;; (message "here! before if")	   
+      ;; (if (string= $sutff-to-insert "<")
+      ;;     (progn
+      ;; 	 (setq $startStuff "<")
+      ;; 	 (setq $endStuff ">"))
+      ;;   (if (string= $stuff-to-insert "(")
+      ;; 	 (progn
+      ;; 	   (setq $startStuff "(")
+      ;; 	   (setq $startStuff ")"))
+      ;;     (if (string= $stuff-to-insert "{")
+      ;; 	   (progn
+      ;; 	   (setq $startStuff "{")
+      ;; 	   (setq $startStuff "}"))
+      ;; 	 (if (string= $stuff-to-insert "[")
+      ;; 	   (progn
+      ;; 	   (setq $startStuff "[")
+      ;; 	   (setq $startStuff "]"))
+      ;; 	   (progn
+      ;; 	     (message "here!")
+      ;; 	     (setq $startStuff '$stuff-to-insert)
+      ;; 	     (setq $startStuff '$stuff-to-insert)))
+      ;; 	 ))
+      ;;     )	   
+      ;; save current position
+      (setq $curPos (point))
+      ;; get start position of the chunk
+      (skip-chars-backward $pathStops)
+      (insert $startStuff)
+      (setq $startPos (point))
+      ;; get stop position of the chunk
+      (goto-char $curPos)
+      (skip-chars-forward $pathStops)
+      (setq $endPos (point))
+      (insert $endStuff)
+      ;; back to original position
+      (goto-char $curPos)
+      )
+    )
+  )
+
+(defun surround-chunk-by-single-quote ()
+  (interactive)
+  (surround-chunk-by-stuff "'"))
+
+(defun surround-chunk-by-double-quote ()
+  (interactive)
+  (surround-chunk-by-stuff "\""))
+
+(defun surround-chunk-by-back-tick ()
+  (interactive)
+  (surround-chunk-by-stuff "`"))
+
+(defun surround-chunk-by-dollar ()
+  (interactive)
+  (surround-chunk-by-stuff "$"))
+
+
+
+(global-set-key (kbd "C-c s '") 'surround-chunk-by-single-quote)
+(global-set-key (kbd "C-c s \"") 'surround-chunk-by-double-quote)
+(global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
+(global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
+
+(defun copy-current-line-position-to-clipboard ()
+  "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
+  (interactive)
+  (let ((path-with-line-number
+         (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
+    (kill-new path-with-line-number)
+    (message (concat path-with-line-number " copied to clipboard"))))
 
 (use-package spaceline
 :ensure t

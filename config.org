@@ -1,5 +1,9 @@
 * wish list
-
+  
+- packages by minad
+  - https://www.youtube.com/watch?v=f0FMo_XxujU
+  - +https://github.com/minad/tab-bookmark+
+  - +learn about bookmarks+
 - [[https://github.com/magnars/multiple-cursors.el][multicursor]]
 - [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
@@ -41,7 +45,8 @@
    #+RESULTS:
    | /usr/bin/ | /Library/TeX/texbin/ | /usr/local/bin/ | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
 
-* use-package
+* package installers
+** use-package
 
 #+BEGIN_SRC emacs-lisp
 (require 'package)
@@ -64,6 +69,15 @@
 #+END_SRC
 
 #+RESULTS:
+
+** quelpa
+
+   #+begin_src emacs-lisp
+     (use-package quelpa
+       :ensure t)
+   #+end_src
+
+   #+RESULTS:
 
 * appearance
 ** theme
@@ -121,6 +135,15 @@
    #+RESULTS:
    | global-emojify-mode | global-company-mode | #[0 \300 \207 [dashboard-insert-startupify-lists] 1] | tramp-register-archive-file-name-handler |
 
+** fonts
+
+   #+begin_src emacs-lisp
+     (set-face-attribute 'default nil :height 150)
+   #+end_src
+
+   #+RESULTS:
+
+
 * dashboard
 
 #+begin_src emacs-lisp
@@ -137,28 +160,76 @@
 : t
 
 * auto completion
-
-** company
+** +company+
 
 #+begin_src emacs-lisp
-  (use-package company
-  :ensure t
-  :init
-  (add-hook 'after-init-hook 'global-company-mode)
-  ;; :bind
-  ;; (:map company-active-map ("<tab>" . company-complete-selection))
-  ) ;; global mode, do we need it
+  ;; (use-package company
+  ;; :ensure t
+  ;; ;; :init
+  ;; ;; (add-hook 'after-init-hook 'global-company-mode)
+  ;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+  ;; ;; :bind
+  ;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
+  ;; ) ;; global mode, do we need it
 
 #+end_src
 
 #+RESULTS:
-: company-complete-selection
 
 should we use =auto-complete-mode=? the recommendation seems to be quite limited.
 
 
 
 #+RESULTS
+** corfu
+
+   it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
+
+#+begin_src emacs-lisp
+  (use-package corfu
+    :ensure t
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    ;; (corfu-separator ?\s)          ;; Orderless field separator
+    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+    ;; Enable Corfu only for certain modes.
+    ;; :hook ((prog-mode . corfu-mode)
+    ;;        (shell-mode . corfu-mode)
+    ;;        (eshell-mode . corfu-mode))
+
+    ;; Recommended: Enable Corfu globally.
+    ;; This is recommended since Dabbrev can be used globally (M-/).
+    ;; See also `corfu-excluded-modes'.
+    :init
+    (global-corfu-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 3)
+
+    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+    ;; (setq read-extended-command-predicate
+    ;;       #'command-completion-default-include-p)
+
+    ;; Enable indentation+completion using the TAB key.
+    ;; `completion-at-point' is often bound to M-TAB.
+    (setq tab-always-indent 'complete))
+#+end_src
+
+#+RESULTS:
+
 * general enhancement
 ** which-key
    
@@ -303,6 +374,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+RESULTS:
    : dairy-org-visit
 
+** shortcut: open note for interpretable ML file
+   #+begin_src emacs-lisp
+     (defun corset-org-visit ()
+     "visit ~/docs/notes/corset2.0.org"
+     (interactive)
+     (find-file "~/docs/notes/corset2.0.org"))
+
+     (global-set-key (kbd "C-c o c") 'corset-org-visit)
+   #+end_src   
+
+   #+RESULTS:
+   : corset-org-visit
+
 ** dired-subtree
 
    #+begin_src emacs-lisp
@@ -327,7 +411,7 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
      (use-package neotree
        :ensure t
        :init
-       (setq neo-window-width 55)
+       (setq neo-window-width 30)
        )
    #+end_src
 
@@ -417,8 +501,23 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+RESULTS:
    : my-open-file-at-cursor
 
-* window
+* bookmarks
+** useful commands
 
+- C-x r l: list bookmarks
+- C-x r b: jump to bookmark
+
+** bookmark-view
+
+   #+begin_src emacs-lisp
+     (use-package bookmark-view
+       :ensure t
+       )
+   #+end_src
+
+   #+RESULTS:
+
+* window
 ** switch-window
 
 let's not use it for now since it works better for => 2= windows.
@@ -471,6 +570,7 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
    #+end_src
    
+
 * buffers
 
 ** ibuffer
@@ -705,13 +805,19 @@ why not showing in non-GUI Emacs?
 	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	  )
     (add-hook 'elpy-mode-hook 'flycheck-mode)
+    :bind
+    ;; remap the keys for some navigation functions
+    ("C-s-n" . 'elpy-nav-forward-block)
+    ("C-s-p" . 'elpy-nav-backward-block)
+    ("C-s-f" . 'elpy-nav-forward-indent)
+    ("C-s-b" . 'elpy-nav-backward-indent)
     )
 
 
 #+END_SRC
 
 #+RESULTS:
-: t
+: elpy-nav-backward-indent
 ** elpy tips
 
 *** navigation
@@ -778,6 +884,52 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : main
 
+** TODO unbind keybindings
+
+#+begin_src emacs-lisp
+  ;; (add-hook latex-mode-hook
+  ;; 	  (lambda()
+  ;; 	    (local-unset-key (kbd "C-M-a"))))
+
+  (add-hook 'LaTex-mode-hook
+	    (lambda()
+	      (define-key LaTex-mode-map (kbd "C-M-a") nil)))
+#+end_src
+
+#+RESULTS:
+| lambda | nil | (define-key LaTex-mode-map (kbd C-M-a) nil) |
+| lambda | nil | (define-key latex-mode-map (kbd C-M-a) nil) |
+
+** text manipulation
+*** wrap by href
+
+#+begin_src emacs-lisp
+  (defun wrap-by-href ()
+    "wrap a text by by \\href"
+    (interactive)
+    (save-excursion
+      (goto-char (region-beginning))
+      (insert (concat "\\href{}{")))
+    (save-excursion
+      (goto-char (region-end))
+      (insert "}"))
+    (goto-char (+ (region-beginning) 6)) ; go to the first {} to insert the link
+    )
+
+
+  ;; how to define the key only for latex mode?
+  ;; tried to the following
+  ;; (add-hook 'LaTeX-mode-hook
+  ;; 	  (lambda () (local-set-key (kbd "C-c h r") #'wrap-by-href)))
+  ;; (eval-after-load 'latex 
+  ;;   '(define-key LaTeX-mode-map [(kbd "C-c h r")] 'wrap-by-href))
+  (global-set-key (kbd "C-c h r") 'wrap-by-href)
+
+#+end_src
+
+#+RESULTS:
+: wrap-by-href
+
 * other languages
 ** Matlab
 
@@ -794,7 +946,7 @@ package-install does not work for now
 
 #+RESULTS:
   
-** YAML
+** YAML mode
 
    #+BEGIN_SRC emacs-lisp   
    (use-package yaml-mode
@@ -803,6 +955,13 @@ package-install does not work for now
    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
    )
    #+END_SRC
+** dockerfile mode
+
+   #+begin_src emacs-lisp
+     (use-package dockerfile-mode
+       :ensure t)
+   #+end_src
+
 * yasnippet
 ** preparation
 
@@ -868,7 +1027,7 @@ package-install does not work for now
 
 * terminals
 
-
+** zsh
 #+BEGIN_SRC emacs-lisp  
   (defvar my-term-shell "/bin/zsh")
   (defadvice ansi-term (before force-bash)
@@ -885,7 +1044,24 @@ package-install does not work for now
   (global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
 #+end_src
 
-   
+** corfu-terminal (with auto-completion)
+
+#+begin_src emacs-lisp
+
+
+  (quelpa '(popon
+	    :fetcher git
+	    :url "https://codeberg.org/akib/emacs-popon.git"))
+
+
+
+  (quelpa '(corfu-terminal
+	    :fetcher git
+	    :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
+#+end_src
+
+#+RESULTS:
+
 * miscellenous
 ** show line/column number
 
@@ -931,7 +1107,6 @@ package-install does not work for now
 
 #+RESULTS:
 : t
-
 * text maniputation
 ** line/region copying/deletion
 
@@ -998,6 +1173,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 	  (buffer-substring
 	   (point-at-bol)
 	   (point-at-eol))))
+       (message "a line is copied")
        )
      (global-set-key (kbd "C-c w l") 'copy-whole-line)
    #+end_src
@@ -1150,7 +1326,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    #+RESULTS:
    : surround-chunk-by-back-tick
 
-** smartparen
+** COMMENT smartparen
 
    [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
 
@@ -1168,7 +1344,22 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+end_src
 
 #+RESULTS:
-: sp-end-of-sexp
+| lambda | nil | (local-unset-key (kbd C-M-a)) |
+
+** copy file and file
+
+#+begin_src emacs-lisp
+(defun copy-current-line-position-to-clipboard ()
+  "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
+  (interactive)
+  (let ((path-with-line-number
+         (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
+    (kill-new path-with-line-number)
+    (message (concat path-with-line-number " copied to clipboard"))))
+#+end_src
+
+#+RESULTS:
+: copy-current-line-position-to-clipboard
 
 * mode line
 ** spaceline
