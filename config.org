@@ -312,6 +312,15 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+RESULTS:
    | /Library/TeX/texbin/ | /Users/hanxiao/code/mz-ds-deep-learning/.venv/bin | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
 
+   increase font size
+
+#+begin_src emacs-lisp
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+#+end_src
+
+#+RESULTS:
+| :foreground | default | :background | default | :scale | 2.0 | :html-foreground | Black | :html-background | Transparent | :html-scale | 1.0 | :matchers | (begin $1 $ $$ \( \[) |
+
 ** image display
 
    #+begin_src emacs-lisp
