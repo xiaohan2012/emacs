@@ -138,6 +138,8 @@
 (setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
 (add-to-list 'exec-path "/Library/TeX/texbin/")
 
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+
 (setq org-image-actual-width nil)
 (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
 
