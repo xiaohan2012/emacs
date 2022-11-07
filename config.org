@@ -1,9 +1,21 @@
 * wish list
   
-- packages by minad
+- +packages by minad+
   - https://www.youtube.com/watch?v=f0FMo_XxujU
   - +https://github.com/minad/tab-bookmark+
   - +learn about bookmarks+
+- auto-completion:
+  - vertico: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
+  - consult: https://github.com/minad/consult
+    - what does it do?
+  - marginalia: https://github.com/minad/marginalia
+    - which enriches the annotation of auto-completion candidates
+  - embark: https://github.com/oantolin/embark
+    - what does it do?
+  - orderless: https://github.com/oantolin/orderless
+    - more general searching?
+  - completion in doomemacs: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
+    - vertico is the default
 - [[https://github.com/magnars/multiple-cursors.el][multicursor]]
 - [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - emacs doom: https://github.com/doomemacs/doomemacs
