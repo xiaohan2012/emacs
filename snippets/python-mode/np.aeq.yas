@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: np.testing.assert_equal
+# key: np.aeq
+# --
+np.testing.assert_equal($1, $2)
