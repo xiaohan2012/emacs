@@ -408,9 +408,9 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
    #+begin_src emacs-lisp
      (defun dairy-org-visit ()
-     "visit ~/docs/notes/dairy2022.org"
+     "visit ~/docs/notes/dairy2023.org"
      (interactive)
-     (find-file "~/docs/notes/dairy2022.org"))
+     (find-file "~/docs/notes/dairy2023.org"))
      (global-set-key (kbd "C-c o d") 'dairy-org-visit)
    #+end_src   
 
@@ -429,6 +429,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
    #+RESULTS:
    : corset-org-visit
+
+** shortcut: open songs.org
+
+   #+begin_src emacs-lisp
+     (defun songs-org-visit ()
+     "visit ~/docs/notes/songs.org"
+     (interactive)
+     (find-file "~/docs/notes/songs.org"))
+     (global-set-key (kbd "C-c o s") 'songs-org-visit)
+   #+end_src   
+
+   #+RESULTS:
+   : songs-org-visit
 
 ** dired-subtree
 
@@ -1030,6 +1043,8 @@ package-install does not work for now
    )
    #+END_SRC
 
+   #+RESULTS:
+
 
 * config reload/edit
 ** config edit
@@ -1481,3 +1496,12 @@ run a command in shell
    #+end_src
 
    #+RESULTS:
+* music player
+** simple-mpc
+
+#+begin_src emacs-lisp
+  (use-package simple-mpc
+    :ensure t)
+#+end_src
+
+#+RESULTS:
