@@ -175,9 +175,9 @@
       (message filename))))
 
 (defun dairy-org-visit ()
-"visit ~/docs/notes/dairy2022.org"
+"visit ~/docs/notes/dairy2023.org"
 (interactive)
-(find-file "~/docs/notes/dairy2022.org"))
+(find-file "~/docs/notes/dairy2023.org"))
 (global-set-key (kbd "C-c o d") 'dairy-org-visit)
 
 (defun corset-org-visit ()
@@ -187,11 +187,20 @@
 
 (global-set-key (kbd "C-c o c") 'corset-org-visit)
 
+(defun songs-org-visit ()
+"visit ~/docs/notes/songs.org"
+(interactive)
+(find-file "~/docs/notes/songs.org"))
+(global-set-key (kbd "C-c o s") 'songs-org-visit)
+
 (use-package dired-subtree
   :ensure t)
 
 (use-package dired-filter
   :ensure t)
+
+(setq dired-omit-files
+      (concat dired-omit-files "\\|^\\.ipynb_checkpoints$\\|^\\.pytest_cache$\\|^\\.venv$\\|^\\.git$\\|^\\_\\_pycache\\_\\_$"))
 
 (use-package neotree
   :ensure t
@@ -483,7 +492,9 @@ Version 2020-10-17"
       ;; TeX-master 'dwim
       )
 
-(setq-default TeX-master "main") ; all master files called "main".
+;; (setq-default TeX-master "main") ; all master files called "main".
+(setq-default TeX-master "sn-article") ; all master files called "sn-article".
+;; (setq-default TeX-master "cover") ; all master files called "cover".
 
 ;; (add-hook latex-mode-hook
 ;; 	  (lambda()
@@ -533,7 +544,7 @@ Version 2020-10-17"
   :config
   (setq yas-snippet-dirs
 	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20220713.1234/snippets/"
 	  ))
   ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
   ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
@@ -807,4 +818,7 @@ Version 2020-10-17"
   ("C-s" . swiper))
 
 (use-package magit
+  :ensure t)
+
+(use-package simple-mpc
   :ensure t)
