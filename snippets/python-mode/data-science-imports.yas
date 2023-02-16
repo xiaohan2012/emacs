@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: data-science-import
+# key: dsimp
+# --
+import os
+import sys
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+from matplotlib import pyplot as plt

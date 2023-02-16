@@ -408,9 +408,9 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
    #+begin_src emacs-lisp
      (defun dairy-org-visit ()
-     "visit ~/docs/notes/dairy2022.org"
+     "visit ~/docs/notes/dairy2023.org"
      (interactive)
-     (find-file "~/docs/notes/dairy2022.org"))
+     (find-file "~/docs/notes/dairy2023.org"))
      (global-set-key (kbd "C-c o d") 'dairy-org-visit)
    #+end_src   
 
@@ -430,6 +430,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+RESULTS:
    : corset-org-visit
 
+** shortcut: open songs.org
+
+   #+begin_src emacs-lisp
+     (defun songs-org-visit ()
+     "visit ~/docs/notes/songs.org"
+     (interactive)
+     (find-file "~/docs/notes/songs.org"))
+     (global-set-key (kbd "C-c o s") 'songs-org-visit)
+   #+end_src   
+
+   #+RESULTS:
+   : songs-org-visit
+
 ** dired-subtree
 
    #+begin_src emacs-lisp
@@ -447,6 +460,15 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+end_src
 
    #+RESULTS:
+** dired: omit certain file types
+
+#+begin_src emacs-lisp
+  (setq dired-omit-files
+	(concat dired-omit-files "\\|^\\.ipynb_checkpoints$\\|^\\.pytest_cache$\\|^\\.venv$\\|^\\.git$\\|^\\_\\_pycache\\_\\_$"))
+#+end_src
+
+
+
 
 ** neotree
 
@@ -921,11 +943,13 @@ why not showing in non-GUI Emacs?
 	;; TeX-master 'dwim
 	)
 
-  (setq-default TeX-master "main") ; all master files called "main".
+  ;; (setq-default TeX-master "main") ; all master files called "main".
+  (setq-default TeX-master "sn-article") ; all master files called "sn-article".
+  ;; (setq-default TeX-master "cover") ; all master files called "cover".
 #+end_src
 
 #+RESULTS:
-: main
+: sn-article
 
 ** TODO unbind keybindings
 
@@ -1014,13 +1038,16 @@ package-install does not work for now
     :config
     (setq yas-snippet-dirs
 	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"
+	    "~/.emacs.d/elpa/yasnippet-snippets-20220713.1234/snippets/"
 	    ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
     (yas-global-mode 1)
     )
 #+END_SRC
+
+#+RESULTS:
+: t
 
 ** add some off-the-shelf snippets by the community
 
@@ -1029,6 +1056,8 @@ package-install does not work for now
    :ensure t
    )
    #+END_SRC
+
+   #+RESULTS:
 
 
 * config reload/edit
@@ -1531,3 +1560,12 @@ run a command in shell
    #+end_src
 
    #+RESULTS:
+* music player
+** simple-mpc
+
+#+begin_src emacs-lisp
+  (use-package simple-mpc
+    :ensure t)
+#+end_src
+
+#+RESULTS:

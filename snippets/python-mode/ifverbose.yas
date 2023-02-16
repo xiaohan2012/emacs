@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: ifverbose
+# key: ifv
+# --
+if verbose > 0:
+   
