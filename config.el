@@ -562,13 +562,20 @@ Version 2020-10-17"
   (find-file "~/.zshrc"))
 (global-set-key (kbd "C-c z") 'zshrc-visit)
 
+(use-package multi-term
+  :ensure t
+  :config (setq multi-term-program "/bin/zsh")
+  :bind ("C-c m t" . 'multi-term)
+  )
+
+
+
+(global-set-key (kbd "C-c s h")  'shell)
+
 (defvar my-term-shell "/bin/zsh")
 (defadvice ansi-term (before force-bash)
   (interactive (list my-term-shell)))
 (ad-activate 'ansi-term)
-(global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
-
-(global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
 
 (quelpa '(popon
 	  :fetcher git
@@ -638,7 +645,27 @@ Version 2020-10-17"
 (kill-word 1)
 )
 
-(global-set-key (kbd "C-c w w") 'my-kill-whole-word)
+(global-set-key (kbd "C-c d w") 'my-kill-whole-word)
+
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+	  (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
+
+(defun my-copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg)
+  ;;(paste-to-mark arg)
+  )
+(global-set-key (kbd "C-c c w") 'my-copy-word)
 
 (defun copy-whole-line ()
   (interactive)
