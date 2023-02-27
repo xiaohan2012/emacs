@@ -1468,7 +1468,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 | lambda | nil | (local-unset-key (kbd C-M-a)) |
 
-** copy file and file
+** copy file and line
 
 #+begin_src emacs-lisp
 (defun copy-current-line-position-to-clipboard ()
@@ -1482,6 +1482,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : copy-current-line-position-to-clipboard
+
 
 * mode line
 ** spaceline
