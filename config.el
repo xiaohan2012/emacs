@@ -492,8 +492,8 @@ Version 2020-10-17"
       ;; TeX-master 'dwim
       )
 
-;; (setq-default TeX-master "main") ; all master files called "main".
-(setq-default TeX-master "sn-article") ; all master files called "sn-article".
+(setq-default TeX-master "main") ; all master files called "main".
+;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
 ;; (setq-default TeX-master "cover") ; all master files called "cover".
 
 ;; (add-hook latex-mode-hook
