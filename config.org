@@ -386,6 +386,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 #+RESULTS:
 : org-download-screenshot
 
+** valign (visual align)
+
+#+begin_src emacs-lisp
+  (use-package valign
+    :ensure t
+    :after org
+    :config   (add-hook 'org-mode-hook #'valign-mode))
+
+#+end_src
+
+#+RESULTS:
+: t
+
 * markdown
 
   #+begin_src emacs-lisp

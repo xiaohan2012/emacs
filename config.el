@@ -130,6 +130,8 @@
 
 (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
+(setq org-cycle-include-plain-lists 'integrate)
+
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))
 
@@ -153,6 +155,22 @@
   (setq org-journal-dir "~/org/journal/"
 	org-journal-date-format "%A, %d %B %Y"
 	org-journal-time-format "日记"))
+
+(use-package org-download
+  :ensure t
+  :after org
+  :defer nil
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  (org-download-heading-lvl nil)
+  (org-download-timestamp "%Y%m%d-%H%M%S_")
+  (org-image-actual-width 500)
+  (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+  :bind
+  ("C-M-y" . org-download-screenshot)
+  :config
+  (require 'org-download))
 
 (use-package markdown-mode
   :ensure t
@@ -544,7 +562,7 @@ Version 2020-10-17"
   :config
   (setq yas-snippet-dirs
 	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20220713.1234/snippets/"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"	    
 	  ))
   ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
   ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
