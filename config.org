@@ -296,10 +296,11 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
       (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
+      (setq org-cycle-include-plain-lists 'integrate)
     #+end_src
 
     #+RESULTS:
-    : org-hide-sublevels
+    : integrate
 
 ** programming language support
 
@@ -356,6 +357,43 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
     (setq org-journal-dir "~/org/journal/"
 	  org-journal-date-format "%A, %d %B %Y"
 	  org-journal-time-format "日记"))
+#+end_src
+
+#+RESULTS:
+: t
+
+** org-download
+
+#+begin_src emacs-lisp
+  (use-package org-download
+    :ensure t
+    :after org
+    :defer nil
+    :custom
+    (org-download-method 'directory)
+    (org-download-image-dir "images")
+    (org-download-heading-lvl nil)
+    (org-download-timestamp "%Y%m%d-%H%M%S_")
+    (org-image-actual-width 500)
+    (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    :bind
+    ("C-M-y" . org-download-screenshot)
+    :config
+    (require 'org-download))
+
+#+end_src
+
+#+RESULTS:
+: org-download-screenshot
+
+** valign (visual align)
+
+#+begin_src emacs-lisp
+  (use-package valign
+    :ensure t
+    :after org
+    :config   (add-hook 'org-mode-hook #'valign-mode))
+
 #+end_src
 
 #+RESULTS:
@@ -1038,7 +1076,7 @@ package-install does not work for now
     :config
     (setq yas-snippet-dirs
 	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20220713.1234/snippets/"
+	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"	    
 	    ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
@@ -1098,23 +1136,48 @@ package-install does not work for now
    #+end_src
 
 * terminals
+** TODO multi-term
+
+#+begin_src emacs-lisp
+  (use-package multi-term
+    :ensure t
+    :config (setq multi-term-program "/bin/zsh")
+    :bind ("C-c m t" . 'multi-term)
+    )
+#+end_src
+
+#+RESULTS:
+: multi-term
+
+how to avoid re-opening a new terminal?
+
+#+RESULTS:
+: multi-term
+
+#+begin_src emacs-lisp
+
+#+end_src
+
+** shell-mode
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-c s h")  'shell)
+#+end_src
+
+#+RESULTS:
+: shell
+
 
 ** zsh
 #+BEGIN_SRC emacs-lisp  
   (defvar my-term-shell "/bin/zsh")
   (defadvice ansi-term (before force-bash)
     (interactive (list my-term-shell)))
-  (ad-activate 'ansi-term)
-  (global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
+  (ad-activate 'ansi-term)  
 #+END_SRC
 
 #+RESULTS:
 : ansi-term
-
-
-#+begin_src emacs-lisp
-  (global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
-#+end_src
 
 ** corfu-terminal (with auto-completion)
 
@@ -1150,7 +1213,7 @@ package-install does not work for now
   (when window-system
     (scroll-bar-mode -1))
 
-					
+
   (setq split-width-threshold 1 )   ; horizontal split window
 
   (defalias 'yes-or-no-p 'y-or-n-p)
@@ -1228,13 +1291,38 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (kill-word 1)
   )
 
-  (global-set-key (kbd "C-c w w") 'my-kill-whole-word)
+  (global-set-key (kbd "C-c d w") 'my-kill-whole-word)
 #+end_src
 
 #+RESULTS:
 : my-kill-whole-word
-** TODO copy-whole-word
-   
+** copy-whole-word
+
+#+begin_src emacs-lisp
+  (defun get-point (symbol &optional arg)
+    "get the point"
+    (funcall symbol arg)
+    (point))
+
+  (defun copy-thing (begin-of-thing end-of-thing &optional arg)
+    "Copy thing between beg & end into kill ring."
+    (save-excursion
+      (let ((beg (get-point begin-of-thing 1))
+	    (end (get-point end-of-thing arg)))
+	(copy-region-as-kill beg end))))
+
+  (defun my-copy-word (&optional arg)
+    "Copy words at point into kill-ring"
+    (interactive "P")
+    (copy-thing 'backward-word 'forward-word arg)
+    ;;(paste-to-mark arg)
+    )
+  (global-set-key (kbd "C-c c w") 'my-copy-word)
+#+end_src
+
+#+RESULTS:
+: my-copy-word
+
 ** copy-whole-line
 
    #+begin_src emacs-lisp
@@ -1418,7 +1506,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 | lambda | nil | (local-unset-key (kbd C-M-a)) |
 
-** copy file and file
+** copy file and line
 
 #+begin_src emacs-lisp
 (defun copy-current-line-position-to-clipboard ()
@@ -1432,6 +1520,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : copy-current-line-position-to-clipboard
+
 
 * mode line
 ** spaceline

@@ -130,6 +130,8 @@
 
 (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
+(setq org-cycle-include-plain-lists 'integrate)
+
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))
 
@@ -153,6 +155,22 @@
   (setq org-journal-dir "~/org/journal/"
 	org-journal-date-format "%A, %d %B %Y"
 	org-journal-time-format "日记"))
+
+(use-package org-download
+  :ensure t
+  :after org
+  :defer nil
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  (org-download-heading-lvl nil)
+  (org-download-timestamp "%Y%m%d-%H%M%S_")
+  (org-image-actual-width 500)
+  (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+  :bind
+  ("C-M-y" . org-download-screenshot)
+  :config
+  (require 'org-download))
 
 (use-package markdown-mode
   :ensure t
@@ -544,7 +562,7 @@ Version 2020-10-17"
   :config
   (setq yas-snippet-dirs
 	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20220713.1234/snippets/"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"	    
 	  ))
   ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
   ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
@@ -573,13 +591,20 @@ Version 2020-10-17"
   (find-file "~/.zshrc"))
 (global-set-key (kbd "C-c z") 'zshrc-visit)
 
+(use-package multi-term
+  :ensure t
+  :config (setq multi-term-program "/bin/zsh")
+  :bind ("C-c m t" . 'multi-term)
+  )
+
+
+
+(global-set-key (kbd "C-c s h")  'shell)
+
 (defvar my-term-shell "/bin/zsh")
 (defadvice ansi-term (before force-bash)
   (interactive (list my-term-shell)))
 (ad-activate 'ansi-term)
-(global-set-key (kbd "C-c a t") 'ansi-term)  ; why does not work? which key is super key?
-
-(global-set-key (kbd "C-c s h") 'shell)  ; why does not work? which key is super key?
 
 (quelpa '(popon
 	  :fetcher git
@@ -649,7 +674,27 @@ Version 2020-10-17"
 (kill-word 1)
 )
 
-(global-set-key (kbd "C-c w w") 'my-kill-whole-word)
+(global-set-key (kbd "C-c d w") 'my-kill-whole-word)
+
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+	  (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
+
+(defun my-copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg)
+  ;;(paste-to-mark arg)
+  )
+(global-set-key (kbd "C-c c w") 'my-copy-word)
 
 (defun copy-whole-line ()
   (interactive)
