@@ -9,3 +9,18 @@
 
 # Undo-tree save-files
 *.~undo-tree
+
+auto
+elpa
+emojis
+local.el
+local.org
+ltximg
+projectile.cache
+projects
+quelpa
+smex-items
+transient
+ido.last
+projectile-bookmarks.eld
+recentf
