@@ -1,3 +1,5 @@
+(print load-path)
+
 (setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
 (add-to-list 'exec-path "/usr/local/bin/")
 
@@ -130,13 +132,15 @@
 
 ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
 
-(defun org-hide-sublevels ()
-  (interactive)
-  (hide-sublevels 1))
+;; (defun org-hide-sublevels ()
+;;   (interactive)
+;;   (hide-sublevels 1))
 
-(global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+;; (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
-(setq org-cycle-include-plain-lists 'integrate)
+;; (setq org-cycle-include-plain-lists 'integrate)
+
+(setq org-startup-folded t)
 
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))

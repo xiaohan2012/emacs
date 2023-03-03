@@ -1,3 +1,4 @@
+* random
 * wish list
   
 - +packages by minad+
@@ -171,7 +172,6 @@
 
    #+RESULTS:
 
-
 * dashboard
 
 #+begin_src emacs-lisp
@@ -302,17 +302,19 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 ** DONE hide sublevels (does not work on Mac)
 
     #+begin_src emacs-lisp
-      (defun org-hide-sublevels ()
-	(interactive)
-	(hide-sublevels 1))
+      ;; (defun org-hide-sublevels ()
+      ;;   (interactive)
+      ;;   (hide-sublevels 1))
 
-      (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+      ;; (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
-      (setq org-cycle-include-plain-lists 'integrate)
+      ;; (setq org-cycle-include-plain-lists 'integrate)
+
+      (setq org-startup-folded t)
     #+end_src
 
     #+RESULTS:
-    : integrate
+    : t
 
 ** programming language support
 
@@ -447,7 +449,6 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 #+RESULTS:
 
-
 * markdown
 
   #+begin_src emacs-lisp
@@ -470,7 +471,6 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+end_src
 
    #+RESULTS:
-
 
 * file
 ** copy path of current buffer
@@ -722,7 +722,6 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
    #+end_src
    
-
 * buffers
 
 ** ibuffer
@@ -792,7 +791,6 @@ let's not use it for now since it works better for => 2= windows.
 
    #+RESULTS:
    : projectile-project-type-to-python-pip
-
 
 * IDO 
 ** preparation
@@ -1145,7 +1143,6 @@ package-install does not work for now
    #+END_SRC
 
    #+RESULTS:
-
 
 * config reload/edit
 ** config edit
@@ -1570,7 +1567,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : copy-current-line-position-to-clipboard
 
-
 * mode line
 ** spaceline
 
@@ -1636,7 +1632,6 @@ run a command in shell
 
   #+RESULTS:
   : swiper
-
 
 
 * version control
