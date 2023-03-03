@@ -4,6 +4,12 @@
 (setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
 (add-to-list 'exec-path "/usr/bin/")
 
+(use-package exec-path-from-shell
+  :ensure t
+  :init (when (memq window-system '(mac ns x))
+	  (exec-path-from-shell-initialize))
+  )
+
 (require 'package)
 
 
@@ -142,6 +148,9 @@
 
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 
+(add-to-list 'org-latex-packages-alist '("" "han-macros" t))  ;; use t not nil
+;; (print org-latex-packages-alist)
+
 (setq org-image-actual-width nil)
 (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
 
@@ -171,6 +180,12 @@
   ("C-M-y" . org-download-screenshot)
   :config
   (require 'org-download))
+
+(use-package valign
+  :ensure t
+  :after org
+  ;; :config   (add-hook 'org-mode-hook #'valign-mode)
+  )
 
 (use-package markdown-mode
   :ensure t

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: providespackage
+# key: ppkg
+# --
+\ProvidesPackage{$1}[`(format-time-string "%Y-%m-%d")` $2]

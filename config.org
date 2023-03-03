@@ -346,6 +346,42 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 #+RESULTS:
 | :foreground | default | :background | default | :scale | 2.0 | :html-foreground | Black | :html-background | Transparent | :html-scale | 1.0 | :matchers | (begin $1 $ $$ \( \[) |
 
+** DONE load predefined Latex macros
+
+- main idea:
+
+  - create your own .sty file and place it under the appropriate directory
+
+  - add your package name to org-latex-packages-alist
+    
+- useful commands to add your own .sty files
+
+  #+begin_src bash
+    less $(kpsewhich texmf.cnf)  # to see the relevant directories
+    kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
+
+    # create the directory to store your own .sty files
+    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"
+
+    # make sure Latex can find your .sty file
+    kpsewhich {your-script}.sty 
+  #+end_src
+
+- reference:
+
+  - https://tex.stackexchange.com/questions/387843/where-do-i-place-my-own-sty-or-cls-files-to-make-them-available-to-all-my-te
+
+  - https://orgmode.org/worg/org-tutorials/org-latex-preview.html
+
+
+#+begin_src emacs-lisp
+  (add-to-list 'org-latex-packages-alist '("" "han-macros" t))  ;; use t not nil
+  ;; (print org-latex-packages-alist)
+#+end_src
+
+#+RESULTS:
+|   | han-macros | t |
+
 ** image display
 
    #+begin_src emacs-lisp
