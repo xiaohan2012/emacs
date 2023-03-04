@@ -1,4 +1,22 @@
-(print load-path)
+(use-package avy
+  :config
+  (setq avy-keys '(?a ?s ?d))
+)
+
+(defun avy-action-kill-whole-line (pt)
+  (save-excursion
+    (goto-char pt)
+    (kill-whole-line))
+  (select-window
+   (cdr
+    (ring-ref avy-ring 0)))
+  t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
+	(alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
+  )
 
 (setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
 (add-to-list 'exec-path "/usr/local/bin/")
@@ -141,6 +159,8 @@
 ;; (setq org-cycle-include-plain-lists 'integrate)
 
 (setq org-startup-folded t)
+
+(setq org-cycle-include-plain-lists 'integrate)
 
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))
@@ -870,11 +890,6 @@ Version 2020-10-17"
     :ensure t
     :bind
     ("C-c d m" . 'dmenu))
-
-(use-package symon
-  :ensure t
-  :bind
-  ("C-c s m" . symon-mode))
 
 (use-package swiper
   :ensure t

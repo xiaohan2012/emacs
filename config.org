@@ -23,7 +23,9 @@
   - a pre-configured emacs
   - the auto-completion looks really cool
 - buffer tabs: how to have browser-like tabs for buffers
-- check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
+  - tab-bar-mode
+  - tab-line-mode
+- check this article, https://karthinks.com/software/cavy-can-do-anything/#avy-plus-embark-any-action-anywhere
 - function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
 - hardcode projectile ignore files and dirs: =__pycache__, .venv=
 - replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
@@ -48,6 +50,164 @@
 - ivy shortcut switch to multi-chars
 - conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
+
+* learning
+** how to customize package variables -- use =setq=
+
+
+- https://emacs.stackexchange.com/questions/44220/how-to-overwrite-a-defcustom-of-a-package-within-the-initfile
+* avy enhancement
+- what is pop-global-mark? what does it do? (C-x C-SPC)
+
+** customize avy-keys
+  #+begin_src emacs-lisp
+    (use-package avy
+      :config
+      (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
+    )
+  #+end_src
+
+  #+RESULTS:
+  : t
+
+** kill words, lines, etc
+#+begin_src emacs-lisp
+  (defun avy-action-kill-whole-line (pt)
+    (save-excursion
+      (goto-char pt)
+      (kill-whole-line))
+    (select-window
+     (cdr
+      (ring-ref avy-ring 0)))
+    t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
+	  (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
+    ) 
+#+end_src
+
+#+RESULTS:
+: avy-action-kill-whole-line
+
+** yanking
+
+#+begin_src emacs-lisp
+  (defun avy-action-copy-whole-line (pt)
+    (save-excursion
+      (goto-char pt)
+      (cl-destructuring-bind (start . end)
+	  (bounds-of-thing-at-point 'line)
+	(copy-region-as-kill start end)))
+    (select-window
+     (cdr
+      (ring-ref avy-ring 0)))
+    t)
+
+  (defun avy-action-yank-whole-line (pt)
+    (avy-action-copy-whole-line pt)
+    (save-excursion (yank))
+    t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
+	  (alist-get ?w avy-dispatch-alist) 'avy-action-copy
+	  (alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
+	  (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line)
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
+** teleport / transpose
+
+=teleporting= moves sexp, e.g., =(print some-var)=, or a word , e.g., =pop-global-mark=
+
+#+begin_src emacs-lisp
+  (defun avy-action-teleport-whole-line (pt)
+    (avy-action-kill-whole-line pt)
+    (save-excursion (yank)) t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
+	  (alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
+** zap to char
+
+Kill from point up to PT.
+
+#+begin_src emacs-lisp
+  (use-package avg
+    :config
+    (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
+    )
+#+end_src
+
+** mark (and activate) a candidate word or sexp
+
+- use =m= to highlight an sexp or word, using avy-action-mark
+
+- (the marked region is activated by default)
+
+#+begin_src python
+  exp1 = (1 + 2 + 3)
+  exp2 = (4 + 5 + 6)
+
+
+
+
+#+end_src
+
+** mark the region from point to a candidate
+
+- (it does not activate the region)
+
+- to activate it, use =C-x C-x=
+
+#+begin_src emacs-lisp
+  (defun avy-action-mark-to-char (pt)
+    (activate-mark)
+    (goto-char pt))
+
+  (use-package avg
+    :config
+    (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
+    )
+#+end_src
+
+** look up the documentation for a symbol
+
+#+begin_src emacs-lisp
+  (use-package helpful
+    :ensure t)
+
+  (defun avy-action-helpful (pt)
+    (save-excursion
+      (goto-char pt)
+      (helpful-at-point))
+    (select-window
+     (cdr (ring-ref avy-ring 0)))
+    t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
+
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
 * setup
 ** environment variables
 
@@ -172,6 +332,14 @@
 
    #+RESULTS:
 
+** marked region
+
+#+begin_src emacs-lisp
+(set-face-attribute 'region nil :background "#666")
+#+end_src
+
+#+RESULTS:
+
 * dashboard
 
 #+begin_src emacs-lisp
@@ -271,7 +439,7 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 #+END_SRC
 
-* ORG
+* org-mode
 ** basic
 
 *** avoid opening a new window when editing a code snippet
@@ -299,7 +467,7 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+begin_src emacs-lisp
      ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
    #+end_src 
-** DONE hide sublevels (does not work on Mac)
+** DONE hide sublevels
 
     #+begin_src emacs-lisp
       ;; (defun org-hide-sublevels ()
@@ -315,6 +483,15 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
     #+RESULTS:
     : t
+
+** hide lists
+
+#+begin_src emacs-lisp
+(setq org-cycle-include-plain-lists 'integrate) 
+#+end_src
+
+#+RESULTS:
+: integrate
 
 ** programming language support
 
@@ -473,6 +650,14 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
    #+RESULTS:
 
 * file
+** save last edit place
+#+begin_src emacs-lisp
+(save-place-mode 1)
+#+end_src
+
+#+RESULTS:
+: t
+
 ** copy path of current buffer
 
   #+begin_src emacs-lisp
@@ -852,8 +1037,9 @@ let's not use it for now since it works better for => 2= windows.
 
 #+RESULTS:
 : ido-switch-buffer
+* cursor navigation
 
-* avy
+** avy
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
@@ -1595,9 +1781,8 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 
-* dmenu
+* dmenu (run a command in shell)
 
-run a command in shell
 
 #+begin_src emacs-lisp
 (use-package dmenu
@@ -1608,19 +1793,6 @@ run a command in shell
 
 #+RESULTS:
 : dmenu
-* symon
-
-#+begin_src emacs-lisp
-
-  (use-package symon
-    :ensure t
-    :bind
-    ("C-c s m" . symon-mode))
-#+end_src
-
-#+RESULTS:
-: t
-
 * searching
   ** text search
   #+begin_src  emacs-lisp
