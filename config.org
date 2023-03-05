@@ -1997,7 +1997,7 @@ Consult provides search and navigation commands
 #+RESULTS:
 : swiper-backward-other-window
 
-* TODO magit (version control)
+* magit (version control)
 
    #+begin_src emacs-lisp
      (use-package magit
@@ -2005,8 +2005,12 @@ Consult provides search and navigation commands
    #+end_src
 
    #+RESULTS:
-* music player
-** simple-mpc
+
+** instructions
+
+- use =C-c C-c= to show all Git operations
+  
+* music player (simple-mpc)
 
 #+begin_src emacs-lisp
   (use-package simple-mpc
