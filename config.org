@@ -93,6 +93,7 @@
 
 ** yanking
 
+
 #+begin_src emacs-lisp
   (defun avy-action-copy-whole-line (pt)
     (save-excursion
@@ -113,9 +114,10 @@
   (use-package avy
     :config
     (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
+	  (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
 	  (alist-get ?w avy-dispatch-alist) 'avy-action-copy
 	  (alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
-	  (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line)
+	  )
     )
 #+end_src
 
@@ -207,6 +209,52 @@ Kill from point up to PT.
 
 #+RESULTS:
 : t
+
+** embark
+
+#+begin_src emacs-lisp
+  (use-package embark
+    :ensure t
+
+    :bind
+    (("C-." . embark-act)         ;; pick some comfortable binding
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+    )
+
+  ;; use citar-embard to enable using citation-key as target
+  (use-package citar-embark
+    :ensure t
+    :after citar embark
+    :config (citar-embark-mode))
+
+  (defun avy-action-embark (pt)
+    (unwind-protect
+	(save-excursion
+	  (goto-char pt)
+	  (embark-act))
+      (select-window
+       (cdr (ring-ref avy-ring 0))))
+    t)
+
+  (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
+#+end_src
+
+#+RESULTS:
+: avy-action-embark
+
+** smell test
+
+
+- Switching windows multiple times to land my cursor on some text
+
+- Isearching through more than three matches to jump to the right one
+
+- Moving the point a long distance to run a lookup command
+
+- Activating the mark manually (C-SPC) all the time
+
+- Jumping to locations to delete single words
 
 * setup
 ** environment variables
@@ -377,9 +425,9 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 
 #+RESULTS
-** corfu
+** +corfu+
 
-   it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
+it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
 
 #+begin_src emacs-lisp
   (use-package corfu
@@ -406,7 +454,8 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
     ;; This is recommended since Dabbrev can be used globally (M-/).
     ;; See also `corfu-excluded-modes'.
     :init
-    (global-corfu-mode))
+    ;; (global-corfu-mode) ;; disable it for nowy
+    )
 
   ;; A few more useful configurations...
   (use-package emacs
@@ -425,8 +474,99 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 #+end_src
 
 #+RESULTS:
+** vertico (a vertical completion UI)
 
-* general enhancement
+#+begin_src emacs-lisp
+  ;; Enable vertico
+  (use-package vertico
+    :ensure t
+    :init
+    (vertico-mode)
+
+    ;; Different scroll margin
+    ;; (setq vertico-scroll-margin 0)
+
+    ;; Show more candidates
+    ;; (setq vertico-count 20)
+
+    ;; Grow and shrink the Vertico minibuffer
+    ;; (setq vertico-resize t)
+
+    ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+    ;; (setq vertico-cycle t)
+    )
+
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init
+    (savehist-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; Add prompt indicator to `completing-read-multiple'.
+    ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+    (defun crm-indicator (args)
+      (cons (format "[CRM%s] %s"
+		    (replace-regexp-in-string
+		     "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+		     crm-separator)
+		    (car args))
+	    (cdr args)))
+    (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+    ;; Do not allow the cursor in the minibuffer prompt
+    (setq minibuffer-prompt-properties
+	  '(read-only t cursor-intangible t face minibuffer-prompt))
+    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+    ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+    ;; Vertico commands are hidden in normal buffers.
+    ;; (setq read-extended-command-predicate
+    ;;       #'command-completion-default-include-p)
+
+    ;; Enable recursive minibuffers
+    (setq enable-recursive-minibuffers t))
+#+end_src
+
+#+RESULTS:
+** orderless
+
+use space to separate the search terms
+
+#+begin_src emacs-lisp
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
+
+#+RESULTS:
+** TODO marginalia (does not quite work with =M-x=)
+
+adds annotation in minibuffer completions
+#+begin_src emacs-lisp
+  ;; Enable rich annotations using the Marginalia package
+  (use-package marginalia
+    :ensure t
+    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+    :bind (("M-A" . marginalia-cycle)
+	   :map minibuffer-local-map
+	   ("M-A" . marginalia-cycle))
+
+    ;; The :init configuration is always executed (Not lazy!)
+    :init
+
+    ;; Must be in the :init section of use-package such that the mode gets
+    ;; enabled right away. Note that this forces loading the package.
+    (marginalia-mode))
+#+end_src
+
+#+RESULTS:
+: marginalia-cycle
+
+* general enhancement-
 ** which-key
    
    shows what keys are possible given what you have already typed
@@ -470,29 +610,22 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 ** DONE hide sublevels
 
     #+begin_src emacs-lisp
-      ;; (defun org-hide-sublevels ()
-      ;;   (interactive)
-      ;;   (hide-sublevels 1))
+      (defun org-hide-sublevels ()
+	(interactive)
+	(hide-sublevels 1))
 
-      ;; (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+      (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
-      ;; (setq org-cycle-include-plain-lists 'integrate)
 
+      ;; hide lists by default
+      (setq org-cycle-include-plain-lists 'integrate)
+
+      ;; hide all levels for default
       (setq org-startup-folded t)
     #+end_src
 
     #+RESULTS:
     : t
-
-** hide lists
-
-#+begin_src emacs-lisp
-(setq org-cycle-include-plain-lists 'integrate) 
-#+end_src
-
-#+RESULTS:
-: integrate
-
 ** programming language support
 
 *** python
@@ -907,7 +1040,7 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
    #+end_src
    
-* buffers
+* Hbuffers
 
 ** ibuffer
    
@@ -1051,7 +1184,7 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : avy-goto-char
 
-* TODO sublimity (make it work)
+* sublimity (make it work)
   
 #+begin_src emacs-lisp
 	  ;; (use-package sublimity
@@ -1267,6 +1400,24 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 : wrap-by-href
+
+** [[https://github.com/emacs-citar/citar][citar]]
+
+#+begin_src emacs-lisp
+  (use-package citar
+    :ensure t
+
+    :hook
+    (LaTeX-mode . citar-capf-setup)
+    (org-mode . citar-capf-setup)
+    )
+
+
+#+end_src
+
+#+RESULTS:
+| citar-capf-setup | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
+
 
 * other languages
 ** Matlab
@@ -1757,26 +1908,26 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** spaceline
 
 #+begin_src emacs-lisp
-(use-package spaceline
-:ensure t
-:config
-(require 'spaceline-config)
-(setq powerline-default-separator (quote arrow))
-(spaceline-spacemacs-theme))
+  (use-package spaceline
+    :ensure t
+    :config
+    (require 'spaceline-config)
+    (setq powerline-default-separator (quote arrow))
+    (spaceline-spacemacs-theme))
 #+end_src
 
 ** diminish
 
 #+begin_src emacs-lisp
   (use-package diminish
-  :ensure t
-  :init 
-  (diminish 'hungry-delete-mode)
-  (diminish 'which-key-mode)
-  (diminish 'rainbow-mode)
-  (diminish 'beacon-mode)
-  (diminish 'subword-mode)
-  )
+    :ensure t
+    :init 
+    (diminish 'hungry-delete-mode)
+    (diminish 'which-key-mode)
+    (diminish 'rainbow-mode)
+    (diminish 'beacon-mode)
+    (diminish 'subword-mode)
+    )
 #+End_src
 
 #+RESULTS:
@@ -1793,8 +1944,8 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : dmenu
-* searching
-  ** text search
+* TODO searching
+** text search
   #+begin_src  emacs-lisp
 	(use-package swiper
 	  :ensure t
@@ -1805,6 +1956,16 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   #+RESULTS:
   : swiper
 
+** TODO [[https://github.com/minad/consult][consult]] (why is it useful?)
+
+Consult provides search and navigation commands
+
+#+begin_src emacs-lisp
+  (use-package consult
+    :ensure t)
+#+end_src
+
+#+RESULTS:
 
 * version control
 ** magit
