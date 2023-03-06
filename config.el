@@ -1,6 +1,21 @@
+(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+(add-to-list 'exec-path "/usr/local/bin/")
+
+(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+(add-to-list 'exec-path "/usr/bin/")
+
+(use-package exec-path-from-shell
+  :ensure t
+  :init (when (memq window-system '(mac ns x))
+	  (exec-path-from-shell-initialize))
+  )
+
+(use-package compat
+  :ensure t)
+
 (use-package avy
   :config
-  (setq avy-keys '(?a ?s ?d))
+  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
 )
 
 (defun avy-action-kill-whole-line (pt)
@@ -13,22 +28,103 @@
   t)
 
 (use-package avy
+  :ensure t
   :config
   (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
 	(alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
   )
 
-(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
-(add-to-list 'exec-path "/usr/local/bin/")
+(defun avy-action-copy-whole-line (pt)
+  (save-excursion
+    (goto-char pt)
+    (cl-destructuring-bind (start . end)
+	(bounds-of-thing-at-point 'line)
+      (copy-region-as-kill start end)))
+  (select-window
+   (cdr
+    (ring-ref avy-ring 0)))
+  t)
 
-(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
-(add-to-list 'exec-path "/usr/bin/")
+(defun avy-action-yank-whole-line (pt)
+  (avy-action-copy-whole-line pt)
+  (save-excursion (yank))
+  t)
 
-(use-package exec-path-from-shell
-  :ensure t
-  :init (when (memq window-system '(mac ns x))
-	  (exec-path-from-shell-initialize))
+(use-package avy
+  :config
+  (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
+	(alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
+	(alist-get ?w avy-dispatch-alist) 'avy-action-copy
+	(alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
+	)
   )
+
+(defun avy-action-teleport-whole-line (pt)
+  (avy-action-kill-whole-line pt)
+  (save-excursion (yank)) t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
+	(alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
+  )
+
+(use-package avy
+  :config
+  (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
+  )
+
+(defun avy-action-mark-to-char (pt)
+  (activate-mark)
+  (goto-char pt))
+
+(use-package avy
+  :config
+  (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
+  )
+
+(use-package helpful
+  :ensure t)
+
+(defun avy-action-helpful (pt)
+  (save-excursion
+    (goto-char pt)
+    (helpful-at-point))
+  (select-window
+   (cdr (ring-ref avy-ring 0)))
+  t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
+
+  )
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  )
+
+;; use citar-embard to enable using citation-key as target
+(use-package citar-embark
+  :ensure t
+  :after citar embark
+  :config (citar-embark-mode))
+
+(defun avy-action-embark (pt)
+  (unwind-protect
+      (save-excursion
+	(goto-char pt)
+	(embark-act))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+(setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
 
 (require 'package)
 
@@ -78,6 +174,8 @@
 
 (set-face-attribute 'default nil :height 150)
 
+(set-face-attribute 'region nil :background "#666")
+
 (use-package dashboard
 :ensure t
 :config
@@ -95,51 +193,119 @@
 ;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
 ;; ) ;; global mode, do we need it
 
-(use-package corfu
+;; (use-package corfu
+;;   :ensure t
+;;   ;; Optional customizations
+;;   :custom
+;;   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+;;   (corfu-auto t)                 ;; Enable auto completion
+;;   ;; (corfu-separator ?\s)          ;; Orderless field separator
+;;   ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+;;   ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+;;   ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+;;   ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+;;   ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+;;   ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+;;   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+;;   ;; Enable Corfu only for certain modes.
+;;   ;; :hook ((prog-mode . corfu-mode)
+;;   ;;        (shell-mode . corfu-mode)
+;;   ;;        (eshell-mode . corfu-mode))
+
+;;   ;; Recommended: Enable Corfu globally.
+;;   ;; This is recommended since Dabbrev can be used globally (M-/).
+;;   ;; See also `corfu-excluded-modes'.
+;;   :init
+;;   ;; (global-corfu-mode) ;; disable it for nowy
+;;   )
+
+;; ;; A few more useful configurations...
+;; (use-package emacs
+;;   :init
+;;   ;; TAB cycle if there are only few candidates
+;;   (setq completion-cycle-threshold 3)
+
+;;   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+;;   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+;;   ;; (setq read-extended-command-predicate
+;;   ;;       #'command-completion-default-include-p)
+
+;;   ;; Enable indentation+completion using the TAB key.
+;;   ;; `completion-at-point' is often bound to M-TAB.
+;;   (setq tab-always-indent 'complete))
+
+;; Enable vertico
+(use-package vertico
   :ensure t
-  ;; Optional customizations
-  :custom
-  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-auto t)                 ;; Enable auto completion
-  ;; (corfu-separator ?\s)          ;; Orderless field separator
-  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-  ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
-  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-  ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
-  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-  ;; Enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
-
-  ;; Recommended: Enable Corfu globally.
-  ;; This is recommended since Dabbrev can be used globally (M-/).
-  ;; See also `corfu-excluded-modes'.
   :init
-  (global-corfu-mode))
+  (vertico-mode)
+
+  ;; Different scroll margin
+  ;; (setq vertico-scroll-margin 0)
+
+  ;; Show more candidates
+  ;; (setq vertico-count 20)
+
+  ;; Grow and shrink the Vertico minibuffer
+  ;; (setq vertico-resize t)
+
+  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+  ;; (setq vertico-cycle t)
+  )
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
 
 ;; A few more useful configurations...
 (use-package emacs
   :init
-  ;; TAB cycle if there are only few candidates
-  (setq completion-cycle-threshold 3)
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+		  (replace-regexp-in-string
+		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+		   crm-separator)
+		  (car args))
+	  (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+	'(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
   ;; (setq read-extended-command-predicate
   ;;       #'command-completion-default-include-p)
 
-  ;; Enable indentation+completion using the TAB key.
-  ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
 
-(use-package which-key
+(use-package orderless
   :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  :ensure t
+  ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+  :bind (("M-A" . marginalia-cycle)
+	 :map minibuffer-local-map
+	 ("M-A" . marginalia-cycle))
+
+  ;; The :init configuration is always executed (Not lazy!)
   :init
-  (which-key-mode))
+
+  ;; Must be in the :init section of use-package such that the mode gets
+  ;; enabled right away. Note that this forces loading the package.
+  (marginalia-mode))
 
 (setq org-src-window-setup 'current-window)
 
@@ -150,17 +316,18 @@
 
 ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
 
-;; (defun org-hide-sublevels ()
-;;   (interactive)
-;;   (hide-sublevels 1))
+(defun org-hide-sublevels ()
+  (interactive)
+  (hide-sublevels 1))
 
-;; (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+(global-set-key (kbd "C-c h s") 'org-hide-sublevels)
 
-;; (setq org-cycle-include-plain-lists 'integrate)
 
-(setq org-startup-folded t)
-
+;; hide lists by default
 (setq org-cycle-include-plain-lists 'integrate)
+
+;; hide all levels for default
+(setq org-startup-folded t)
 
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)))
@@ -218,6 +385,8 @@
 
 (custom-set-variables
  '(markdown-command "/usr/local/bin/pandoc"))
+
+(save-place-mode 1)
 
 (defun my-put-file-name-on-clipboard ()
   "Put the current file name on the clipboard"
@@ -444,11 +613,11 @@ Version 2020-10-17"
   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
   )
 
-(use-package smex
-  :ensure t
-  :init (smex-initialize)
-  :bind
-  ("M-x" . smex))
+;; (use-package smex
+;;   :ensure t
+;;   :init (smex-initialize)
+;;   :bind
+;;   ("M-x" . smex))
 
 (global-set-key (kbd "C-x b") 'ido-switch-buffer)
 
@@ -581,6 +750,14 @@ Version 2020-10-17"
 ;; (eval-after-load 'latex 
 ;;   '(define-key LaTeX-mode-map [(kbd "C-c h r")] 'wrap-by-href))
 (global-set-key (kbd "C-c h r") 'wrap-by-href)
+
+(use-package citar
+  :ensure t
+
+  :hook
+  (LaTeX-mode . citar-capf-setup)
+  (org-mode . citar-capf-setup)
+  )
 
 (when (and (eq system-type 'gnu/linux)
 	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
@@ -870,21 +1047,21 @@ Version 2020-10-17"
     (message (concat path-with-line-number " copied to clipboard"))))
 
 (use-package spaceline
-:ensure t
-:config
-(require 'spaceline-config)
-(setq powerline-default-separator (quote arrow))
-(spaceline-spacemacs-theme))
+  :ensure t
+  :config
+  (require 'spaceline-config)
+  (setq powerline-default-separator (quote arrow))
+  (spaceline-spacemacs-theme))
 
 (use-package diminish
-:ensure t
-:init 
-(diminish 'hungry-delete-mode)
-(diminish 'which-key-mode)
-(diminish 'rainbow-mode)
-(diminish 'beacon-mode)
-(diminish 'subword-mode)
-)
+  :ensure t
+  :init 
+  (diminish 'hungry-delete-mode)
+  (diminish 'which-key-mode)
+  (diminish 'rainbow-mode)
+  (diminish 'beacon-mode)
+  (diminish 'subword-mode)
+  )
 
 (use-package dmenu
     :ensure t
@@ -895,6 +1072,32 @@ Version 2020-10-17"
   :ensure t
   :bind
   ("C-s" . swiper))
+
+(use-package consult
+  :ensure t)
+
+(defun swiper-forward-other-window (prefix)
+    "Function to swiper-forward in other-window."
+    (interactive "P")
+    (unless (one-window-p)
+      (save-excursion
+	(let ((next (if prefix -1 1)))
+	  (other-window next)
+	  (swiper-isearch)
+	  (other-window (- next))))))
+
+(defun swiper-backward-other-window (prefix)
+  "Function to swiper-backward in other-window."
+  (interactive "P")
+  (unless (one-window-p)
+    (save-excursion
+      (let ((next (if prefix 1 -1)))
+	(other-window next)
+	(swiper-backward)
+	(other-window (- next))))))
+
+(define-key global-map (kbd "C-M-s") 'swiper-forward-other-window)
+(define-key global-map (kbd "C-M-r") 'swiper-backward-other-window)
 
 (use-package magit
   :ensure t)

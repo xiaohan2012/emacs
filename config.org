@@ -5,7 +5,8 @@
   - https://www.youtube.com/watch?v=f0FMo_XxujU
   - +https://github.com/minad/tab-bookmark+
   - +learn about bookmarks+
-- [ ] auto-completion:
+- check this blog: https://wilkesley.org/~ian/xah/emacs/emacs.html
+- [X] auto-completion:
   - vertico: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
   - consult: https://github.com/minad/consult
     - what does it do?
@@ -38,14 +39,14 @@
   - key binding to yapf-fix-code
   - if a test passes, close the *compilation* buffer
   - navigate by indentation
-- [ ] ein:
+- +ein:+
   - when open a new nb, do not open two windows
   - when closing a nb, close the window as well
   - in traceback, linkify the file names and line numbers (is there a package to do that)
   - jump to definition not working for my own functions
-- [ ] python in general    
+- [X] python in general    
   - function for =print({var}:', {var})=
-- [ ] shortcut to open config/settings file
+- [X] shortcut to open config/settings file
 - [ ] delete parenthesis by pairs
 - [ ] ivy shortcut switch to multi-chars
 - [ ] conditional add symbols to electricmode
@@ -56,6 +57,40 @@
 
 
 - https://emacs.stackexchange.com/questions/44220/how-to-overwrite-a-defcustom-of-a-package-within-the-initfile
+* setup
+** environment variables
+
+      #+begin_src emacs-lisp
+	(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/local/bin/")
+
+	(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/bin/")
+   #+end_src
+
+   #+RESULTS:
+   | /usr/bin/ | /Library/TeX/texbin/ | /usr/local/bin/ | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
+
+** exec-path-from-shell
+
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :ensure t
+    :init (when (memq window-system '(mac ns x))
+	    (exec-path-from-shell-initialize))
+    )
+#+end_src
+
+#+RESULTS:
+** compat
+
+#+begin_src emacs-lisp
+  (use-package compat
+    :ensure t)
+#+end_src
+
+#+RESULTS:
+
 * avy enhancement
 - what is pop-global-mark? what does it do? (C-x C-SPC)
 
@@ -82,6 +117,7 @@
     t)
 
   (use-package avy
+    :ensure t
     :config
     (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
 	  (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
@@ -148,7 +184,7 @@
 Kill from point up to PT.
 
 #+begin_src emacs-lisp
-  (use-package avg
+  (use-package avy
     :config
     (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
     )
@@ -180,7 +216,7 @@ Kill from point up to PT.
     (activate-mark)
     (goto-char pt))
 
-  (use-package avg
+  (use-package avy
     :config
     (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
     )
@@ -255,32 +291,6 @@ Kill from point up to PT.
 - Activating the mark manually (C-SPC) all the time
 
 - Jumping to locations to delete single words
-
-* setup
-** environment variables
-
-      #+begin_src emacs-lisp
-	(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
-	(add-to-list 'exec-path "/usr/local/bin/")
-
-	(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
-	(add-to-list 'exec-path "/usr/bin/")
-   #+end_src
-
-   #+RESULTS:
-   | /usr/bin/ | /Library/TeX/texbin/ | /usr/local/bin/ | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
-
-** exec-path-from-shell
-
-#+begin_src emacs-lisp
-  (use-package exec-path-from-shell
-    :ensure t
-    :init (when (memq window-system '(mac ns x))
-	    (exec-path-from-shell-initialize))
-    )
-#+end_src
-
-#+RESULTS:
 
 * package installers
 ** use-package
@@ -430,47 +440,47 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
 
 #+begin_src emacs-lisp
-  (use-package corfu
-    :ensure t
-    ;; Optional customizations
-    :custom
-    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto t)                 ;; Enable auto completion
-    ;; (corfu-separator ?\s)          ;; Orderless field separator
-    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-    ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
-    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-    ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
-    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+  ;; (use-package corfu
+  ;;   :ensure t
+  ;;   ;; Optional customizations
+  ;;   :custom
+  ;;   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  ;;   (corfu-auto t)                 ;; Enable auto completion
+  ;;   ;; (corfu-separator ?\s)          ;; Orderless field separator
+  ;;   ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  ;;   ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  ;;   ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;;   ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+  ;;   ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  ;;   ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+  ;;   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
 
-    ;; Enable Corfu only for certain modes.
-    ;; :hook ((prog-mode . corfu-mode)
-    ;;        (shell-mode . corfu-mode)
-    ;;        (eshell-mode . corfu-mode))
+  ;;   ;; Enable Corfu only for certain modes.
+  ;;   ;; :hook ((prog-mode . corfu-mode)
+  ;;   ;;        (shell-mode . corfu-mode)
+  ;;   ;;        (eshell-mode . corfu-mode))
 
-    ;; Recommended: Enable Corfu globally.
-    ;; This is recommended since Dabbrev can be used globally (M-/).
-    ;; See also `corfu-excluded-modes'.
-    :init
-    ;; (global-corfu-mode) ;; disable it for nowy
-    )
+  ;;   ;; Recommended: Enable Corfu globally.
+  ;;   ;; This is recommended since Dabbrev can be used globally (M-/).
+  ;;   ;; See also `corfu-excluded-modes'.
+  ;;   :init
+  ;;   ;; (global-corfu-mode) ;; disable it for nowy
+  ;;   )
 
-  ;; A few more useful configurations...
-  (use-package emacs
-    :init
-    ;; TAB cycle if there are only few candidates
-    (setq completion-cycle-threshold 3)
+  ;; ;; A few more useful configurations...
+  ;; (use-package emacs
+  ;;   :init
+  ;;   ;; TAB cycle if there are only few candidates
+  ;;   (setq completion-cycle-threshold 3)
 
-    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-    ;; (setq read-extended-command-predicate
-    ;;       #'command-completion-default-include-p)
+  ;;   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;;   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;;   ;; (setq read-extended-command-predicate
+  ;;   ;;       #'command-completion-default-include-p)
 
-    ;; Enable indentation+completion using the TAB key.
-    ;; `completion-at-point' is often bound to M-TAB.
-    (setq tab-always-indent 'complete))
+  ;;   ;; Enable indentation+completion using the TAB key.
+  ;;   ;; `completion-at-point' is often bound to M-TAB.
+  ;;   (setq tab-always-indent 'complete))
 #+end_src
 
 #+RESULTS:
@@ -1110,7 +1120,7 @@ let's not use it for now since it works better for => 2= windows.
    : projectile-project-type-to-python-pip
 
 * IDO 
-** preparation
+** preparation and ignore files
 
 #+BEGIN_SRC emacs-lisp
   (use-package ido
@@ -1142,23 +1152,26 @@ let's not use it for now since it works better for => 2= windows.
 ** vertical IDO
 
    #+BEGIN_SRC  emacs-lisp
-(use-package ido-vertical-mode
-  :ensure t
-  :requires ido
-  :config
-  (ido-vertical-mode 1)
-  (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-  )   
+     (use-package ido-vertical-mode
+       :ensure t
+       :requires ido
+       :config
+       (ido-vertical-mode 1)
+       (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+       )   
    #+END_SRC
 
-** smex
+   #+RESULTS:
+   : t
+
+** +smex+
    
 #+BEGIN_SRC emacs-lisp
-(use-package smex
-  :ensure t
-  :init (smex-initialize)
-  :bind
-  ("M-x" . smex))
+  ;; (use-package smex
+  ;;   :ensure t
+  ;;   :init (smex-initialize)
+  ;;   :bind
+  ;;   ("M-x" . smex))
 #+END_SRC
 
 ** buffer switching
