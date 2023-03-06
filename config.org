@@ -1105,6 +1105,9 @@ let's not use it for now since it works better for => 2= windows.
     )
 #+END_SRC
 
+#+RESULTS:
+: consult-find
+
 ** set project type to python-pip
 
    #+begin_src emacs-lisp
@@ -1177,11 +1180,12 @@ let's not use it for now since it works better for => 2= windows.
 ** buffer switching
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-x b") 'ido-switch-buffer)
+  ;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+  (global-set-key (kbd "C-x b") 'consult-buffer)
 #+END_SRC
 
 #+RESULTS:
-: ido-switch-buffer
+: consult-buffer
 * cursor navigation
 
 ** avy
@@ -1968,16 +1972,21 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   #+RESULTS:
   : swiper
 
-** TODO [[https://github.com/minad/consult][consult]] (why is it useful?)
+** [[https://github.com/minad/consult][consult]] 
 
 Consult provides search and navigation commands
 
 #+begin_src emacs-lisp
   (use-package consult
-    :ensure t)
+    :ensure t
+
+    :bind ("C-c p f" . 'consult-find)  ;; find file
+    :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+    )
 #+end_src
 
 #+RESULTS:
+: consult-imenu
 
 ** search in the other window
 

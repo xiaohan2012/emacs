@@ -619,7 +619,8 @@ Version 2020-10-17"
 ;;   :bind
 ;;   ("M-x" . smex))
 
-(global-set-key (kbd "C-x b") 'ido-switch-buffer)
+;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+(global-set-key (kbd "C-x b") 'consult-buffer)
 
 (use-package avy
 :ensure t
@@ -1074,7 +1075,11 @@ Version 2020-10-17"
   ("C-s" . swiper))
 
 (use-package consult
-  :ensure t)
+  :ensure t
+
+  :bind ("C-c p f" . 'consult-find)  ;; find file
+  :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  )
 
 (defun swiper-forward-other-window (prefix)
     "Function to swiper-forward in other-window."
