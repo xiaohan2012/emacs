@@ -84,7 +84,10 @@
   )
 
 (use-package helpful
-  :ensure t)
+  :ensure t
+  :bind
+  ("C-c h p" . helpful-at-point)
+  )
 
 (defun avy-action-helpful (pt)
   (save-excursion
@@ -306,6 +309,11 @@
   ;; Must be in the :init section of use-package such that the mode gets
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
+
+(use-package which-key
+  :ensure t
+  :init
+  (which-key-mode))
 
 (setq org-src-window-setup 'current-window)
 
@@ -666,6 +674,9 @@ Version 2020-10-17"
   (ein:output-area-inlined-images t) ;; not necessary in older versions
   (ein:slice-image t)
   (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+
+  :bind
+  ("C-c C-k C-c" . 'ein:worksheet-kill-cell)
   )
 
 (use-package elpy
@@ -779,7 +790,8 @@ Version 2020-10-17"
   :config
   (setq yas-snippet-dirs
 	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"	    
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
 	  ))
   ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
   ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
@@ -867,9 +879,9 @@ Version 2020-10-17"
 
 (show-paren-mode 1)
 
-(global-set-key (kbd "C-c c l") 'avy-copy-line)  ; copy a line
-(global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
-(global-set-key (kbd "C-c c r") 'avy-copy-region)  ; copy a region
+;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
+(global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
+;; (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
 (global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
 
 (global-subword-mode 1)
@@ -885,13 +897,35 @@ Version 2020-10-17"
 ))
 (electric-pair-mode t)
 
-(defun my-kill-whole-word ()
-(interactive)
-(backward-word)
-(kill-word 1)
-)
+(defun kill-current-word ()
+  "kill the current word"
+  (interactive)
+  (backward-word)
+  (kill-word 1)
+  )
 
-(global-set-key (kbd "C-c d w") 'my-kill-whole-word)
+(defun kill-current-sexp ()
+  "kill the current sexp"
+  (interactive)
+  (backward-sexp)
+  (kill-sexp 1)
+  )
+
+
+(defun kill-current-line ()
+  "kill the current line"
+  (interactive)
+  (move-beginning-of-line 1)
+  (kill-whole-line)  ;; kill-line does not kill the \n
+  (previous-line)
+  )
+
+;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
+(bind-keys*
+ ("C-c d w" . kill-current-word)
+ ("C-c d l" . kill-current-line)
+ ("C-c d s" . kill-current-sexp) 
+ )
 
 (defun get-point (symbol &optional arg)
   "get the point"
@@ -909,9 +943,26 @@ Version 2020-10-17"
   "Copy words at point into kill-ring"
   (interactive "P")
   (copy-thing 'backward-word 'forward-word arg)
-  ;;(paste-to-mark arg)
+  (message (format "copied %s"(car kill-ring)))
   )
-(global-set-key (kbd "C-c c w") 'my-copy-word)
+
+(global-set-key (kbd "C-c w w") 'my-copy-word)
+
+(defun copy-sexp (&optional arg)
+  "copy an sexp at point into kill-ring"
+  (interactive "p")
+  (save-excursion
+    ;; to the begining of the sexp if needed
+    (unless (member  ;; check if the previous point is left paren or space
+	     (char-to-string (char-after (1- (point))))
+	     '("(" " " "\n"))
+      (backward-sexp))
+    (mark-sexp)  ;; mark the sexp
+    (kill-ring-save (region-beginning) (region-end))
+    (message (format "copied %s"(car kill-ring)))
+    )
+  )
+(global-set-key (kbd "C-c w s") 'copy-sexp)
 
 (defun copy-whole-line ()
   (interactive)
@@ -924,13 +975,15 @@ Version 2020-10-17"
   )
 (global-set-key (kbd "C-c w l") 'copy-whole-line)
 
+
+
 (use-package hungry-delete
 :ensure t
 :config (global-hungry-delete-mode))
 
 ;; (global-set-key (kbd "C-c d p") 'delete-pair)
 
-(defun copy-chunk-at-point ()
+(defun copy-path-at-point ()
   "copy a path at point if it exists."
   (interactive)
   (let* (
@@ -958,7 +1011,7 @@ Version 2020-10-17"
       (clipboard-kill-region (point-min) (point-max)))
     (message (format "copied '%s'" $inputStr))
     ))
-(global-set-key (kbd "C-c c c") 'copy-chunk-at-point)
+(global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
 (defun surround-chunk-by-stuff ($stuff-to-insert)
   "surround a text chunk by single quote"

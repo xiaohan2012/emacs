@@ -1719,9 +1719,9 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
   ;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
   (bind-keys*
-   ("C-c C-k C-w" . kill-current-word)
-   ("C-c C-k C-l" . kill-current-line)
-   ("C-c C-k C-s" . kill-current-sexp) 
+   ("C-c d w" . kill-current-word)
+   ("C-c d l" . kill-current-line)
+   ("C-c d s" . kill-current-sexp) 
    )
 #+end_src
 
