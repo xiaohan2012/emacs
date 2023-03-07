@@ -1477,7 +1477,8 @@ package-install does not work for now
     :config
     (setq yas-snippet-dirs
 	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"	    
+	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
 	    ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
