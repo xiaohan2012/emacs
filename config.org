@@ -1276,12 +1276,15 @@ why not showing in non-GUI Emacs?
     (ein:output-area-inlined-images t) ;; not necessary in older versions
     (ein:slice-image t)
     (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+
+    :bind
+    ("C-c C-k C-c" . 'ein:worksheet-kill-cell)
     )
 
 #+END_SRC
 
 #+RESULTS:
-: t
+: ein:worksheet-kill-cell
 
 ** elpy
 
@@ -1759,7 +1762,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
       ;; to the begining of the sexp if needed
       (unless (member  ;; check if the previous point is left paren or space
 	       (char-to-string (char-after (1- (point))))
-	       '("(" " "))
+	       '("(" " " "\n"))
 	(backward-sexp))
       (mark-sexp)  ;; mark the sexp
       (kill-ring-save (region-beginning) (region-end))
