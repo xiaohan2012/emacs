@@ -116,7 +116,8 @@
 (use-package citar-embark
   :ensure t
   :after citar embark
-  :config (citar-embark-mode))
+  ;; :config (citar-embark-mode)
+  )
 
 (defun avy-action-embark (pt)
   (unwind-protect
