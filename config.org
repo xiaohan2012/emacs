@@ -46,6 +46,8 @@
   - jump to definition not working for my own functions
 - [X] python in general    
   - function for =print({var}:', {var})=
+  - wrap an identifier with list(..), set(..), or any function (using embark)
+  - change a variable name without moving cursor (kill identifier and insert new)
 - [X] shortcut to open config/settings file
 - [ ] delete parenthesis by pairs
 - [ ] ivy shortcut switch to multi-chars
@@ -226,7 +228,10 @@ Kill from point up to PT.
 
 #+begin_src emacs-lisp
   (use-package helpful
-    :ensure t)
+    :ensure t
+    :bind
+    ("C-c h p" . helpful-at-point)
+    )
 
   (defun avy-action-helpful (pt)
     (save-excursion
@@ -1647,9 +1652,9 @@ how to avoid re-opening a new terminal?
 ** line/region copying/deletion
 
 #+begin_src emacs-lisp
-  (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
+  ;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
   (global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
-  (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
+  ;; (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
   (global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
 #+end_src
 
@@ -1686,17 +1691,39 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** kill-whole-word and kill-whole-line
 
 #+begin_src emacs-lisp
-  (defun my-kill-whole-word ()
-  (interactive)
-  (backward-word)
-  (kill-word 1)
-  )
+  (defun kill-current-word ()
+    "kill the current word"
+    (interactive)
+    (backward-word)
+    (kill-word 1)
+    )
 
-  (global-set-key (kbd "C-c d w") 'my-kill-whole-word)
+  (defun kill-current-sexp ()
+    "kill the current sexp"
+    (interactive)
+    (backward-sexp)
+    (kill-sexp 1)
+    )
+
+
+  (defun kill-current-line ()
+    "kill the current line"
+    (interactive)
+    (move-beginning-of-line 1)
+    (kill-whole-line)  ;; kill-line does not kill the \n
+    (previous-line)
+    )
+
+  ;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
+  (bind-keys*
+   ("C-c C-k C-w" . kill-current-word)
+   ("C-c C-k C-l" . kill-current-line)
+   ("C-c C-k C-s" . kill-current-sexp) 
+   )
 #+end_src
 
 #+RESULTS:
-: my-kill-whole-word
+: kill-current-sexp
 ** copy-whole-word
 
 #+begin_src emacs-lisp
