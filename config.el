@@ -1096,9 +1096,11 @@ Version 2020-10-17"
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
   (interactive)
   (let ((path-with-line-number
-         (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
+	 (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
     (kill-new path-with-line-number)
     (message (concat path-with-line-number " copied to clipboard"))))
+
+(global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
 
 (use-package spaceline
   :ensure t
@@ -1130,7 +1132,7 @@ Version 2020-10-17"
 (use-package consult
   :ensure t
 
-  :bind ("C-c p f" . 'consult-find)  ;; find file
+  :bind ("C-c c f" . 'consult-find)  ;; find file
   :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
   )
 

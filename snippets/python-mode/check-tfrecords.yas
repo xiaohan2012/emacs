@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: check-tfrecords
+# key: check-tfrecords
+# --
+import tensorflow as tf
+uri = '$1'
+raw_dataset = tf.data.TFRecordDataset(uri, compression_type='GZIP')
+for raw_record in raw_dataset.take(1):
+    example = tf.train.Example()
+    example.ParseFromString(raw_record.numpy())
+    print(example)
