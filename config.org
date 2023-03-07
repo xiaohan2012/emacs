@@ -586,8 +586,9 @@ adds annotation in minibuffer completions
   :ensure t
   :init
   (which-key-mode))
+#+END_SRC
 
-#+END_SRC-
+#+RESULTS:
 
 * org-mode
 ** basic
