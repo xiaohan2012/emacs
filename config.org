@@ -1049,7 +1049,7 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
    #+end_src
    
-* Hbuffers
+* buffers
 
 ** ibuffer
    
@@ -1645,10 +1645,10 @@ how to avoid re-opening a new terminal?
 ** line/region copying/deletion
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-c c l") 'avy-copy-line)  ; copy a line
-(global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
-(global-set-key (kbd "C-c c r") 'avy-copy-region)  ; copy a region
-(global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
+  (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
+  (global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
+  (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
+  (global-set-key (kbd "C-c d r") 'avy-kill-region)  ; kill&save a region
 #+end_src
 
 #+RESULTS:
