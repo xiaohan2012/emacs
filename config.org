@@ -1743,13 +1743,27 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     "Copy words at point into kill-ring"
     (interactive "P")
     (copy-thing 'backward-word 'forward-word arg)
-    ;;(paste-to-mark arg)
+    (message (format "copied %s"(car kill-ring)))
     )
-  (global-set-key (kbd "C-c c w") 'my-copy-word)
+
+  (global-set-key (kbd "C-c w w") 'my-copy-word)
+
+  (defun copy-sexp ()
+    "copy an sexp at point into kill-ring"
+    (interactive)
+    (save-excursion
+      (backward-sexp)
+      (kill-sexp 1)
+      (undo)
+      (message (format "copied %s"(car kill-ring)))
+      )
+    )
+  (global-set-key (kbd "C-c w s") 'copy-sexp)
+
 #+end_src
 
 #+RESULTS:
-: my-copy-word
+: copy-sexp
 
 ** copy-whole-line
 
@@ -1789,12 +1803,12 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : delete-pair
 
-** ❤ copy chunk at point
+** ❤ copy path at point
 
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
    
    #+begin_src emacs-lisp
-     (defun copy-chunk-at-point ()
+     (defun copy-path-at-point ()
        "copy a path at point if it exists."
        (interactive)
        (let* (
@@ -1822,11 +1836,11 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 	   (clipboard-kill-region (point-min) (point-max)))
 	 (message (format "copied '%s'" $inputStr))
 	 ))
-     (global-set-key (kbd "C-c c c") 'copy-chunk-at-point)
+     (global-set-key (kbd "C-c w p") 'copy-path-at-point)
    #+end_src
 
    #+RESULTS:
-   : copy-chunk-at-point
+   : copy-path-at-point
 
 ** TODO 🥑 surround text chunk by single-quote, double-quote, caret, etc (half done)
 
