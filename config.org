@@ -1805,13 +1805,16 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** hungry-delete
 
 #+begin_src emacs-lisp
-(use-package hungry-delete
-:ensure t
-:config (global-hungry-delete-mode))
+  (use-package hungry-delete
+  :ensure t
+  :config (global-hungry-delete-mode)
+  :bind
+  ("C-c h d f" . hungry-delete-forward)
+  ("C-c h d b" . hungry-delete-backward))
 #+end_src
 
 #+RESULTS:
-: t
+: hungry-delete-backward
 
 ** +delete a pair (of parenthesis, bracket, etc)+
 
