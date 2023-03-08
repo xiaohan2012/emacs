@@ -1698,14 +1698,20 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (defun kill-current-word ()
     "kill the current word"
     (interactive)
-    (backward-word)
+    (unless (member  ;; check if the previous point is left paren or space, or newline
+	     (char-to-string (char-after (1- (point))))
+	     '("(" " " "\n" "-"))
+	(backward-word))
     (kill-word 1)
     )
 
   (defun kill-current-sexp ()
     "kill the current sexp"
     (interactive)
-    (backward-sexp)
+    (unless (member  ;; check if the previous point is left paren or space, or newline
+	     (char-to-string (char-after (1- (point))))
+	     '("(" " " "\n"))
+      (backward-sexp))    
     (kill-sexp 1)
     )
 
