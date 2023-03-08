@@ -2064,7 +2064,7 @@ Consult provides search and navigation commands
     :ensure t
 
     :bind ("C-c c f" . 'consult-find)  ;; find file
-    :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+    :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
     )
 #+end_src
 
