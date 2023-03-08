@@ -1695,23 +1695,33 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** kill-whole-word and kill-whole-line
 
 #+begin_src emacs-lisp
-  (defun kill-current-word ()
-    "kill the current word"
-    (interactive)
+  (defun refrained-backward-word ()
+    "similar to backward-word but moves to the previous word unless the cursor is at the begining of the word"
     (unless (member  ;; check if the previous point is left paren or space, or newline
 	     (char-to-string (char-after (1- (point))))
 	     '("(" " " "\n" "-"))
-	(backward-word))
+      (backward-word))  
+    )
+
+  (defun refrained-backward-sexp ()
+    "similar to backward-sexp but moves to the previous word unless the cursor is at the begining of the sexp"
+    (unless (member  ;; check if the previous point is left paren or space, or newline
+	     (char-to-string (char-after (1- (point))))
+	     '("(" " " "\n"))
+      (backward-sexp))    
+    )
+
+  (defun kill-current-word ()
+    "kill the current word"
+    (interactive)
+    (refrained-backward-word)
     (kill-word 1)
     )
 
   (defun kill-current-sexp ()
     "kill the current sexp"
     (interactive)
-    (unless (member  ;; check if the previous point is left paren or space, or newline
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n"))
-      (backward-sexp))    
+    (refrained-backward-sexp)  
     (kill-sexp 1)
     )
 
