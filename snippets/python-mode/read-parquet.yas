@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: read-parquet
+# key: read-parquet
+# --
+import pandas as pd
+uri = '$1'
+df = pd.read_parquet(uri)
