@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: bash-for-loop
+# key: bash
+# --
+
+declare -a var_values=($1)
+for var_value in "${var_values[@]}"; do
+    echo "variable value: ${var_value}"
+done
