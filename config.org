@@ -624,7 +624,7 @@ adds annotation in minibuffer completions
    #+begin_src emacs-lisp
      ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
    #+end_src 
-** DONE hide sublevels
+** hide sublevels
 
     #+begin_src emacs-lisp
       (defun org-hide-sublevels ()
@@ -675,7 +675,7 @@ adds annotation in minibuffer completions
 #+RESULTS:
 | :foreground | default | :background | default | :scale | 2.0 | :html-foreground | Black | :html-background | Transparent | :html-scale | 1.0 | :matchers | (begin $1 $ $$ \( \[) |
 
-** DONE load predefined Latex macros
+** load predefined Latex macros
 
 - main idea:
 
@@ -775,6 +775,20 @@ adds annotation in minibuffer completions
 #+end_src
 
 #+RESULTS:
+** org-babel
+
+enable executing shell scripts in code blocks
+
+#+begin_src emacs-lisp
+(org-babel-do-load-languages 'org-babel-load-languages
+    '(
+        (shell . t)
+    )
+)
+#+end_src
+
+#+RESULTS:
+
 * markdown
 
   #+begin_src emacs-lisp
