@@ -880,6 +880,22 @@ Version 2020-10-17"
 
 (show-paren-mode 1)
 
+(defun refrained-backward-word ()
+  "similar to backward-word but moves to the previous word unless the cursor is at the begining of the word"
+  (unless (member  ;; check if the previous point is left paren or space, or newline
+	   (char-to-string (char-after (1- (point))))
+	   '("(" " " "\n" "-"))
+    (backward-word))  
+  )
+
+(defun refrained-backward-sexp ()
+  "similar to backward-sexp but moves to the previous word unless the cursor is at the begining of the sexp"
+  (unless (member  ;; check if the previous point is left paren or space, or newline
+	   (char-to-string (char-after (1- (point))))
+	   '("(" " " "\n"))
+    (backward-sexp))    
+  )
+
 ;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
 (global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
 ;; (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
@@ -901,14 +917,14 @@ Version 2020-10-17"
 (defun kill-current-word ()
   "kill the current word"
   (interactive)
-  (backward-word)
+  (refrained-backward-word)
   (kill-word 1)
   )
 
 (defun kill-current-sexp ()
   "kill the current sexp"
   (interactive)
-  (backward-sexp)
+  (refrained-backward-sexp)  
   (kill-sexp 1)
   )
 
@@ -928,36 +944,46 @@ Version 2020-10-17"
  ("C-c d s" . kill-current-sexp) 
  )
 
-(defun get-point (symbol &optional arg)
-  "get the point"
-  (funcall symbol arg)
-  (point))
+(defun copy-word (&optional arg)
+    "copy a word at point into kill-ring"
+    (interactive "p")
+    (save-excursion
+      ;; to the begining of the sexp if needed
+      (refrained-backward-word)
+      (mark-word)  ;; mark the sexp
+      (kill-ring-save (region-beginning) (region-end))
+      (message (format "copied %s"(car kill-ring)))
+      )
+    )
+(global-set-key (kbd "C-c w w") 'copy-word)
 
-(defun copy-thing (begin-of-thing end-of-thing &optional arg)
-  "Copy thing between beg & end into kill ring."
-  (save-excursion
-    (let ((beg (get-point begin-of-thing 1))
-	  (end (get-point end-of-thing arg)))
-      (copy-region-as-kill beg end))))
+;; (defun get-point (symbol &optional arg)
+;;   "get the point"
+;;   (funcall symbol arg)
+;;   (point))
 
-(defun my-copy-word (&optional arg)
-  "Copy words at point into kill-ring"
-  (interactive "P")
-  (copy-thing 'backward-word 'forward-word arg)
-  (message (format "copied %s"(car kill-ring)))
-  )
+;; (defun copy-thing (begin-of-thing end-of-thing &optional arg)
+;;   "Copy thing between beg & end into kill ring."
+;;   (save-excursion
+;;     (let ((beg (get-point begin-of-thing 1))
+;; 	  (end (get-point end-of-thing arg)))
+;;       (copy-region-as-kill beg end))))
 
-(global-set-key (kbd "C-c w w") 'my-copy-word)
+;; (defun my-copy-word (&optional arg)
+;;   "Copy words at point into kill-ring"
+;;   (interactive "P")
+;;   (copy-thing 'backward-word 'forward-word arg)
+;;   (message (format "copied %s"(car kill-ring)))
+;;   )
+
+;; (global-set-key (kbd "C-c w w") 'my-copy-word)
 
 (defun copy-sexp (&optional arg)
   "copy an sexp at point into kill-ring"
   (interactive "p")
   (save-excursion
     ;; to the begining of the sexp if needed
-    (unless (member  ;; check if the previous point is left paren or space
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n"))
-      (backward-sexp))
+    (refrained-backward-sexp)
     (mark-sexp)  ;; mark the sexp
     (kill-ring-save (region-beginning) (region-end))
     (message (format "copied %s"(car kill-ring)))
@@ -980,7 +1006,10 @@ Version 2020-10-17"
 
 (use-package hungry-delete
 :ensure t
-:config (global-hungry-delete-mode))
+:config (global-hungry-delete-mode)
+:bind
+("C-c h d f" . hungry-delete-forward)
+("C-c h d b" . hungry-delete-backward))
 
 ;; (global-set-key (kbd "C-c d p") 'delete-pair)
 
