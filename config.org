@@ -789,6 +789,22 @@ enable executing shell scripts in code blocks
 
 #+RESULTS:
 
+** todo keywords
+
+#+begin_src emacs-lisp
+  ;; does not work
+  (use-package org
+    :ensure t
+    :init
+    (setq org-todo-keywords
+	  '((sequence "TODO" "DOING" "DONE")))
+    (setq org-todo-keyword-faces
+	  '(("TODO" . "red") ("DOING" . "dark cyan") ("DONE" . "green")))
+    )
+#+end_src
+
+#+RESULTS:
+
 * markdown
 
   #+begin_src emacs-lisp
