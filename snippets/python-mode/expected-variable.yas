@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: expected-variable
+# key: exp
+# --
+expected = 
