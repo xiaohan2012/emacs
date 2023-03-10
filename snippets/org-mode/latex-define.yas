@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: latex-define
+# key: ldef
+# --
+\define $1

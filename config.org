@@ -690,7 +690,7 @@ adds annotation in minibuffer completions
     kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
 
     # create the directory to store your own .sty files
-    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"
+    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"  # which gives sth like /Users/hanxiao1/Library/texmf/tex/latex on my Mac
 
     # make sure Latex can find your .sty file
     kpsewhich {your-script}.sty 
@@ -710,6 +710,28 @@ adds annotation in minibuffer completions
 
 #+RESULTS:
 |   | han-macros | t |
+
+** remove latex images
+
+#+begin_src emacs-lisp :results output
+  (defun my/remove-latex-image-dir ()
+    (interactive)
+    (let ((dirname (concat
+		    (file-name-directory (buffer-file-name))
+		    "ltximg"
+		    )))
+      (if (file-directory-p dirname)
+	  (progn
+	    (delete-directory dirname t)
+	    (message (format "%s deleted" dirname))
+	    )
+	(message (format "%s does not exist" dirname))
+	)
+      )
+    )
+#+end_src
+
+#+RESULTS:
 
 ** image display
 
