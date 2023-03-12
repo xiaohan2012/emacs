@@ -351,6 +351,22 @@
 (add-to-list 'org-latex-packages-alist '("" "han-macros" t))  ;; use t not nil
 ;; (print org-latex-packages-alist)
 
+(defun my/remove-latex-image-dir ()
+  (interactive)
+  (let ((dirname (concat
+		  (file-name-directory (buffer-file-name))
+		  "ltximg"
+		  )))
+    (if (file-directory-p dirname)
+	(progn
+	  (delete-directory dirname t)
+	  (message (format "%s deleted" dirname))
+	  )
+      (message (format "%s does not exist" dirname))
+      )
+    )
+  )
+
 (setq org-image-actual-width nil)
 (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
 
@@ -386,6 +402,12 @@
   :after org
   ;; :config   (add-hook 'org-mode-hook #'valign-mode)
   )
+
+(org-babel-do-load-languages 'org-babel-load-languages
+    '(
+        (shell . t)
+    )
+)
 
 (use-package markdown-mode
   :ensure t
@@ -610,7 +632,7 @@ Version 2020-10-17"
   (add-to-list 'ido-ignore-files "\.out")
   (add-to-list 'ido-ignore-files "\.pdf")
   (add-to-list 'ido-ignore-files "\.snm")
-  (add-to-list 'ido-ignore-files "\.synctex.gz")    
+  (add-to-list 'ido-ignore-files "\.synctex.gz")
   (ido-mode 1)
   )
 
@@ -709,8 +731,8 @@ Version 2020-10-17"
       (setq TeX-save-query nil)
       )
 
-; for MacOS: environment variable fix 
-    (setenv "PATH" 
+; for MacOS: environment variable fix
+    (setenv "PATH"
 	    (concat
 	      "/usr/local/bin/" ":" "/Library/TeX/texbin/" ":"
 	      (getenv "PATH")))
@@ -760,7 +782,7 @@ Version 2020-10-17"
 ;; tried to the following
 ;; (add-hook 'LaTeX-mode-hook
 ;; 	  (lambda () (local-set-key (kbd "C-c h r") #'wrap-by-href)))
-;; (eval-after-load 'latex 
+;; (eval-after-load 'latex
 ;;   '(define-key LaTeX-mode-map [(kbd "C-c h r")] 'wrap-by-href))
 (global-set-key (kbd "C-c h r") 'wrap-by-href)
 
@@ -795,7 +817,7 @@ Version 2020-10-17"
 	  "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
 	  ))
   ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
-  ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
+  ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
   (yas-global-mode 1)
   )
 
@@ -885,7 +907,7 @@ Version 2020-10-17"
   (unless (member  ;; check if the previous point is left paren or space, or newline
 	   (char-to-string (char-after (1- (point))))
 	   '("(" " " "\n" "-"))
-    (backward-word))  
+    (backward-word))
   )
 
 (defun refrained-backward-sexp ()
@@ -893,7 +915,7 @@ Version 2020-10-17"
   (unless (member  ;; check if the previous point is left paren or space, or newline
 	   (char-to-string (char-after (1- (point))))
 	   '("(" " " "\n"))
-    (backward-sexp))    
+    (backward-sexp))
   )
 
 ;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
@@ -907,12 +929,20 @@ Version 2020-10-17"
 			    (?\( . ?\))
 			    (?\[ . ?\])
 			    (?\{ . ?\})
-			    ;; (?\' . ?\')  ; 
+			    ;; (?\' . ?\')  ;
 			    (?\" . ?\")
 			    (?\` . ?\`)
 			    ;; (?\$ . ?\$)
 ))
 (electric-pair-mode t)
+
+(defvar org-electric-pairs '((?= . ?=) (?$ . ?$)) "Electric pairs for org-mode.")
+
+(defun org-add-electric-pairs ()
+  (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
+  (setq-local electric-pair-text-pairs electric-pair-pairs))
+
+(add-hook 'org-mode-hook 'org-add-electric-pairs)
 
 (defun kill-current-word ()
   "kill the current word"
@@ -924,7 +954,7 @@ Version 2020-10-17"
 (defun kill-current-sexp ()
   "kill the current sexp"
   (interactive)
-  (refrained-backward-sexp)  
+  (refrained-backward-sexp)
   (kill-sexp 1)
   )
 
@@ -941,7 +971,7 @@ Version 2020-10-17"
 (bind-keys*
  ("C-c d w" . kill-current-word)
  ("C-c d l" . kill-current-line)
- ("C-c d s" . kill-current-sexp) 
+ ("C-c d s" . kill-current-sexp)
  )
 
 (defun copy-word (&optional arg)
@@ -1043,6 +1073,38 @@ Version 2020-10-17"
     ))
 (global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
+(fmakunbound 'surround-chunk-by-stuff-new)
+(defun surround-chunk-by-stuff-new (str)
+  "surround a text chunk by single quote"
+  ;; (interactive)
+  (if (use-region-p)
+      (buffer-substring-no-properties (region-beginning) (region-end))
+    (let (;; $curPos
+	  ;; $startPos $endPos
+	  ;; $startStuff $endStuff
+	  ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brnackets or quotes as in markdown or html
+	  ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
+	  (prefix-str str)
+	  )
+      (defvar-local suffix-str (cond
+				;; ((string= prefix-str "(") ")")
+				;; ((string= prefix-str "[") "]")
+				;; ((string= prefix-str "<") ">")
+				;; ((string= prefix-str "{") "}")
+				(t prefix-str)))
+      ;; ($stuff-to-insert (read-string "what string?"))
+      ;; try to support different start and end chars, eg parenthesis and brackets
+      ;; however, it shows:
+      ;; if: Symbol’s value as variable is void: $sutff-to-insert
+      (print (format "prefix-str %s" prefix-str))
+      (print (format "%s ... %s" prefix-str suffix-str))
+      (string= prefix-str "(")
+      )
+    )
+  )
+(surround-chunk-by-stuff-new "(")
+(surround-chunk-by-stuff-new "[")
+
 (defun surround-chunk-by-stuff ($stuff-to-insert)
   "surround a text chunk by single quote"
   ;; (interactive)
@@ -1059,7 +1121,7 @@ Version 2020-10-17"
       ;; if: Symbol’s value as variable is void: $sutff-to-insert
       (setq $startStuff $stuff-to-insert)
       (setq $endStuff $stuff-to-insert)
-      ;; (message "here! before if")	   
+      ;; (message "here! before if")
       ;; (if (string= $sutff-to-insert "<")
       ;;     (progn
       ;; 	 (setq $startStuff "<")
@@ -1080,8 +1142,8 @@ Version 2020-10-17"
       ;; 	     (message "here!")
       ;; 	     (setq $startStuff '$stuff-to-insert)
       ;; 	     (setq $startStuff '$stuff-to-insert)))
-      ;; 	 ))
-      ;;     )	   
+      ;; ;	 ))
+      ;;     )
       ;; save current position
       (setq $curPos (point))
       ;; get start position of the chunk
@@ -1141,7 +1203,7 @@ Version 2020-10-17"
 
 (use-package diminish
   :ensure t
-  :init 
+  :init
   (diminish 'hungry-delete-mode)
   (diminish 'which-key-mode)
   (diminish 'rainbow-mode)
@@ -1163,7 +1225,7 @@ Version 2020-10-17"
   :ensure t
 
   :bind ("C-c c f" . 'consult-find)  ;; find file
-  :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
   )
 
 (defun swiper-forward-other-window (prefix)
