@@ -416,9 +416,8 @@
   (setq org-todo-keywords
 	'((sequence "TODO" "DOING" "DONE")))
   (setq org-todo-keyword-faces
-	'(("TODO" . "red") ("DOING" . "dark cyan") ("DONE" . "green")))
+	'(("TODO" . "red") ("DOING" . "dark scyan") ("DONE" . "green")))
   )
-
 
 (use-package markdown-mode
   :ensure t
@@ -914,7 +913,7 @@ Version 2020-10-17"
 (show-paren-mode 1)
 
 (defun refrained-backward-word ()
-  "similar to backward-word but moves to the previous word unless the cursor is at the begining of the word"
+  "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
   (unless (member  ;; check if the previous point is left paren or space, or newline
 	   (char-to-string (char-after (1- (point))))
 	   '("(" " " "\n" "-"))
@@ -922,7 +921,7 @@ Version 2020-10-17"
   )
 
 (defun refrained-backward-sexp ()
-  "similar to backward-sexp but moves to the previous word unless the cursor is at the begining of the sexp"
+  "similar to backward-sexp but does not move to the previous sexp if the cursor is at the begining of the sexp"
   (unless (member  ;; check if the previous point is left paren or space, or newline
 	   (char-to-string (char-after (1- (point))))
 	   '("(" " " "\n"))
@@ -1043,8 +1042,6 @@ Version 2020-10-17"
   )
 (global-set-key (kbd "C-c w l") 'copy-whole-line)
 
-
-
 (use-package hungry-delete
 :ensure t
 :config (global-hungry-delete-mode)
@@ -1084,29 +1081,132 @@ Version 2020-10-17"
     ))
 (global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
-(defun my/surround-and-insert-at-beginning (surround-prefix-str prefix-str)
-  "surround a text by surround-prefix-str (e.g., {) and its associated suffix string (e.g., }) \
-  and then insert prefix-str at the beginning of the new string"
-  (my/surround-chunk-by-string surround-prefix-str)
+(defun get-close-string (open-str)
+  "given an open string (, return the close string, such as )"
+  (cond
+   ((string= open-str "(") ")")
+   ((string= open-str "[") "]")
+   ((string= open-str "<") ">")
+   ((string= open-str "{") "}")
+   (t open-str)
+   )
+  )
+
+;; Instead of using region-beginning and region-end, a command designed to operate on a region should normally use interactive with the ‘r’ specification to find the beginning and end of the region. 
+(defun my/surround-region (start end open-str)
   (save-excursion
-    (print (char-to-string (char-after)))
-    (unless (string= (char-to-string (char-after)) surround-prefix-str) ; if we are not at the begining of the the chunk
-      (search-backward surround-prefix-str)); search backward to the point to insert the prefix
-    (insert prefix-str)
+    (goto-char end)
+    (insert (get-close-string open-str))
+    (goto-char start)
+    (insert open-str)
     )
   )
 
-(defun py/insert-callable ()
-  "add a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
-  (interactive)
-  (my/surround-and-insert-at-beginning
-   "("
-   (read-string "which function/method:"))
+
+(defun my/surround-sexp (open-str)
+  "surround a sexp by str"
+  (save-excursion
+    (refrained-backward-sexp)
+    (insert open-str)
+    (forward-sexp)
+    (insert (get-close-string open-str))
+    )
   )
 
-; enable the following keybinding only in Python
+(defun my/surround-by-single-quote (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "'")
+    (my/surround-sexp "'"))
+  )
+
+(defun my/surround-by-double-quote (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "\"")
+    (my/surround-sexp "\""))
+  )
+
+(defun my/surround-by-back-tick (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "`")
+    (my/surround-sexp "`"))
+  )
+(defun my/surround-by-dollar (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "$")
+    (my/surround-sexp "$"))    
+  )
+
+(defun my/surround-by-parenthesis (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "(")
+    (my/surround-sexp "("))
+  )
+
+
+(defun my/surround-by-brace (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "{")
+    (my/surround-sexp "{"))
+  )
+
+(defun my/surround-by-bracket (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "[")
+    (my/surround-sexp "["))
+  )  
+
+
+
+(global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
+(global-set-key (kbd "C-c s \"") 'my/surround-by-double-quote)
+(global-set-key (kbd "C-c s $") 'my/surround-by-dollar)
+(global-set-key (kbd "C-c s `") 'my/surround-by-back-tick)
+(global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
+(global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
+(global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+
+;; (print (get-close-string "'"))
+;; (print (get-close-string "\""))
+;; (print (get-close-string "’"))
+
+(defun my/surround-path-by-string (str)
+  "surround a path-like string by another string"
+  (let*  ((open-str str)
+	  (close-str (get-close-string open-str))
+	  (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
+	  )
+    (save-excursion
+      (skip-chars-backward delimiters)
+      (insert open-str)
+      (skip-chars-forward delimiters)
+      (insert close-str)
+      )
+    )
+  )
+
+(defun my/py-insert-callable (beg end)
+  "prepends a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
+  (interactive "r")
+  (let ((py-callable (read-string "Which callable:")))
+    (save-excursion
+      (my/surround-by-parenthesis beg end)
+      (unless (string= (char-to-string (char-after)) "(") ; if we are not at the begining of the the chunk
+	(search-backward "(")); search backward to the point to insert the prefix
+      (insert py-callable)
+      )
+    )
+  )
+
+;; enable the following keybinding only in Python
 (use-package elpy
-  :bind ("C-c s f" . 'py/insert-callable))
+  :bind ("C-c s f" . 'my/py-insert-callable))
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
