@@ -1,6 +1,6 @@
 * random
 * wish list
-  
+
 - [ ] +packages by minad+
   - https://www.youtube.com/watch?v=f0FMo_XxujU
   - +https://github.com/minad/tab-bookmark+
@@ -26,7 +26,7 @@
 - [ ] buffer tabs: how to have browser-like tabs for buffers
   - tab-bar-mode
   - tab-line-mode
-- [X] check this article, https://karthinks.com/software/cavy-can-do-anything/#avy-plus-embark-any-action-anywhere
+- [X] check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
 - [ ] function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
 - [X] hardcode projectile ignore files and dirs: =__pycache__, .venv=
 - [ ] replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
@@ -44,14 +44,14 @@
   - when closing a nb, close the window as well
   - in traceback, linkify the file names and line numbers (is there a package to do that)
   - jump to definition not working for my own functions
-- [X] python in general    
+- [X] python in general
   - function for =print({var}:', {var})=
   - wrap an identifier with list(..), set(..), or any function (using embark)
   - change a variable name without moving cursor (kill identifier and insert new)
 - [X] shortcut to open config/settings file
 - [ ] delete parenthesis by pairs
 - [ ] ivy shortcut switch to multi-chars
-- [ ] conditional add symbols to electricmode
+- [X] conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
 
 * learning
@@ -123,7 +123,7 @@
     :config
     (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
 	  (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
-    ) 
+    )
 #+end_src
 
 #+RESULTS:
@@ -584,7 +584,7 @@ adds annotation in minibuffer completions
 
 * general enhancement
 ** which-key
-   
+
    shows what keys are possible given what you have already typed
 
 #+BEGIN_SRC emacs-lisp
@@ -623,7 +623,7 @@ adds annotation in minibuffer completions
 
    #+begin_src emacs-lisp
      ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
-   #+end_src 
+   #+end_src
 ** hide sublevels
 
     #+begin_src emacs-lisp
@@ -682,7 +682,7 @@ adds annotation in minibuffer completions
   - create your own .sty file and place it under the appropriate directory
 
   - add your package name to org-latex-packages-alist
-    
+
 - useful commands to add your own .sty files
 
   #+begin_src bash
@@ -690,10 +690,10 @@ adds annotation in minibuffer completions
     kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
 
     # create the directory to store your own .sty files
-    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"
+    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"  # which gives sth like /Users/hanxiao1/Library/texmf/tex/latex on my Mac
 
     # make sure Latex can find your .sty file
-    kpsewhich {your-script}.sty 
+    kpsewhich {your-script}.sty
   #+end_src
 
 - reference:
@@ -710,6 +710,28 @@ adds annotation in minibuffer completions
 
 #+RESULTS:
 |   | han-macros | t |
+
+** remove latex images
+
+#+begin_src emacs-lisp :results output
+  (defun my/remove-latex-image-dir ()
+    (interactive)
+    (let ((dirname (concat
+		    (file-name-directory (buffer-file-name))
+		    "ltximg"
+		    )))
+      (if (file-directory-p dirname)
+	  (progn
+	    (delete-directory dirname t)
+	    (message (format "%s deleted" dirname))
+	    )
+	(message (format "%s does not exist" dirname))
+	)
+      )
+    )
+#+end_src
+
+#+RESULTS:
 
 ** image display
 
@@ -863,7 +885,7 @@ enable executing shell scripts in code blocks
      (interactive)
      (find-file "~/docs/notes/dairy2023.org"))
      (global-set-key (kbd "C-c o d") 'dairy-org-visit)
-   #+end_src   
+   #+end_src
 
    #+RESULTS:
    : dairy-org-visit
@@ -876,7 +898,7 @@ enable executing shell scripts in code blocks
      (find-file "~/docs/notes/corset2.0.org"))
 
      (global-set-key (kbd "C-c o c") 'corset-org-visit)
-   #+end_src   
+   #+end_src
 
    #+RESULTS:
    : corset-org-visit
@@ -889,7 +911,7 @@ enable executing shell scripts in code blocks
      (interactive)
      (find-file "~/docs/notes/songs.org"))
      (global-set-key (kbd "C-c o s") 'songs-org-visit)
-   #+end_src   
+   #+end_src
 
    #+RESULTS:
    : songs-org-visit
@@ -1084,12 +1106,15 @@ let's not use it for now since it works better for => 2= windows.
    (other-window 1))
    (global-set-key (kbd "C-x 3") 'split-window-and-follow-horizontally)
    #+end_src
+
+   #+RESULTS:
+
    #+end_src
-   
+
 * buffers
 
 ** ibuffer
-   
+
 
    some goodies: use =p= and =n= to move up and down
 
@@ -1157,9 +1182,8 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
 
    #+RESULTS:
-   : projectile-project-type-to-python-pip
 
-* IDO 
+* IDO
 ** preparation and ignore files
 
 #+BEGIN_SRC emacs-lisp
@@ -1182,7 +1206,7 @@ let's not use it for now since it works better for => 2= windows.
     (add-to-list 'ido-ignore-files "\.out")
     (add-to-list 'ido-ignore-files "\.pdf")
     (add-to-list 'ido-ignore-files "\.snm")
-    (add-to-list 'ido-ignore-files "\.synctex.gz")    
+    (add-to-list 'ido-ignore-files "\.synctex.gz")
     (ido-mode 1)
     )
 #+END_SRC
@@ -1198,14 +1222,14 @@ let's not use it for now since it works better for => 2= windows.
        :config
        (ido-vertical-mode 1)
        (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-       )   
+       )
    #+END_SRC
 
    #+RESULTS:
    : t
 
 ** +smex+
-   
+
 #+BEGIN_SRC emacs-lisp
   ;; (use-package smex
   ;;   :ensure t
@@ -1238,7 +1262,7 @@ let's not use it for now since it works better for => 2= windows.
 : avy-goto-char
 
 * sublimity (make it work)
-  
+
 #+begin_src emacs-lisp
 	  ;; (use-package sublimity
 	  ;;   :ensure t
@@ -1286,7 +1310,7 @@ why not showing in non-GUI Emacs?
 
    #+RESULTS:
    : activate-virtualenv
-   
+
 ** flycheck
 
    #+begin_src emacs-lisp
@@ -1344,9 +1368,8 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : elpy-nav-backward-indent
 ** elpy tips
-
 *** navigation
-      
+
    - =M-.= and =M-,= to goto-def and goback
    - =C-c C-o= to list all functions
    - =M-?= to search for symbols in the current project
@@ -1362,7 +1385,13 @@ why not showing in non-GUI Emacs?
    #+end_src
 
    #+RESULTS:
+** code block folding
 
+- run =M-x hs-minor-mode= first to enable the minor mode
+- =C-c @ C-t= (hs-hide-all) to hide all functions/classes
+- =C-c @ C-M-S= (hs-show-all) to show all
+- =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
+  
 * LaTex
 ** preparation
   #+begin_src emacs-lisp
@@ -1374,8 +1403,8 @@ why not showing in non-GUI Emacs?
       (setq TeX-save-query nil)
       )
 
-; for MacOS: environment variable fix 
-    (setenv "PATH" 
+; for MacOS: environment variable fix
+    (setenv "PATH"
 	    (concat
 	      "/usr/local/bin/" ":" "/Library/TeX/texbin/" ":"
 	      (getenv "PATH")))
@@ -1448,7 +1477,7 @@ why not showing in non-GUI Emacs?
   ;; tried to the following
   ;; (add-hook 'LaTeX-mode-hook
   ;; 	  (lambda () (local-set-key (kbd "C-c h r") #'wrap-by-href)))
-  ;; (eval-after-load 'latex 
+  ;; (eval-after-load 'latex
   ;;   '(define-key LaTeX-mode-map [(kbd "C-c h r")] 'wrap-by-href))
   (global-set-key (kbd "C-c h r") 'wrap-by-href)
 
@@ -1478,7 +1507,7 @@ why not showing in non-GUI Emacs?
 * other languages
 ** Matlab
 
-need to install matlab-mode manually, 
+need to install matlab-mode manually,
 package-install does not work for now
 
 #+BEGIN_SRC emacs-lisp
@@ -1490,10 +1519,10 @@ package-install does not work for now
 #+END_SRC
 
 #+RESULTS:
-  
+
 ** YAML mode
 
-   #+BEGIN_SRC emacs-lisp   
+   #+BEGIN_SRC emacs-lisp
    (use-package yaml-mode
    :ensure t
    :config
@@ -1520,7 +1549,7 @@ package-install does not work for now
 	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
 	    ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
-    ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change  
+    ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
     (yas-global-mode 1)
     )
 #+END_SRC
@@ -1571,7 +1600,7 @@ package-install does not work for now
        "visit ~/.zshrc"
        (interactive)
        (find-file "~/.zshrc"))
-     (global-set-key (kbd "C-c z") 'zshrc-visit)   
+     (global-set-key (kbd "C-c z") 'zshrc-visit)
 
    #+end_src
 
@@ -1609,11 +1638,11 @@ how to avoid re-opening a new terminal?
 
 
 ** zsh
-#+BEGIN_SRC emacs-lisp  
+#+BEGIN_SRC emacs-lisp
   (defvar my-term-shell "/bin/zsh")
   (defadvice ansi-term (before force-bash)
     (interactive (list my-term-shell)))
-  (ad-activate 'ansi-term)  
+  (ad-activate 'ansi-term)
 #+END_SRC
 
 #+RESULTS:
@@ -1691,7 +1720,7 @@ how to avoid re-opening a new terminal?
     (unless (member  ;; check if the previous point is left paren or space, or newline
 	     (char-to-string (char-after (1- (point))))
 	     '("(" " " "\n" "-"))
-      (backward-word))  
+      (backward-word))
     )
 
   (defun refrained-backward-sexp ()
@@ -1699,7 +1728,7 @@ how to avoid re-opening a new terminal?
     (unless (member  ;; check if the previous point is left paren or space, or newline
 	     (char-to-string (char-after (1- (point))))
 	     '("(" " " "\n"))
-      (backward-sexp))    
+      (backward-sexp))
     )
 #+end_src
 
@@ -1728,13 +1757,13 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 
 ** electric pair mode
-
+*** global pairs
 #+begin_src emacs-lisp
   (setq electric-pair-pairs '(
 			      (?\( . ?\))
 			      (?\[ . ?\])
 			      (?\{ . ?\})
-			      ;; (?\' . ?\')  ; 
+			      ;; (?\' . ?\')  ;
 			      (?\" . ?\")
 			      (?\` . ?\`)
 			      ;; (?\$ . ?\$)
@@ -1744,6 +1773,21 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : t
+
+*** pairs in org mode
+
+#+begin_src emacs-lisp
+  (defvar org-electric-pairs '((?= . ?=) (?$ . ?$)) "Electric pairs for org-mode.")
+
+  (defun org-add-electric-pairs ()
+    (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
+    (setq-local electric-pair-text-pairs electric-pair-pairs))
+
+  (add-hook 'org-mode-hook 'org-add-electric-pairs)
+#+end_src
+
+#+RESULTS:
+| org-add-electric-pairs | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 ** kill word, sexp, and line
 
@@ -1758,7 +1802,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (defun kill-current-sexp ()
     "kill the current sexp"
     (interactive)
-    (refrained-backward-sexp)  
+    (refrained-backward-sexp)
     (kill-sexp 1)
     )
 
@@ -1775,7 +1819,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (bind-keys*
    ("C-c d w" . kill-current-word)
    ("C-c d l" . kill-current-line)
-   ("C-c d s" . kill-current-sexp) 
+   ("C-c d s" . kill-current-sexp)
    )
 #+end_src
 
@@ -1824,7 +1868,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 : copy-word
 
 *** copy sexp
-#+begin_src emacs-lisp  
+#+begin_src emacs-lisp
   (defun copy-sexp (&optional arg)
     "copy an sexp at point into kill-ring"
     (interactive "p")
@@ -1863,7 +1907,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** TODO copy Python variable and function names
 
 - check elpy for functions that mark variables
-  
+
 #+begin_src emacs-lisp
 
 #+end_src
@@ -1894,7 +1938,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 ** ❤ copy path at point
 
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
-   
+
    #+begin_src emacs-lisp
      (defun copy-path-at-point ()
        "copy a path at point if it exists."
@@ -1932,89 +1976,77 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 ** TODO 🥑 surround text chunk by single-quote, double-quote, caret, etc (half done)
 
+to fix:
+
+- when the cursor is at the start of the symbol
+
    #+begin_src emacs-lisp
-	  (defun surround-chunk-by-stuff ($stuff-to-insert)
-	    "surround a text chunk by single quote"
-	    ;; (interactive)
-	    (if (use-region-p)
-		(buffer-substring-no-properties (region-beginning) (region-end))
-	      (let ($curPos $startPos $endPos
-			    $startStuff $endStuff
-			    ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
-			    ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-			    ;; ($stuff-to-insert (read-string "what string?"))
-			    )
-		;; try to support different start and end chars, eg parenthesis and brackets
-		;; however, it shows:
-		;; if: Symbol’s value as variable is void: $sutff-to-insert
-		(setq $startStuff $stuff-to-insert)
-		(setq $endStuff $stuff-to-insert)
-		;; (message "here! before if")	   
-		;; (if (string= $sutff-to-insert "<")
-		;;     (progn
-		;; 	 (setq $startStuff "<")
-		;; 	 (setq $endStuff ">"))
-		;;   (if (string= $stuff-to-insert "(")
-		;; 	 (progn
-		;; 	   (setq $startStuff "(")
-		;; 	   (setq $startStuff ")"))
-		;;     (if (string= $stuff-to-insert "{")
-		;; 	   (progn
-		;; 	   (setq $startStuff "{")
-		;; 	   (setq $startStuff "}"))
-		;; 	 (if (string= $stuff-to-insert "[")
-		;; 	   (progn
-		;; 	   (setq $startStuff "[")
-		;; 	   (setq $startStuff "]"))
-		;; 	   (progn
-		;; 	     (message "here!")
-		;; 	     (setq $startStuff '$stuff-to-insert)
-		;; 	     (setq $startStuff '$stuff-to-insert)))
-		;; 	 ))
-		;;     )	   
-		;; save current position
-		(setq $curPos (point))
-		;; get start position of the chunk
-		(skip-chars-backward $pathStops)
-		(insert $startStuff)
-		(setq $startPos (point))
-		;; get stop position of the chunk
-		(goto-char $curPos)
-		(skip-chars-forward $pathStops)
-		(setq $endPos (point))
-		(insert $endStuff)
-		;; back to original position
-		(goto-char $curPos)
+     (defun surround-chunk-by-string (str)
+       "surround a text chunk by some string"
+       (if (use-region-p)
+	   (buffer-substring-no-properties (region-beginning) (region-end))
+	 (let* (
+		;; chars that are likely to be delimiters of a "chunk"
+		(delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
+		(prefix-str str)
+		(suffix-str (cond
+			     ((string= prefix-str "(") ")")
+			     ((string= prefix-str "[") "]")
+			     ((string= prefix-str "<") ">")
+			     ((string= prefix-str "{") "}")
+			     (t prefix-str)
+			     ))
 		)
-	      )
-	    )
+	   (save-excursion
+	     (skip-chars-backward delimiters)
+	     (insert prefix-str)
+	     (skip-chars-forward delimiters)
+	     (insert suffix-str)
+	     )
+	   )
+	 )
+       )
+     (defun surround-chunk-by-single-quote ()
+       (interactive)
+       (surround-chunk-by-stuff "'"))
 
-	  (defun surround-chunk-by-single-quote ()
-	    (interactive)
-	    (surround-chunk-by-stuff "'"))
+     (defun surround-chunk-by-double-quote ()
+       (interactive)
+       (surround-chunk-by-stuff "\""))
 
-	  (defun surround-chunk-by-double-quote ()
-	    (interactive)
-	    (surround-chunk-by-stuff "\""))
+     (defun surround-chunk-by-back-tick ()
+       (interactive)
+       (surround-chunk-by-stuff "`"))
 
-	  (defun surround-chunk-by-back-tick ()
-	    (interactive)
-	    (surround-chunk-by-stuff "`"))
+     (defun surround-chunk-by-dollar ()
+       (interactive)
+       (surround-chunk-by-stuff "$"))
 
-	  (defun surround-chunk-by-dollar ()
-	    (interactive)
-	    (surround-chunk-by-stuff "$"))
+     (defun surround-chunk-by-parenthesis ()
+       (interactive)
+       (surround-chunk-by-stuff "("))
+
+     (defun surround-chunk-by-brace ()
+       (interactive)
+       (surround-chunk-by-stuff "{"))
+
+     (defun surround-chunk-by-bracket ()
+       (interactive)
+       (surround-chunk-by-stuff "["))               
 
 
 
-	  (global-set-key (kbd "C-c s '") 'surround-chunk-by-single-quote)
-	  (global-set-key (kbd "C-c s \"") 'surround-chunk-by-double-quote)
-	  (global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
-	  (global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
+     (global-set-key (kbd "C-c s '") 'surround-chunk-by-single-quote)
+     (global-set-key (kbd "C-c s \"") 'surround-chunk-by-double-quote)
+     (global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
+     (global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
+     (global-set-key (kbd "C-c s (") 'surround-chunk-by-parenthesis)
+     (global-set-key (kbd "C-c s [") 'surround-chunk-by-bracket)
+     (global-set-key (kbd "C-c s {") 'surround-chunk-by-brace)
    #+end_src
 
    #+RESULTS:
-   : surround-chunk-by-back-tick
+   : surround-chunk-by-brace
 
 ** COMMENT smartparen
 
@@ -2053,6 +2085,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : copy-current-line-position-to-clipboard
 
+
 * mode line
 ** spaceline
 
@@ -2070,7 +2103,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+begin_src emacs-lisp
   (use-package diminish
     :ensure t
-    :init 
+    :init
     (diminish 'hungry-delete-mode)
     (diminish 'which-key-mode)
     (diminish 'rainbow-mode)
@@ -2105,7 +2138,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   #+RESULTS:
   : swiper
 
-** [[https://github.com/minad/consult][consult]] 
+** [[https://github.com/minad/consult][consult]]
 
 Consult provides search and navigation commands
 
@@ -2164,7 +2197,7 @@ Consult provides search and navigation commands
 ** instructions
 
 - use =C-c C-c= to show all Git operations
-  
+
 ** global .gitignore
 
 #+begin_src bash
