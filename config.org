@@ -1700,7 +1700,7 @@ how to avoid re-opening a new terminal?
 
 #+begin_src emacs-lisp
   (defun refrained-backward-word ()
-    "similar to backward-word but moves to the previous word unless the cursor is at the begining of the word"
+    "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
     (unless (member  ;; check if the previous point is left paren or space, or newline
 	     (char-to-string (char-after (1- (point))))
 	     '("(" " " "\n" "-"))
@@ -1708,7 +1708,7 @@ how to avoid re-opening a new terminal?
     )
 
   (defun refrained-backward-sexp ()
-    "similar to backward-sexp but moves to the previous word unless the cursor is at the begining of the sexp"
+    "similar to backward-sexp but does not move to the previous sexp if the cursor is at the begining of the sexp"
     (unless (member  ;; check if the previous point is left paren or space, or newline
 	     (char-to-string (char-after (1- (point))))
 	     '("(" " " "\n"))
@@ -1888,14 +1888,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    #+RESULTS:
    : copy-whole-line
 
-** TODO copy Python variable and function names
-
-- check elpy for functions that mark variables
-
-#+begin_src emacs-lisp
-
-#+end_src
-
 ** hungry-delete
 
 #+begin_src emacs-lisp
@@ -1919,7 +1911,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : delete-pair
 
-** ❤ copy path at point
+** copy path at point
 
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
 
@@ -1958,80 +1950,172 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    #+RESULTS:
    : copy-path-at-point
 
-** TODO 🥑 surround text chunk by single-quote, double-quote, caret, etc (half done)
+** surround sexp by string
+*** main functions
+#+begin_src emacs-lisp
+  (defun get-close-string (open-str)
+    "given an open string (, return the close string, such as )"
+    (cond
+     ((string= open-str "(") ")")
+     ((string= open-str "[") "]")
+     ((string= open-str "<") ">")
+     ((string= open-str "{") "}")
+     (t open-str)
+     )
+    )
 
-to fix:
-
-- when the cursor is at the start of the symbol
-
-   #+begin_src emacs-lisp
-     (defun surround-chunk-by-string (str)
-       "surround a text chunk by some string"
-       (if (use-region-p)
-	   (buffer-substring-no-properties (region-beginning) (region-end))
-	 (let* (
-		;; chars that are likely to be delimiters of a "chunk"
-		(delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-		(prefix-str str)
-		(suffix-str (cond
-			     ((string= prefix-str "(") ")")
-			     ((string= prefix-str "[") "]")
-			     ((string= prefix-str "<") ">")
-			     ((string= prefix-str "{") "}")
-			     (t prefix-str)
-			     ))
-		)
-	   (save-excursion
-	     (skip-chars-backward delimiters)
-	     (insert prefix-str)
-	     (skip-chars-forward delimiters)
-	     (insert suffix-str)
-	     )
-	   )
-	 )
-       )
-     (defun surround-chunk-by-single-quote ()
-       (interactive)
-       (surround-chunk-by-stuff "'"))
-
-     (defun surround-chunk-by-double-quote ()
-       (interactive)
-       (surround-chunk-by-stuff "\""))
-
-     (defun surround-chunk-by-back-tick ()
-       (interactive)
-       (surround-chunk-by-stuff "`"))
-
-     (defun surround-chunk-by-dollar ()
-       (interactive)
-       (surround-chunk-by-stuff "$"))
-
-     (defun surround-chunk-by-parenthesis ()
-       (interactive)
-       (surround-chunk-by-stuff "("))
-
-     (defun surround-chunk-by-brace ()
-       (interactive)
-       (surround-chunk-by-stuff "{"))
-
-     (defun surround-chunk-by-bracket ()
-       (interactive)
-       (surround-chunk-by-stuff "["))               
+  ;; Instead of using region-beginning and region-end, a command designed to operate on a region should normally use interactive with the ‘r’ specification to find the beginning and end of the region. 
+  (defun my/surround-region (start end open-str)
+    (save-excursion
+      (goto-char end)
+      (insert (get-close-string open-str))
+      (goto-char start)
+      (insert open-str)
+      )
+    )
 
 
+  (defun my/surround-sexp (open-str)
+    "surround a sexp by str"
+    (save-excursion
+      (refrained-backward-sexp)
+      (insert open-str)
+      (forward-sexp)
+      (insert (get-close-string open-str))
+      )
+    )      
 
-     (global-set-key (kbd "C-c s '") 'surround-chunk-by-single-quote)
-     (global-set-key (kbd "C-c s \"") 'surround-chunk-by-double-quote)
-     (global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
-     (global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
-     (global-set-key (kbd "C-c s (") 'surround-chunk-by-parenthesis)
-     (global-set-key (kbd "C-c s [") 'surround-chunk-by-bracket)
-     (global-set-key (kbd "C-c s {") 'surround-chunk-by-brace)
+#+end_src
+
+#+RESULTS:
+: my/surround-sexp
+*** keybindings
+
+#+begin_src emacs-lisp
+  (defun my/surround-by-single-quote (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "'")
+      (my/surround-sexp "'"))
+    )
+
+  (defun my/surround-by-double-quote (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "\"")
+      (my/surround-sexp "\""))
+    )
+
+  (defun my/surround-by-back-tick (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "`")
+      (my/surround-sexp "`"))
+    )
+  (defun my/surround-by-dollar (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "$")
+      (my/surround-sexp "$"))    
+    )
+
+  (defun my/surround-by-parenthesis (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "(")
+      (my/surround-sexp "("))
+    )
+
+
+  (defun my/surround-by-brace (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "{")
+      (my/surround-sexp "{"))
+    )
+
+  (defun my/surround-by-bracket (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "[")
+      (my/surround-sexp "["))
+    )  
+
+
+
+  (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
+  (global-set-key (kbd "C-c s \"") 'my/surround-by-double-quote)
+  (global-set-key (kbd "C-c s $") 'my/surround-by-dollar)
+  (global-set-key (kbd "C-c s `") 'my/surround-by-back-tick)
+  (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
+  (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
+  (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
    #+end_src
 
    #+RESULTS:
-   : surround-chunk-by-brace
+   : my/surround-by-brace
 
+** surround path by string
+*** helper functions
+  #+begin_src emacs-lisp :results output
+
+    ;; (print (get-close-string "'"))
+    ;; (print (get-close-string "\""))
+    ;; (print (get-close-string "’"))
+
+    (defun my/surround-path-by-string (str)
+      "surround a path-like string by another string"
+      (let*  ((open-str str)
+	      (close-str (get-close-string open-str))
+	      (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
+	      )
+	(save-excursion
+	  (skip-chars-backward delimiters)
+	  (insert open-str)
+	  (skip-chars-forward delimiters)
+	  (insert close-str)
+	  )
+	)
+      )    
+  #+end_src
+
+  #+RESULTS:
+
+
+   #+RESULTS:
+   : my/surround-chunk-by-brace
+
+** DONE surround a Python expression with a callable
+
+nice-to-have:
+ 
+- [ ] autocomplete the function/method name e.g., using consult
+  
+#+begin_src emacs-lisp :results output
+  (defun my/py-insert-callable (beg end)
+    "prepends a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
+    (interactive "r")
+    (let ((py-callable (read-string "Which callable:")))
+      (save-excursion
+	(my/surround-by-parenthesis beg end)
+	(unless (string= (char-to-string (char-after)) "(") ; if we are not at the begining of the the chunk
+	  (search-backward "(")); search backward to the point to insert the prefix
+	(insert py-callable)
+	)
+      )
+    )
+
+  ;; enable the following keybinding only in Python
+  (use-package elpy
+    :bind ("C-c s f" . 'my/py-insert-callable))
+#+end_src
+
+
+#+RESULTS:
+
+** TODO delete text between "pairs"
+
+pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 ** COMMENT smartparen
 
    [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
