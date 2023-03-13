@@ -409,7 +409,6 @@
     )
 )
 
-<<<<<<< HEAD
 ;; does not work
 (use-package org
   :ensure t
@@ -420,8 +419,7 @@
 	'(("TODO" . "red") ("DOING" . "dark cyan") ("DONE" . "green")))
   )
 
-=======
->>>>>>> 947a41c8a93713d8b08c74b8bf45728f33c150ac
+
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
