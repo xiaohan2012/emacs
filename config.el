@@ -1084,116 +1084,29 @@ Version 2020-10-17"
     ))
 (global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
-(fmakunbound 'surround-chunk-by-stuff-new)
-(defun surround-chunk-by-stuff-new (str)
-  "surround a text chunk by single quote"
-  ;; (interactive)
-  (if (use-region-p)
-      (buffer-substring-no-properties (region-beginning) (region-end))
-    (let (;; $curPos
-	  ;; $startPos $endPos
-	  ;; $startStuff $endStuff
-	  ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brnackets or quotes as in markdown or html
-	  ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-	  (prefix-str str)
-	  )
-      (defvar-local suffix-str (cond
-				;; ((string= prefix-str "(") ")")
-				;; ((string= prefix-str "[") "]")
-				;; ((string= prefix-str "<") ">")
-				;; ((string= prefix-str "{") "}")
-				(t prefix-str)))
-      ;; ($stuff-to-insert (read-string "what string?"))
-      ;; try to support different start and end chars, eg parenthesis and brackets
-      ;; however, it shows:
-      ;; if: Symbol’s value as variable is void: $sutff-to-insert
-      (print (format "prefix-str %s" prefix-str))
-      (print (format "%s ... %s" prefix-str suffix-str))
-      (string= prefix-str "(")
-      )
-    )
-  )
-(surround-chunk-by-stuff-new "(")
-(surround-chunk-by-stuff-new "[")
-
-(defun surround-chunk-by-stuff ($stuff-to-insert)
-  "surround a text chunk by single quote"
-  ;; (interactive)
-  (if (use-region-p)
-      (buffer-substring-no-properties (region-beginning) (region-end))
-    (let ($curPos $startPos $endPos
-		  $startStuff $endStuff
-		  ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
-		  ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-		  ;; ($stuff-to-insert (read-string "what string?"))
-		  )
-      ;; try to support different start and end chars, eg parenthesis and brackets
-      ;; however, it shows:
-      ;; if: Symbol’s value as variable is void: $sutff-to-insert
-      (setq $startStuff $stuff-to-insert)
-      (setq $endStuff $stuff-to-insert)
-      ;; (message "here! before if")
-      ;; (if (string= $sutff-to-insert "<")
-      ;;     (progn
-      ;; 	 (setq $startStuff "<")
-      ;; 	 (setq $endStuff ">"))
-      ;;   (if (string= $stuff-to-insert "(")
-      ;; 	 (progn
-      ;; 	   (setq $startStuff "(")
-      ;; 	   (setq $startStuff ")"))
-      ;;     (if (string= $stuff-to-insert "{")
-      ;; 	   (progn
-      ;; 	   (setq $startStuff "{")
-      ;; 	   (setq $startStuff "}"))
-      ;; 	 (if (string= $stuff-to-insert "[")
-      ;; 	   (progn
-      ;; 	   (setq $startStuff "[")
-      ;; 	   (setq $startStuff "]"))
-      ;; 	   (progn
-      ;; 	     (message "here!")
-      ;; 	     (setq $startStuff '$stuff-to-insert)
-      ;; 	     (setq $startStuff '$stuff-to-insert)))
-      ;; ;	 ))
-      ;;     )
-      ;; save current position
-      (setq $curPos (point))
-      ;; get start position of the chunk
-      (skip-chars-backward $pathStops)
-      (insert $startStuff)
-      (setq $startPos (point))
-      ;; get stop position of the chunk
-      (goto-char $curPos)
-      (skip-chars-forward $pathStops)
-      (setq $endPos (point))
-      (insert $endStuff)
-      ;; back to original position
-      (goto-char $curPos)
-      )
+(defun my/surround-and-insert-at-beginning (surround-prefix-str prefix-str)
+  "surround a text by surround-prefix-str (e.g., {) and its associated suffix string (e.g., }) \
+  and then insert prefix-str at the beginning of the new string"
+  (my/surround-chunk-by-string surround-prefix-str)
+  (save-excursion
+    (print (char-to-string (char-after)))
+    (unless (string= (char-to-string (char-after)) surround-prefix-str) ; if we are not at the begining of the the chunk
+      (search-backward surround-prefix-str)); search backward to the point to insert the prefix
+    (insert prefix-str)
     )
   )
 
-(defun surround-chunk-by-single-quote ()
+(defun py/insert-callable ()
+  "add a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
   (interactive)
-  (surround-chunk-by-stuff "'"))
+  (my/surround-and-insert-at-beginning
+   "("
+   (read-string "which function/method:"))
+  )
 
-(defun surround-chunk-by-double-quote ()
-  (interactive)
-  (surround-chunk-by-stuff "\""))
-
-(defun surround-chunk-by-back-tick ()
-  (interactive)
-  (surround-chunk-by-stuff "`"))
-
-(defun surround-chunk-by-dollar ()
-  (interactive)
-  (surround-chunk-by-stuff "$"))
-
-
-
-(global-set-key (kbd "C-c s '") 'surround-chunk-by-single-quote)
-(global-set-key (kbd "C-c s \"") 'surround-chunk-by-double-quote)
-(global-set-key (kbd "C-c s $") 'surround-chunk-by-dollar)
-(global-set-key (kbd "C-c s `") 'surround-chunk-by-back-tick)
+; enable the following keybinding only in Python
+(use-package elpy
+  :bind ("C-c s f" . 'py/insert-callable))
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
