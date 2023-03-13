@@ -799,7 +799,7 @@ enable executing shell scripts in code blocks
     (setq org-todo-keywords
 	  '((sequence "TODO" "DOING" "DONE")))
     (setq org-todo-keyword-faces
-	  '(("TODO" . "red") ("DOING" . "dark cyan") ("DONE" . "green")))
+	  '(("TODO" . "red") ("DOING" . "dark scyan") ("DONE" . "green")))
     )
 #+end_src
 

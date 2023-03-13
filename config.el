@@ -387,6 +387,22 @@
   ;; :config   (add-hook 'org-mode-hook #'valign-mode)
   )
 
+(org-babel-do-load-languages 'org-babel-load-languages
+    '(
+        (shell . t)
+    )
+)
+
+;; does not work
+(use-package org
+  :ensure t
+  :init
+  (setq org-todo-keywords
+	'((sequence "TODO" "DOING" "DONE")))
+  (setq org-todo-keyword-faces
+	'(("TODO" . "red") ("DOING" . "dark cyan") ("DONE" . "green")))
+  )
+
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
@@ -1163,7 +1179,7 @@ Version 2020-10-17"
   :ensure t
 
   :bind ("C-c c f" . 'consult-find)  ;; find file
-  :bind ("C-c i m" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
   )
 
 (defun swiper-forward-other-window (prefix)
