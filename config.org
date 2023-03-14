@@ -2192,6 +2192,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+RESULTS:
 : my/delete-between-equal
 
+** TODO copy text between "a pair"
 ** smartparen
 
    [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
@@ -2270,7 +2271,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 
 #+RESULTS:
 : dmenu
-* TODO searching
+* searching
 ** text search
   #+begin_src  emacs-lisp
 	(use-package swiper
