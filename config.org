@@ -821,7 +821,7 @@ enable executing shell scripts in code blocks
     (setq org-todo-keywords
 	  '((sequence "TODO" "DOING" "DONE")))
     (setq org-todo-keyword-faces
-	  '(("TODO" . "red") ("DOING" . "dark scyan") ("DONE" . "green")))
+	  '(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
     )
 #+end_src
 
@@ -1830,6 +1830,8 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
 #+RESULTS:
 : kill-current-sexp
+** kill, copy, and yank in Latex
+# C-c w s on $\apxcntcore$ gives $\apxcntcore$, instead of \apxcntcore
 ** copy word, line, sexp
 *** copy word
 #+begin_src emacs-lisp
