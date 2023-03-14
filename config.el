@@ -86,7 +86,7 @@
 (use-package helpful
   :ensure t
   :bind
-  ("C-c h p" . helpful-at-point)
+  ("C-c h f" . helpful-at-point)
   )
 
 (defun avy-action-helpful (pt)
@@ -928,6 +928,11 @@ Version 2020-10-17"
     (backward-sexp))
   )
 
+(defun search-backward-no-move (str)
+  "search backward for a string without moving the cursor, return the position of the first occurrence"
+  (save-excursion (search-backward str))
+  )
+
 ;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
 (global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
 ;; (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
@@ -1081,7 +1086,7 @@ Version 2020-10-17"
     ))
 (global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
-(defun get-close-string (open-str)
+(defun close-string (open-str)
   "given an open string (, return the close string, such as )"
   (cond
    ((string= open-str "(") ")")
@@ -1096,7 +1101,7 @@ Version 2020-10-17"
 (defun my/surround-region (start end open-str)
   (save-excursion
     (goto-char end)
-    (insert (get-close-string open-str))
+    (insert (close-string open-str))
     (goto-char start)
     (insert open-str)
     )
@@ -1109,7 +1114,7 @@ Version 2020-10-17"
     (refrained-backward-sexp)
     (insert open-str)
     (forward-sexp)
-    (insert (get-close-string open-str))
+    (insert (close-string open-str))
     )
   )
 
@@ -1172,14 +1177,10 @@ Version 2020-10-17"
 (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
 (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
 
-;; (print (get-close-string "'"))
-;; (print (get-close-string "\""))
-;; (print (get-close-string "’"))
-
 (defun my/surround-path-by-string (str)
   "surround a path-like string by another string"
   (let*  ((open-str str)
-	  (close-str (get-close-string open-str))
+	  (close-str (close-string open-str))
 	  (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
 	  )
     (save-excursion
@@ -1207,6 +1208,20 @@ Version 2020-10-17"
 ;; enable the following keybinding only in Python
 (use-package elpy
   :bind ("C-c s f" . 'my/py-insert-callable))
+
+(defun delete-in-between (open)
+  "delete the text between a pair of symbols (e.g., `(' and `)'), \
+   the first element of the pair is speicifed by `open', \
+   while the second is inferred automatically using `close-str'"
+  (let ((close (close-string open)))
+    (save-excursion
+      (delete-region
+       (+ (search-backward-no-move open) (length open)) ; leave the open and close there
+       (- (search-forward close) (length close))
+       )
+      )
+    )
+  )
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
