@@ -1782,7 +1782,8 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 *** pairs in org mode
 
 #+begin_src emacs-lisp
-  (defvar org-electric-pairs '((?= . ?=) (?$ . ?$)) "Electric pairs for org-mode.")
+  (defvar org-electric-pairs '(;; (?= . ?=)
+			       (?$ . ?$)) "Electric pairs for org-mode.")
 
   (defun org-add-electric-pairs ()
     (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
@@ -1792,7 +1793,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+end_src
 
 #+RESULTS:
-| org-add-electric-pairs | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
+| #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 ** kill word, sexp, and line
 
