@@ -1237,8 +1237,7 @@ let's not use it for now since it works better for => 2= windows.
 
 #+RESULTS:
 : consult-buffer
-* cursor navigation
-
+* cursor
 ** avy
 
 #+BEGIN_SRC emacs-lisp
@@ -1251,7 +1250,42 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : avy-goto-char
 
+** multicursor
+*** setup
+#+begin_src emacs-lisp
+
+  (use-package multiple-cursors
+    :ensure t
+    :bind
+    ("C-M-j" . 'mc/mark-all-dwim)
+    ("C-M-l" . 'mc/edit-lines)
+    ("C-<" . 'mc/mark-previous-like-this)
+    ("C->" . 'mc/mark-next-like-this)
+    ;; ("C-M->" . 'mc/skip-to-next-like-this)
+    ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
+    )
+#+end_src
+
+#+RESULTS:
+: mc/mark-next-like-this
+
+*** use cases
+ 
+- code refactoring: change symbol name
+- html editting
+
+*** some tips
+ 
+- =mc/mark-all-dwim=: "smart" way of marking
+  - for both marked and unmarkd region
+  - when unmarked, it will guess which regions to mark and add a cursor to each guessed region
+  - when in marked region, it will ask for the text to seatch for
+  - or when a short text is marked, mc will search for all occurrences of it
+  - hit twice to mark even more
+- =mc/edit-lines=: mark a region first and edit continuous lines
+
 * sublimity (make it work)
+
 
 #+begin_src emacs-lisp
 	  ;; (use-package sublimity
@@ -1492,7 +1526,6 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 | citar-capf-setup | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
-
 
 * other languages
 ** Matlab
@@ -2222,7 +2255,6 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 
 #+RESULTS:
 : copy-current-line-position-to-clipboard
-
 
 * mode line
 ** spaceline
