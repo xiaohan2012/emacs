@@ -316,15 +316,107 @@
   :init
   (which-key-mode))
 
-(use-package multiple-cursors
+(setq org-src-window-setup 'current-window)
+
+(use-package org-bullets
   :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode))))
+
+;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
+
+(defun org-hide-sublevels ()
+  (interactive)
+  (hide-sublevels 1))
+
+(global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+
+
+;; hide lists by default
+(setq org-cycle-include-plain-lists 'integrate)
+
+;; hide all levels for default
+(setq org-startup-folded t)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((python . t)))
+
+;; Making emacs find latex (so that C-c C-x C-l works on orgmode)
+;; On MacOS
+(setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+(add-to-list 'exec-path "/Library/TeX/texbin/")
+
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+
+(add-to-list 'org-latex-packages-alist '("" "han-macros" t))  ;; use t not nil
+;; (print org-latex-packages-alist)
+
+(defun my/remove-latex-image-dir ()
+  (interactive)
+  (let ((dirname (concat
+		  (file-name-directory (buffer-file-name))
+		  "ltximg"
+		  )))
+    (if (file-directory-p dirname)
+	(progn
+	  (delete-directory dirname t)
+	  (message (format "%s deleted" dirname))
+	  )
+      (message (format "%s does not exist" dirname))
+      )
+    )
+  )
+
+(setq org-image-actual-width nil)
+(pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+
+(use-package org-journal
+  :ensure t
+  :defer t
+  :init
+  ;; Change default prefix key; needs to be set before loading org-journal
+  (setq org-journal-prefix-key "C-c j ")
+  :config
+  (setq org-journal-dir "~/org/journal/"
+	org-journal-date-format "%A, %d %B %Y"
+	org-journal-time-format "日记"))
+
+(use-package org-download
+  :ensure t
+  :after org
+  :defer nil
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  (org-download-heading-lvl nil)
+  (org-download-timestamp "%Y%m%d-%H%M%S_")
+  (org-image-actual-width 500)
+  (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
   :bind
-  ("C-M-j" . 'mc/mark-all-dwim)
-  ("C-M-l" . 'mc/edit-lines)
-  ("C-<" . 'mc/mark-previous-like-this)
-  ("C->" . 'mc/mark-next-like-this)
-  ;; ("C-M->" . 'mc/skip-to-next-like-this)
-  ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
+  ("C-M-y" . org-download-screenshot)
+  :config
+  (require 'org-download))
+
+(use-package valign
+  :ensure t
+  :after org
+  ;; :config   (add-hook 'org-mode-hook #'valign-mode)
+  )
+
+(org-babel-do-load-languages 'org-babel-load-languages
+    '(
+        (shell . t)
+    )
+)
+
+;; does not work
+(use-package org
+  :ensure t
+  :init
+  (setq org-todo-keywords
+	'((sequence "TODO" "DOING" "DONE")))
+  (setq org-todo-keyword-faces
+	'(("TODO" . "red") ("DOING" . "dark scyan") ("DONE" . "green")))
   )
 
 (use-package markdown-mode
@@ -859,8 +951,7 @@ Version 2020-10-17"
 ))
 (electric-pair-mode t)
 
-(defvar org-electric-pairs '(;; (?= . ?=)
-			     (?$ . ?$)) "Electric pairs for org-mode.")
+(defvar org-electric-pairs '((?= . ?=) (?$ . ?$)) "Electric pairs for org-mode.")
 
 (defun org-add-electric-pairs ()
   (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
@@ -1120,67 +1211,17 @@ Version 2020-10-17"
 
 (defun delete-in-between (open)
   "delete the text between a pair of symbols (e.g., `(' and `)'), \
-     the first element of the pair is speicifed by `open', \
-     while the second is inferred automatically using `close-str'"
+   the first element of the pair is speicifed by `open', \
+   while the second is inferred automatically using `close-str'"
   (let ((close (close-string open)))
     (save-excursion
       (delete-region
-       (+ (search-backward-no-move open) (length open)) ; leave the open and close string there
+       (+ (search-backward-no-move open) (length open)) ; leave the open and close there
        (- (search-forward close) (length close))
        )
       )
     )
   )
-
-
-(defun my/delete-between-single-quote  ()
-  (interactive)
-  (delete-in-between "'")
-  )
-(defun my/delete-between-double-quote  ()
-  (interactive)
-  (delete-in-between "\"")
-  )
-(defun my/delete-between-parenthesis  ()
-  (interactive)
-  (delete-in-between "(")
-  )
-(defun my/delete-between-bracket  ()
-  (interactive)
-  (delete-in-between "[")
-  )
-(defun my/delete-between-brace  ()
-  (interactive)
-  (delete-in-between "{")
-  )
-(defun my/delete-between-dollar  ()
-  (interactive)
-  (delete-in-between "$")
-  )    
-
-(defun my/delete-between-equal  ()
-  (interactive)
-  (delete-in-between "=")
-  )
-
-(global-set-key (kbd "C-c d '") 'my/delete-between-single-quote)
-(global-set-key (kbd "C-c d \"") 'my/delete-between-double-quote)
-(global-set-key (kbd "C-c d (") 'my/delete-between-parenthesis)
-(global-set-key (kbd "C-c d [") 'my/delete-between-bracket)
-(global-set-key (kbd "C-c d {") 'my/delete-between-brace)
-(global-set-key (kbd "C-c d $") 'my/delete-between-dollar)
-(global-set-key (kbd "C-c d =") 'my/delete-between-equal)
-
-(use-package smartparens-config
-  :ensure smartparens
-  :config (progn (show-smartparens-global-mode t)))
-
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
-
-(global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-(global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
-;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."

@@ -6,6 +6,19 @@
   - +https://github.com/minad/tab-bookmark+
   - +learn about bookmarks+
 - check this blog: https://wilkesley.org/~ian/xah/emacs/emacs.html
+- [X] auto-completion:
+  - vertico: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
+  - consult: https://github.com/minad/consult
+    - what does it do?
+  - marginalia: https://github.com/minad/marginalia
+    - which enriches the annotation of auto-completion candidates
+  - embark: https://github.com/oantolin/embark
+    - what does it do?
+  - orderless: https://github.com/oantolin/orderless
+    - more general searching?
+  - completion in doomemacs: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
+    - vertico is the default
+- [ ] [[https://github.com/magnars/multiple-cursors.el][multicursor]]
 - [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - [ ] emacs doom: https://github.com/doomemacs/doomemacs
   - a pre-configured emacs
@@ -583,40 +596,236 @@ adds annotation in minibuffer completions
 
 #+RESULTS:
 
-* multicursor
-** setup
+* org-mode
+** basic
+
+*** avoid opening a new window when editing a code snippet
+
 #+begin_src emacs-lisp
-  (use-package multiple-cursors
-    :ensure t
-    :bind
-    ("C-M-j" . 'mc/mark-all-dwim)
-    ("C-M-l" . 'mc/edit-lines)
-    ("C-<" . 'mc/mark-previous-like-this)
-    ("C->" . 'mc/mark-next-like-this)
-    ;; ("C-M->" . 'mc/skip-to-next-like-this)
-    ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
+(setq org-src-window-setup 'current-window)
+#+end_src
+
+#+RESULTS:
+: current-window
+** org-bullets
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode))))
+
+#+END_SRC
+
+** some key bindings
+
+   the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
+
+   #+begin_src emacs-lisp
+     ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
+   #+end_src
+** hide sublevels
+
+    #+begin_src emacs-lisp
+      (defun org-hide-sublevels ()
+	(interactive)
+	(hide-sublevels 1))
+
+      (global-set-key (kbd "C-c h s") 'org-hide-sublevels)
+
+
+      ;; hide lists by default
+      (setq org-cycle-include-plain-lists 'integrate)
+
+      ;; hide all levels for default
+      (setq org-startup-folded t)
+    #+end_src
+
+    #+RESULTS:
+    : t
+** programming language support
+
+*** python
+
+    #+begin_src emacs-lisp
+      (org-babel-do-load-languages
+       'org-babel-load-languages '((python . t)))
+    #+end_src
+
+    #+RESULTS:
+
+** preview latex
+
+   #+begin_src emacs-lisp
+     ;; Making emacs find latex (so that C-c C-x C-l works on orgmode)
+     ;; On MacOS
+     (setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+     (add-to-list 'exec-path "/Library/TeX/texbin/")
+   #+end_src
+
+   #+RESULTS:
+   | /Library/TeX/texbin/ | /Users/hanxiao/code/mz-ds-deep-learning/.venv/bin | /usr/bin | /bin | /usr/sbin | /sbin | /Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec-x86_64-10_14 | /Applications/Emacs.app/Contents/MacOS/libexec | /Applications/Emacs.app/Contents/MacOS/bin |
+
+   increase font size
+
+#+begin_src emacs-lisp
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+#+end_src
+
+#+RESULTS:
+| :foreground | default | :background | default | :scale | 2.0 | :html-foreground | Black | :html-background | Transparent | :html-scale | 1.0 | :matchers | (begin $1 $ $$ \( \[) |
+
+** load predefined Latex macros
+
+- main idea:
+
+  - create your own .sty file and place it under the appropriate directory
+
+  - add your package name to org-latex-packages-alist
+
+- useful commands to add your own .sty files
+
+  #+begin_src bash
+    less $(kpsewhich texmf.cnf)  # to see the relevant directories
+    kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
+
+    # create the directory to store your own .sty files
+    mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex"  # which gives sth like /Users/hanxiao1/Library/texmf/tex/latex on my Mac
+
+    # make sure Latex can find your .sty file
+    kpsewhich {your-script}.sty
+  #+end_src
+
+- reference:
+
+  - https://tex.stackexchange.com/questions/387843/where-do-i-place-my-own-sty-or-cls-files-to-make-them-available-to-all-my-te
+
+  - https://orgmode.org/worg/org-tutorials/org-latex-preview.html
+
+
+#+begin_src emacs-lisp
+  (add-to-list 'org-latex-packages-alist '("" "han-macros" t))  ;; use t not nil
+  ;; (print org-latex-packages-alist)
+#+end_src
+
+#+RESULTS:
+|   | han-macros | t |
+
+** remove latex images
+
+#+begin_src emacs-lisp :results output
+  (defun my/remove-latex-image-dir ()
+    (interactive)
+    (let ((dirname (concat
+		    (file-name-directory (buffer-file-name))
+		    "ltximg"
+		    )))
+      (if (file-directory-p dirname)
+	  (progn
+	    (delete-directory dirname t)
+	    (message (format "%s deleted" dirname))
+	    )
+	(message (format "%s does not exist" dirname))
+	)
+      )
     )
 #+end_src
 
 #+RESULTS:
-: mc/mark-next-like-this
-** use cases
 
-- code refactoring: change symbol name
-- html editting
+** image display
 
-** some tips
+   #+begin_src emacs-lisp
+     (setq org-image-actual-width nil)
+     (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+   #+end_src
 
-- =mc/mark-all-dwim=: 
-  - for both marked and unmarkd region
-  - when unmarked, it will guess which regions to mark and add a cursor to each guessed region
-  - when in marked region, it will ask for the text to seatch for
-  - or when a short text is marked, mc will search for all occurrences of it
-  - hit twice to mark even more
-- =mc/edit-lines=: mark a region first and edit continuous lines
+   #+RESULTS:
+   : t
 
+** org-journal for dairy keeping
 
+#+begin_src emacs-lisp
+  (use-package org-journal
+    :ensure t
+    :defer t
+    :init
+    ;; Change default prefix key; needs to be set before loading org-journal
+    (setq org-journal-prefix-key "C-c j ")
+    :config
+    (setq org-journal-dir "~/org/journal/"
+	  org-journal-date-format "%A, %d %B %Y"
+	  org-journal-time-format "日记"))
+#+end_src
 
+#+RESULTS:
+: t
+
+** org-download
+
+#+begin_src emacs-lisp
+  (use-package org-download
+    :ensure t
+    :after org
+    :defer nil
+    :custom
+    (org-download-method 'directory)
+    (org-download-image-dir "images")
+    (org-download-heading-lvl nil)
+    (org-download-timestamp "%Y%m%d-%H%M%S_")
+    (org-image-actual-width 500)
+    (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    :bind
+    ("C-M-y" . org-download-screenshot)
+    :config
+    (require 'org-download))
+
+#+end_src
+
+#+RESULTS:
+: org-download-screenshot
+
+** valign (visual align)
+
+#+begin_src emacs-lisp
+  (use-package valign
+    :ensure t
+    :after org
+    ;; :config   (add-hook 'org-mode-hook #'valign-mode)
+    )
+
+#+end_src
+
+#+RESULTS:
+** org-babel
+
+enable executing shell scripts in code blocks
+
+#+begin_src emacs-lisp
+(org-babel-do-load-languages 'org-babel-load-languages
+    '(
+        (shell . t)
+    )
+)
+#+end_src
+
+#+RESULTS:
+
+** todo keywords
+
+#+begin_src emacs-lisp
+  ;; does not work
+  (use-package org
+    :ensure t
+    :init
+    (setq org-todo-keywords
+	  '((sequence "TODO" "DOING" "DONE")))
+    (setq org-todo-keyword-faces
+	  '(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
+    )
+#+end_src
+
+#+RESULTS:
 
 * markdown
 
@@ -1293,6 +1502,7 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 | citar-capf-setup | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
+
 
 * other languages
 ** Matlab
