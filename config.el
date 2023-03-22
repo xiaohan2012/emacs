@@ -416,7 +416,7 @@
   (setq org-todo-keywords
 	'((sequence "TODO" "DOING" "DONE")))
   (setq org-todo-keyword-faces
-	'(("TODO" . "red") ("DOING" . "dark scyan") ("DONE" . "green")))
+	'(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
   )
 
 (use-package markdown-mode
@@ -668,6 +668,17 @@ Version 2020-10-17"
 :bind
 ("M-s" . avy-goto-char-timer))
 
+(use-package multiple-cursors
+  :ensure t
+  :bind
+  ("C-M-j" . 'mc/mark-all-dwim)
+  ("C-M-l" . 'mc/edit-lines)
+  ("C-<" . 'mc/mark-previous-like-this)
+  ("C->" . 'mc/mark-next-like-this)
+  ;; ("C-M->" . 'mc/skip-to-next-like-this)
+  ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
+  )
+
 ;; (use-package sublimity
 	;;   :ensure t
 	;;   :config
@@ -721,7 +732,7 @@ Version 2020-10-17"
 	;; elpy-rpc-project-specific 't
 	elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	)
-  (add-hook 'elpy-mode-hook 'flycheck-mode)
+  ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
   :bind
   ;; remap the keys for some navigation functions
   ("C-s-n" . 'elpy-nav-forward-block)
@@ -951,7 +962,8 @@ Version 2020-10-17"
 ))
 (electric-pair-mode t)
 
-(defvar org-electric-pairs '((?= . ?=) (?$ . ?$)) "Electric pairs for org-mode.")
+(defvar org-electric-pairs '(;; (?= . ?=)
+			     (?$ . ?$)) "Electric pairs for org-mode.")
 
 (defun org-add-electric-pairs ()
   (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
@@ -1211,17 +1223,67 @@ Version 2020-10-17"
 
 (defun delete-in-between (open)
   "delete the text between a pair of symbols (e.g., `(' and `)'), \
-   the first element of the pair is speicifed by `open', \
-   while the second is inferred automatically using `close-str'"
+     the first element of the pair is speicifed by `open', \
+     while the second is inferred automatically using `close-str'"
   (let ((close (close-string open)))
     (save-excursion
       (delete-region
-       (+ (search-backward-no-move open) (length open)) ; leave the open and close there
+       (+ (search-backward-no-move open) (length open)) ; leave the open and close string there
        (- (search-forward close) (length close))
        )
       )
     )
   )
+
+
+(defun my/delete-between-single-quote  ()
+  (interactive)
+  (delete-in-between "'")
+  )
+(defun my/delete-between-double-quote  ()
+  (interactive)
+  (delete-in-between "\"")
+  )
+(defun my/delete-between-parenthesis  ()
+  (interactive)
+  (delete-in-between "(")
+  )
+(defun my/delete-between-bracket  ()
+  (interactive)
+  (delete-in-between "[")
+  )
+(defun my/delete-between-brace  ()
+  (interactive)
+  (delete-in-between "{")
+  )
+(defun my/delete-between-dollar  ()
+  (interactive)
+  (delete-in-between "$")
+  )    
+
+(defun my/delete-between-equal  ()
+  (interactive)
+  (delete-in-between "=")
+  )
+
+(global-set-key (kbd "C-c d '") 'my/delete-between-single-quote)
+(global-set-key (kbd "C-c d \"") 'my/delete-between-double-quote)
+(global-set-key (kbd "C-c d (") 'my/delete-between-parenthesis)
+(global-set-key (kbd "C-c d [") 'my/delete-between-bracket)
+(global-set-key (kbd "C-c d {") 'my/delete-between-brace)
+(global-set-key (kbd "C-c d $") 'my/delete-between-dollar)
+(global-set-key (kbd "C-c d =") 'my/delete-between-equal)
+
+(use-package smartparens-config
+  :ensure smartparens
+  :config (progn (show-smartparens-global-mode t)))
+
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+(global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+(global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."

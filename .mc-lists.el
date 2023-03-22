@@ -3,8 +3,14 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+	end-of-buffer
+	forward-sexp
 	org-beginning-of-line
+	org-edit-src-save
 	org-self-insert-command
+	sp-delete-char
+	sp-kill-region
+	sp-kill-word
 	))
 
 (setq mc/cmds-to-run-once
