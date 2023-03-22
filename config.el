@@ -1276,13 +1276,16 @@ Version 2020-10-17"
 
 (use-package smartparens-config
   :ensure smartparens
-  :config (progn (show-smartparens-global-mode t)))
+  :config
+  (progn (show-smartparens-global-mode t))
+  )
 
 (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
-(global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-(global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+
 ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 
 (defun copy-current-line-position-to-clipboard ()
