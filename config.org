@@ -1569,6 +1569,21 @@ package-install does not work for now
        :ensure t)
    #+end_src
 
+** sql
+
+tips: install pgformatter first, e.g., =brew install pgformatter=
+
+#+begin_src emacs-lisp
+  (use-package sqlformat
+    :ensure t
+    :config
+    (setq sqlformat-command 'pgformatter)
+    (setq sqlformat-args '("-s2" "-g")))
+#+end_src
+
+#+RESULTS:
+: t
+
 * yasnippet
 ** preparation
 

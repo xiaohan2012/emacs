@@ -6,7 +6,9 @@
 	end-of-buffer
 	forward-sexp
 	org-beginning-of-line
+	org-delete-char
 	org-edit-src-save
+	org-end-of-line
 	org-self-insert-command
 	sp-delete-char
 	sp-kill-region
