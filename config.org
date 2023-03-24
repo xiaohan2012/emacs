@@ -1394,7 +1394,7 @@ why not showing in non-GUI Emacs?
 	  ;; elpy-rpc-project-specific 't
 	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	  )
-    (add-hook 'elpy-mode-hook 'flycheck-mode)
+    ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
     :bind
     ;; remap the keys for some navigation functions
     ("C-s-n" . 'elpy-nav-forward-block)
@@ -1588,6 +1588,21 @@ package-install does not work for now
      (use-package dockerfile-mode
        :ensure t)
    #+end_src
+
+** sql
+
+tips: install pgformatter first, e.g., =brew install pgformatter=
+
+#+begin_src emacs-lisp
+  (use-package sqlformat
+    :ensure t
+    :config
+    (setq sqlformat-command 'pgformatter)
+    (setq sqlformat-args '("-s2" "-g")))
+#+end_src
+
+#+RESULTS:
+: t
 
 * yasnippet
 ** preparation
@@ -2186,6 +2201,7 @@ nice-to-have:
 
 #+RESULTS:
 
+** TODO delete calling to a callable
 ** delete text between "a pair"
 
 pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
@@ -2256,18 +2272,20 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+begin_src emacs-lisp
   (use-package smartparens-config
     :ensure smartparens
-    :config (progn (show-smartparens-global-mode t)))
+    :config
+    (progn (show-smartparens-global-mode t))
+    )
 
   (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-  (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+  ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
-  (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-  (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+  ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+  ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+
   ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 #+end_src
 
 #+RESULTS:
-| lambda | nil | (local-unset-key (kbd C-M-a)) |
 
 ** copy file and line
 

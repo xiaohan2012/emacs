@@ -745,7 +745,7 @@ Version 2020-10-17"
 	;; elpy-rpc-project-specific 't
 	elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	)
-  (add-hook 'elpy-mode-hook 'flycheck-mode)
+  ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
   :bind
   ;; remap the keys for some navigation functions
   ("C-s-n" . 'elpy-nav-forward-block)
@@ -1303,13 +1303,16 @@ Version 2020-10-17"
 
 (use-package smartparens-config
   :ensure smartparens
-  :config (progn (show-smartparens-global-mode t)))
+  :config
+  (progn (show-smartparens-global-mode t))
+  )
 
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
-(global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-(global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+
 ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 
 (defun copy-current-line-position-to-clipboard ()

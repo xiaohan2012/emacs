@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tensorboard
+# key: tsb
+# --
+tensorboard --logdir $1

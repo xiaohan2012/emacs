@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: check-tfrecords
-# key: check-tfrecords
+# name: read-tfrecords
+# key: read-tf
 # --
 import tensorflow as tf
 uri = '$1'
