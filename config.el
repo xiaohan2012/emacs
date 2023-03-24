@@ -311,6 +311,16 @@
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
 
+(use-package flycheck
+  :config
+  ; enable flycheck for certain modes
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+  ; disable flycheck for certain mode
+  (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode -1))))
+  )
+
 (use-package which-key
   :ensure t
   :init
@@ -418,6 +428,9 @@
   (setq org-todo-keyword-faces
 	'(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
   )
+
+(use-package oc-bibtex
+  :ensure t)
 
 (use-package markdown-mode
   :ensure t
@@ -668,6 +681,17 @@ Version 2020-10-17"
 :bind
 ("M-s" . avy-goto-char-timer))
 
+(use-package multiple-cursors
+  :ensure t
+  :bind
+  ("C-M-j" . 'mc/mark-all-dwim)
+  ("C-M-l" . 'mc/edit-lines)
+  ("C-<" . 'mc/mark-previous-like-this)
+  ("C->" . 'mc/mark-next-like-this)
+  ;; ("C-M->" . 'mc/skip-to-next-like-this)
+  ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
+  )
+
 ;; (use-package sublimity
 	;;   :ensure t
 	;;   :config
@@ -798,10 +822,24 @@ Version 2020-10-17"
 
 (use-package citar
   :ensure t
-
+  :after oc
   :hook
   (LaTeX-mode . citar-capf-setup)
   (org-mode . citar-capf-setup)
+
+  :custom
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar)
+
+
+
+  :general
+  (:keymaps 'org-mode-map
+	    :prefix "C-c b"
+	    "b" '(citar-insert-citation :wk "Insert citation")
+	    "r" '(citar-insert-reference :wk "Insert reference")
+	    "o" '(citar-open-notes :wk "Open note"))
   )
 
 (when (and (eq system-type 'gnu/linux)

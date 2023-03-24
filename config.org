@@ -1,18 +1,15 @@
 * random
 * wish list
 
-- [X] +packages by minad+
-  - https://www.youtube.com/watch?v=f0FMo_XxujU
-  - +https://github.com/minad/tab-bookmark+
-  - +learn about bookmarks+
-- fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+- [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+- [ ] [[ https://kristofferbalintona.me/posts/202206141852/#citar][citation in org]]
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
 - [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
-- [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
+- [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
 - [ ] ivy shortcut switch to multi-chars    
 - [ ] [[https://github.com/magnars/multiple-cursors.el][multicursor]]
   - like a generalization to rectangle, which cannot deal with discontinuous lines
@@ -27,16 +24,8 @@
   - [ ] key binding to yapf-fix-code
   - [ ] if a test passes, close the *compilation* buffer
   - [X] navigate by indentation
-- +ein:+
-  - when open a new nb, do not open two windows
-  - when closing a nb, close the window as well
-  - in traceback, linkify the file names and line numbers (is there a package to do that)
-  - jump to definition not working for my own functions
-- [X] python in general
-  - [X] function for =print({var}:', {var})=
-  - [X] wrap an identifier with list(..), set(..), or any function (using embark)    
-- [X] shortcut to open config/settings file
-- [X] conditional add symbols to electricmode
+- [ ] shortcut to open config/settings file
+- [ ] conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
 
 * good blogs on Emacs
@@ -572,6 +561,24 @@ adds annotation in minibuffer completions
 #+RESULTS:
 : marginalia-cycle
 
+** flycheck
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :config
+    ; enable flycheck for certain modes
+    (dolist (hook '(text-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode 1))))
+    ; disable flycheck for certain mode
+    (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode -1))))
+    )
+
+#+end_src
+
+#+RESULTS:
+: t
+
 * general enhancement
 ** which-key
 
@@ -816,6 +823,16 @@ enable executing shell scripts in code blocks
 #+end_src
 
 #+RESULTS:
+
+** citation
+
+#+begin_src emacs-lisp
+  (use-package oc-bibtex
+    :ensure t)
+#+end_src
+
+#+RESULTS:
+: t
 
 * markdown
 
@@ -1515,17 +1532,30 @@ why not showing in non-GUI Emacs?
 #+begin_src emacs-lisp
   (use-package citar
     :ensure t
-
+    :after oc
     :hook
     (LaTeX-mode . citar-capf-setup)
     (org-mode . citar-capf-setup)
+
+    :custom
+    (org-cite-insert-processor 'citar)
+    (org-cite-follow-processor 'citar)
+    (org-cite-activate-processor 'citar)
+
+  	
+
+    :general
+    (:keymaps 'org-mode-map
+	      :prefix "C-c b"
+	      "b" '(citar-insert-citation :wk "Insert citation")
+	      "r" '(citar-insert-reference :wk "Insert reference")
+	      "o" '(citar-open-notes :wk "Open note"))
     )
 
 
 #+end_src
 
 #+RESULTS:
-| citar-capf-setup | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 * other languages
 ** Matlab
