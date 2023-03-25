@@ -856,6 +856,12 @@ Version 2020-10-17"
 (use-package dockerfile-mode
   :ensure t)
 
+(use-package sqlformat
+  :ensure t
+  :config
+  (setq sqlformat-command 'pgformatter)
+  (setq sqlformat-args '("-s2" "-g")))
+
 (use-package yasnippet
   :ensure t
   :config
@@ -949,6 +955,53 @@ Version 2020-10-17"
 
 
 (show-paren-mode 1)
+
+(use-package cl-lib
+  :ensure t)
+
+
+(defvar punctuation-marks '(","
+			    "."
+			    "'"
+			    "&"
+			    "\"")
+  "List of Punctuation Marks that you want to count.")
+
+(defun count-raw-word-list (raw-word-list)
+  (cl-loop with result = nil
+	   for elt in raw-word-list
+	   do (cl-incf (cdr (or (assoc elt result)
+				(first (push (cons elt 0) result)))))
+	   finally return (sort result
+				(lambda (a b) (string< (car a) (car b))))))
+
+(defun word-stats ()
+  (interactive)
+  (let* ((words (split-string
+		 (downcase (buffer-string))
+		 (format "[ %s\f\t\n\r\v]+"
+			 (mapconcat #'identity punctuation-marks ""))
+		 t))
+	 (punctuation-marks (cl-remove-if-not
+			     (lambda (elt) (member elt punctuation-marks))
+			     (split-string (buffer-string) "" t )))
+	 (raw-word-list (append punctuation-marks words))
+	 (word-list (count-raw-word-list raw-word-list)))
+    (with-current-buffer (get-buffer-create "*word-statistics*")
+      (erase-buffer)
+      (insert "| word | occurences |
+	       |-----------+------------|\n")
+
+      (dolist (elt word-list)
+	(insert (format "| '%s' | %d |\n" (car elt) (cdr elt))))
+
+      (org-mode)
+      (indent-region (point-min) (point-max))
+      (goto-char 100)
+      (org-cycle)
+      (goto-char 79)
+      (org-table-sort-lines nil ?N)))
+  (pop-to-buffer "*word-statistics*"))
 
 (defun refrained-backward-word ()
   "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
@@ -1307,7 +1360,7 @@ Version 2020-10-17"
   (progn (show-smartparens-global-mode t))
   )
 
-;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
 ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
 ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
