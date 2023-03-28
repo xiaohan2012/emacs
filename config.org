@@ -1634,6 +1634,19 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 
    #+RESULTS:
 
+** fast acronyms
+
+#+begin_src emacs-lisp
+  (defun my/yas-add-acronyms (mode-sym acronyms)
+    "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+  acronyms is a list of (list acronym full-name)
+  "
+    (dolist (acr acronyms)
+      (yas--define mode-sym (car acr) (car (cdr acr)))
+      )
+    )
+#+end_src
+
 * config reload/edit
 ** config edit
 #+BEGIN_SRC emacs-lisp

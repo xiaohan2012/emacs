@@ -879,6 +879,15 @@ Version 2020-10-17"
 :ensure t
 )
 
+(defun my/yas-add-acronyms (mode-sym acronyms)
+  "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+acronyms is a list of (list acronym full-name)
+"
+  (dolist (acr acronyms)
+    (yas--define mode-sym (car acr) (car (cdr acr)))
+    )
+  )
+
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
 (interactive)
@@ -956,9 +965,10 @@ Version 2020-10-17"
 
 (show-paren-mode 1)
 
-(use-package cl-lib
-  :ensure t)
+;; (use-package cl-lib
+;;   :ensure t)
 
+(require 'cl-lib)
 
 (defvar punctuation-marks '(","
 			    "."
@@ -971,7 +981,7 @@ Version 2020-10-17"
   (cl-loop with result = nil
 	   for elt in raw-word-list
 	   do (cl-incf (cdr (or (assoc elt result)
-				(first (push (cons elt 0) result)))))
+				(car (push (cons elt 0) result)))))
 	   finally return (sort result
 				(lambda (a b) (string< (car a) (car b))))))
 
