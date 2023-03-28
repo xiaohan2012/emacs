@@ -1,58 +1,36 @@
 * random
 * wish list
 
-- [ ] +packages by minad+
-  - https://www.youtube.com/watch?v=f0FMo_XxujU
-  - +https://github.com/minad/tab-bookmark+
-  - +learn about bookmarks+
-- check this blog: https://wilkesley.org/~ian/xah/emacs/emacs.html
-- [X] auto-completion:
-  - vertico: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
-  - consult: https://github.com/minad/consult
-    - what does it do?
-  - marginalia: https://github.com/minad/marginalia
-    - which enriches the annotation of auto-completion candidates
-  - embark: https://github.com/oantolin/embark
-    - what does it do?
-  - orderless: https://github.com/oantolin/orderless
-    - more general searching?
-  - completion in doomemacs: https://github.com/doomemacs/doomemacs/tree/master/modules/completion/vertico
-    - vertico is the default
+- [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+- [ ] auto-completion in text mode with past frequency in mind
+  - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
+  - or https://github.com/doomemacs/doomemacs
+- [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
+- [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
+- [ ] [[https://emacsrocks.com/e05.html][macros]]
+- [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
+- [ ] ivy shortcut switch to multi-chars    
 - [ ] [[https://github.com/magnars/multiple-cursors.el][multicursor]]
-- [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
-- [ ] emacs doom: https://github.com/doomemacs/doomemacs
-  - a pre-configured emacs
-  - the auto-completion looks really cool
-- [ ] buffer tabs: how to have browser-like tabs for buffers
-  - tab-bar-mode
-  - tab-line-mode
-- [X] check this article, https://karthinks.com/software/avy-can-do-anything/#avy-plus-embark-any-action-anywhere
-- [ ] function to delete arguments inside a parenthesis, e.g., =np.ones(data.shape[0])=, remove =data.shape[0]=
-- [X] hardcode projectile ignore files and dirs: =__pycache__, .venv=
-- [ ] replace =func(a=1, b=2)= with =func(a=self.a, b=self.b)= automatically
-- [ ] put parenthesis on value, e.g., /a = asdfasdfasasdfadf/ => /a = (asdfasdfasasdfadf)/
-- [ ] elpy:
-  - code folding is not working
-  - hungry delete not usable in elpy-mode?
-  - importmagic
-  - in test: jump to error, or navigation in test output in general
-  - key binding to yapf-fix-code
-  - if a test passes, close the *compilation* buffer
-  - navigate by indentation
-- +ein:+
-  - when open a new nb, do not open two windows
-  - when closing a nb, close the window as well
-  - in traceback, linkify the file names and line numbers (is there a package to do that)
-  - jump to definition not working for my own functions
-- [X] python in general
-  - function for =print({var}:', {var})=
-  - wrap an identifier with list(..), set(..), or any function (using embark)
-  - change a variable name without moving cursor (kill identifier and insert new)
-- [X] shortcut to open config/settings file
+  - like a generalization to rectangle, which cannot deal with discontinuous lines
 - [ ] delete parenthesis by pairs
-- [ ] ivy shortcut switch to multi-chars
-- [X] conditional add symbols to electricmode
+  - smart-paren mode?    
+- [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
+- [-] elpy:
+  - [X] code folding is not working (turn on the mode)
+  - [ ] import package    
+  - [ ] hungry delete not usable in elpy-mode?
+  - [ ] in test: jump to error, or navigation in test output in general
+  - [ ] key binding to yapf-fix-code
+  - [ ] if a test passes, close the *compilation* buffer
+  - [X] navigate by indentation
+- [ ] conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
+- [ ] [[ https://kristofferbalintona.me/posts/202206141852/#citar][citation in org]]
+  
+* good blogs on Emacs
+
+- https://emacsrocks.com/
+- 
 
 * learning
 ** how to customize package variables -- use =setq=
@@ -582,6 +560,24 @@ adds annotation in minibuffer completions
 #+RESULTS:
 : marginalia-cycle
 
+** flycheck
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :config
+    ; enable flycheck for certain modes
+    (dolist (hook '(text-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode 1))))
+    ; disable flycheck for certain mode
+    (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode -1))))
+    )
+
+#+end_src
+
+#+RESULTS:
+: t
+
 * general enhancement
 ** which-key
 
@@ -826,6 +822,16 @@ enable executing shell scripts in code blocks
 #+end_src
 
 #+RESULTS:
+
+** citation
+
+#+begin_src emacs-lisp
+  (use-package oc-bibtex
+    :ensure t)
+#+end_src
+
+#+RESULTS:
+: t
 
 * markdown
 
@@ -1525,17 +1531,30 @@ why not showing in non-GUI Emacs?
 #+begin_src emacs-lisp
   (use-package citar
     :ensure t
-
+    :after oc
     :hook
     (LaTeX-mode . citar-capf-setup)
     (org-mode . citar-capf-setup)
+
+    :custom
+    (org-cite-insert-processor 'citar)
+    (org-cite-follow-processor 'citar)
+    (org-cite-activate-processor 'citar)
+
+  	
+
+    :general
+    (:keymaps 'org-mode-map
+	      :prefix "C-c b"
+	      "b" '(citar-insert-citation :wk "Insert citation")
+	      "r" '(citar-insert-reference :wk "Insert reference")
+	      "o" '(citar-open-notes :wk "Open note"))
     )
 
 
 #+end_src
 
 #+RESULTS:
-| citar-capf-setup | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 * other languages
 ** Matlab
@@ -1714,7 +1733,7 @@ how to avoid re-opening a new terminal?
 
 #+RESULTS:
 
-* miscellenous
+* miscellaneous
 ** show line/column number
 
 #+begin_src emacs-lisp
@@ -1759,7 +1778,62 @@ how to avoid re-opening a new terminal?
 
 #+RESULTS:
 : t
-* text maniputation
+** TODO word count (does not work)
+
+#+begin_src emacs-lisp
+  ;; (use-package cl-lib
+  ;;   :ensure t)
+
+  (require 'cl-lib)
+
+  (defvar punctuation-marks '(","
+			      "."
+			      "'"
+			      "&"
+			      "\"")
+    "List of Punctuation Marks that you want to count.")
+
+  (defun count-raw-word-list (raw-word-list)
+    (cl-loop with result = nil
+	     for elt in raw-word-list
+	     do (cl-incf (cdr (or (assoc elt result)
+				  (car (push (cons elt 0) result)))))
+	     finally return (sort result
+				  (lambda (a b) (string< (car a) (car b))))))
+
+  (defun word-stats ()
+    (interactive)
+    (let* ((words (split-string
+		   (downcase (buffer-string))
+		   (format "[ %s\f\t\n\r\v]+"
+			   (mapconcat #'identity punctuation-marks ""))
+		   t))
+	   (punctuation-marks (cl-remove-if-not
+			       (lambda (elt) (member elt punctuation-marks))
+			       (split-string (buffer-string) "" t )))
+	   (raw-word-list (append punctuation-marks words))
+	   (word-list (count-raw-word-list raw-word-list)))
+      (with-current-buffer (get-buffer-create "*word-statistics*")
+	(erase-buffer)
+	(insert "| word | occurences |
+		 |-----------+------------|\n")
+
+	(dolist (elt word-list)
+	  (insert (format "| '%s' | %d |\n" (car elt) (cdr elt))))
+
+	(org-mode)
+	(indent-region (point-min) (point-max))
+	(goto-char 100)
+	(org-cycle)
+	(goto-char 79)
+	(org-table-sort-lines nil ?N)))
+    (pop-to-buffer "*word-statistics*"))
+#+end_src
+
+#+RESULTS:
+: word-stats
+
+* text manipulation
 ** common functions
 
 #+begin_src emacs-lisp

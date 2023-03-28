@@ -311,6 +311,16 @@
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
 
+(use-package flycheck
+  :config
+  ; enable flycheck for certain modes
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+  ; disable flycheck for certain mode
+  (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode -1))))
+  )
+
 (use-package which-key
   :ensure t
   :init
@@ -418,6 +428,9 @@
   (setq org-todo-keyword-faces
 	'(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
   )
+
+(use-package oc-bibtex
+  :ensure t)
 
 (use-package markdown-mode
   :ensure t
@@ -809,10 +822,24 @@ Version 2020-10-17"
 
 (use-package citar
   :ensure t
-
+  :after oc
   :hook
   (LaTeX-mode . citar-capf-setup)
   (org-mode . citar-capf-setup)
+
+  :custom
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar)
+
+
+
+  :general
+  (:keymaps 'org-mode-map
+	    :prefix "C-c b"
+	    "b" '(citar-insert-citation :wk "Insert citation")
+	    "r" '(citar-insert-reference :wk "Insert reference")
+	    "o" '(citar-open-notes :wk "Open note"))
   )
 
 (when (and (eq system-type 'gnu/linux)
@@ -928,6 +955,53 @@ Version 2020-10-17"
 
 
 (show-paren-mode 1)
+
+(use-package cl-lib
+  :ensure t)
+
+
+(defvar punctuation-marks '(","
+			    "."
+			    "'"
+			    "&"
+			    "\"")
+  "List of Punctuation Marks that you want to count.")
+
+(defun count-raw-word-list (raw-word-list)
+  (cl-loop with result = nil
+	   for elt in raw-word-list
+	   do (cl-incf (cdr (or (assoc elt result)
+				(first (push (cons elt 0) result)))))
+	   finally return (sort result
+				(lambda (a b) (string< (car a) (car b))))))
+
+(defun word-stats ()
+  (interactive)
+  (let* ((words (split-string
+		 (downcase (buffer-string))
+		 (format "[ %s\f\t\n\r\v]+"
+			 (mapconcat #'identity punctuation-marks ""))
+		 t))
+	 (punctuation-marks (cl-remove-if-not
+			     (lambda (elt) (member elt punctuation-marks))
+			     (split-string (buffer-string) "" t )))
+	 (raw-word-list (append punctuation-marks words))
+	 (word-list (count-raw-word-list raw-word-list)))
+    (with-current-buffer (get-buffer-create "*word-statistics*")
+      (erase-buffer)
+      (insert "| word | occurences |
+	       |-----------+------------|\n")
+
+      (dolist (elt word-list)
+	(insert (format "| '%s' | %d |\n" (car elt) (cdr elt))))
+
+      (org-mode)
+      (indent-region (point-min) (point-max))
+      (goto-char 100)
+      (org-cycle)
+      (goto-char 79)
+      (org-table-sort-lines nil ?N)))
+  (pop-to-buffer "*word-statistics*"))
 
 (defun refrained-backward-word ()
   "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
