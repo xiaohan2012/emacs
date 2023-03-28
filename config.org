@@ -2111,7 +2111,21 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     (if (use-region-p)
 	(my/surround-region beg end "[")
       (my/surround-sexp "["))
-    )  
+    )
+
+  (defun my/surround-by-asterisk (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "*")
+      (my/surround-sexp "*"))
+    )    
+
+  (defun my/surround-by-backslash (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "/")
+      (my/surround-sexp "/"))
+    )    
 
 
 
@@ -2122,10 +2136,12 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
   (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
   (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+  (global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
+  (global-set-key (kbd "C-c s /") 'my/surround-by-backslash)
    #+end_src
 
    #+RESULTS:
-   : my/surround-by-brace
+   : my/surround-by-backslash
 
 ** surround path by string
 *** helper functions

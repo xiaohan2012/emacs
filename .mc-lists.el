@@ -5,6 +5,7 @@
       '(
 	end-of-buffer
 	forward-sexp
+	kill-region
 	org-beginning-of-line
 	org-delete-char
 	org-edit-src-save

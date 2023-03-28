@@ -829,6 +829,12 @@ Version 2020-10-17"
 (use-package dockerfile-mode
   :ensure t)
 
+(use-package sqlformat
+  :ensure t
+  :config
+  (setq sqlformat-command 'pgformatter)
+  (setq sqlformat-args '("-s2" "-g")))
+
 (use-package yasnippet
   :ensure t
   :config
@@ -1177,7 +1183,21 @@ Version 2020-10-17"
   (if (use-region-p)
       (my/surround-region beg end "[")
     (my/surround-sexp "["))
-  )  
+  )
+
+(defun my/surround-by-asterisk (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "*")
+    (my/surround-sexp "*"))
+  )    
+
+(defun my/surround-by-backslash (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "/")
+    (my/surround-sexp "/"))
+  )    
 
 
 
@@ -1188,6 +1208,8 @@ Version 2020-10-17"
 (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
 (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
 (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+(global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
+(global-set-key (kbd "C-c s /") 'my/surround-by-backslash)
 
 (defun my/surround-path-by-string (str)
   "surround a path-like string by another string"
