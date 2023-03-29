@@ -2,6 +2,7 @@
 * wish list
 
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+- [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
