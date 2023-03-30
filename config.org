@@ -3,6 +3,12 @@
 
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
 - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
+- [ ] quickly gls in another buffer
+- [ ] jump from left closing "$" to right closing "$" and vice versa
+- [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
+  - and when done, render the math
+- flyspell: fix the previous word (no need to move cursor back and forth)
+- [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
@@ -1206,14 +1212,16 @@ let's not use it for now since it works better for => 2= windows.
     (add-to-list 'ido-ignore-files "__pycache__")
     (add-to-list 'ido-ignore-files "\.pytest_cache")
     (add-to-list 'ido-ignore-files "\.pkl")
-  ; data files
+    ;; data files
     (add-to-list 'ido-ignore-files "\.hdf5")
-  ; latex-related
+    ;; latex-related
     (add-to-list 'ido-ignore-files "\.nav")
     (add-to-list 'ido-ignore-files "\.out")
     (add-to-list 'ido-ignore-files "\.pdf")
     (add-to-list 'ido-ignore-files "\.snm")
     (add-to-list 'ido-ignore-files "\.synctex.gz")
+    ;; org
+    (add-to-list 'ido-ignore-files "\.org_archive")
     (ido-mode 1)
     )
 #+END_SRC
@@ -1647,6 +1655,15 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
       )
     )
 #+end_src
+
+** indentation (does it work?)
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+#+end_src
+
+#+RESULTS:
+| (lambda nil (set (make-local-variable 'yas-indent-line) 'fixed)) | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 * config reload/edit
 ** config edit
@@ -2199,6 +2216,13 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     (if (use-region-p)
 	(my/surround-region beg end "[")
       (my/surround-sexp "["))
+    )
+
+  (defun my/surround-by-plus (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "+")
+      (my/surround-sexp "+"))
     )  
 
 
@@ -2210,10 +2234,11 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
   (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
   (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+  (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
    #+end_src
 
    #+RESULTS:
-   : my/surround-by-brace
+   : my/surround-by-plus
 
 ** surround path by string
 *** helper functions
