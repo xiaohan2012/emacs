@@ -2,6 +2,13 @@
 * wish list
 
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+- [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
+- [ ] quickly gls in another buffer
+- [ ] jump from left closing "$" to right closing "$" and vice versa
+- [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
+  - and when done, render the math
+- flyspell: fix the previous word (no need to move cursor back and forth)
+- [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
@@ -1208,14 +1215,16 @@ let's not use it for now since it works better for => 2= windows.
     (add-to-list 'ido-ignore-files "__pycache__")
     (add-to-list 'ido-ignore-files "\.pytest_cache")
     (add-to-list 'ido-ignore-files "\.pkl")
-  ; data files
+    ;; data files
     (add-to-list 'ido-ignore-files "\.hdf5")
-  ; latex-related
+    ;; latex-related
     (add-to-list 'ido-ignore-files "\.nav")
     (add-to-list 'ido-ignore-files "\.out")
     (add-to-list 'ido-ignore-files "\.pdf")
     (add-to-list 'ido-ignore-files "\.snm")
     (add-to-list 'ido-ignore-files "\.synctex.gz")
+    ;; org
+    (add-to-list 'ido-ignore-files "\.org_archive")
     (ido-mode 1)
     )
 #+END_SRC
@@ -1636,6 +1645,28 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
    #+END_SRC
 
    #+RESULTS:
+
+** fast acronyms
+
+#+begin_src emacs-lisp
+  (defun my/yas-add-acronyms (mode-sym acronyms)
+    "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+  acronyms is a list of (list acronym full-name)
+  "
+    (dolist (acr acronyms)
+      (yas--define mode-sym (car acr) (car (cdr acr)))
+      )
+    )
+#+end_src
+
+** indentation (does it work?)
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+#+end_src
+
+#+RESULTS:
+| (lambda nil (set (make-local-variable 'yas-indent-line) 'fixed)) | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
 * config reload/edit
 ** config edit
@@ -2203,7 +2234,12 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 	(my/surround-region beg end "/")
       (my/surround-sexp "/"))
     )    
-
+  (defun my/surround-by-plus (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "+")
+      (my/surround-sexp "+"))
+    )  
 
 
   (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
@@ -2215,167 +2251,11 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
   (global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
   (global-set-key (kbd "C-c s /") 'my/surround-by-backslash)
-   #+end_src
-
-   #+RESULTS:
-   : my/surround-by-backslash
-
-** surround path by string
-*** helper functions
-  #+begin_src emacs-lisp :results output
-
-    (defun my/surround-path-by-string (str)
-      "surround a path-like string by another string"
-      (let*  ((open-str str)
-	      (close-str (close-string open-str))
-	      (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-	      )
-	(save-excursion
-	  (skip-chars-backward delimiters)
-	  (insert open-str)
-	  (skip-chars-forward delimiters)
-	  (insert close-str)
-	  )
-	)
-      )    
-  #+end_src
-
-  #+RESULTS:
-
-
-   #+RESULTS:
-   : my/surround-chunk-by-brace
-
-** TODO surround a Python expression with a callable
-
-nice-to-have:
- 
-- [ ] autocomplete the function/method name e.g., using consult
-  
-#+begin_src emacs-lisp :results output
-  (defun my/py-insert-callable (beg end)
-    "prepends a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
-    (interactive "r")
-    (let ((py-callable (read-string "Which callable:")))
-      (save-excursion
-	(my/surround-by-parenthesis beg end)
-	(unless (string= (char-to-string (char-after)) "(") ; if we are not at the begining of the the chunk
-	  (search-backward "(")); search backward to the point to insert the prefix
-	(insert py-callable)
-	)
-      )
-    )
-
-  ;; enable the following keybinding only in Python
-  (use-package elpy
-    :bind ("C-c s f" . 'my/py-insert-callable))
-#+end_src
-
-
-#+RESULTS:
-
-** TODO delete calling to a callable
-** delete text between "a pair"
-
-pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
-
-#+begin_src emacs-lisp  
-  (defun delete-in-between (open)
-    "delete the text between a pair of symbols (e.g., `(' and `)'), \
-       the first element of the pair is speicifed by `open', \
-       while the second is inferred automatically using `close-str'"
-    (let ((close (close-string open)))
-      (save-excursion
-	(delete-region
-	 (+ (search-backward-no-move open) (length open)) ; leave the open and close string there
-	 (- (search-forward close) (length close))
-	 )
-	)
-      )
-    )
-
-
-  (defun my/delete-between-single-quote  ()
-    (interactive)
-    (delete-in-between "'")
-    )
-  (defun my/delete-between-double-quote  ()
-    (interactive)
-    (delete-in-between "\"")
-    )
-  (defun my/delete-between-parenthesis  ()
-    (interactive)
-    (delete-in-between "(")
-    )
-  (defun my/delete-between-bracket  ()
-    (interactive)
-    (delete-in-between "[")
-    )
-  (defun my/delete-between-brace  ()
-    (interactive)
-    (delete-in-between "{")
-    )
-  (defun my/delete-between-dollar  ()
-    (interactive)
-    (delete-in-between "$")
-    )    
-
-  (defun my/delete-between-equal  ()
-    (interactive)
-    (delete-in-between "=")
-    )
-
-  (global-set-key (kbd "C-c d '") 'my/delete-between-single-quote)
-  (global-set-key (kbd "C-c d \"") 'my/delete-between-double-quote)
-  (global-set-key (kbd "C-c d (") 'my/delete-between-parenthesis)
-  (global-set-key (kbd "C-c d [") 'my/delete-between-bracket)
-  (global-set-key (kbd "C-c d {") 'my/delete-between-brace)
-  (global-set-key (kbd "C-c d $") 'my/delete-between-dollar)
-  (global-set-key (kbd "C-c d =") 'my/delete-between-equal)
+  (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
 #+end_src
 
 #+RESULTS:
-: my/delete-between-equal
-
-** TODO copy text between "a pair"
-** TODO smartparen (how to use it?)
-
-   [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
-
-#+begin_src emacs-lisp
-  (use-package smartparens-config
-    :ensure smartparens
-    :config
-    ;; (progn (show-smartparens-global-morde t))
-    )
-
-  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-  ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
-
-  ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-  ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
-
-  ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
-#+end_src
-
-#+RESULTS:
-
-** copy file and line
-
-#+begin_src emacs-lisp
-  (defun copy-current-line-position-to-clipboard ()
-    "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
-    (interactive)
-    (let ((path-with-line-number
-	   (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
-      (kill-new path-with-line-number)
-      (message (concat path-with-line-number " copied to clipboard"))))
-
-  (global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
-#+end_src
-
-#+RESULTS:
-: copy-current-line-position-to-clipboard
+: my/surround-by-plus
 
 * mode line
 ** spaceline

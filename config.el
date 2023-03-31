@@ -879,6 +879,15 @@ Version 2020-10-17"
 :ensure t
 )
 
+(defun my/yas-add-acronyms (mode-sym acronyms)
+  "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+acronyms is a list of (list acronym full-name)
+"
+  (dolist (acr acronyms)
+    (yas--define mode-sym (car acr) (car (cdr acr)))
+    )
+  )
+
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
 (interactive)
