@@ -3,6 +3,8 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+	backward-sexp
+	electric-pair-delete-pair
 	end-of-buffer
 	forward-sexp
 	kill-region
@@ -11,6 +13,8 @@
 	org-edit-src-save
 	org-end-of-line
 	org-self-insert-command
+	sp-backward-delete-char
+	sp-backward-kill-word
 	sp-delete-char
 	sp-kill-region
 	sp-kill-word

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: python-with-df-output
+# key: pydf
+# --
+
+#+begin_src python :results value raw :return tabulate(df, headers=df.columns, tablefmt='orgtbl')
+import pandas as pd
+from tabulate import tabulate
+df = None
+#+end_src

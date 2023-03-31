@@ -956,9 +956,10 @@ Version 2020-10-17"
 
 (show-paren-mode 1)
 
-(use-package cl-lib
-  :ensure t)
+;; (use-package cl-lib
+;;   :ensure t)
 
+(require 'cl-lib)
 
 (defvar punctuation-marks '(","
 			    "."
@@ -971,7 +972,7 @@ Version 2020-10-17"
   (cl-loop with result = nil
 	   for elt in raw-word-list
 	   do (cl-incf (cdr (or (assoc elt result)
-				(first (push (cons elt 0) result)))))
+				(car (push (cons elt 0) result)))))
 	   finally return (sort result
 				(lambda (a b) (string< (car a) (car b))))))
 
@@ -1373,10 +1374,10 @@ Version 2020-10-17"
 (use-package smartparens-config
   :ensure smartparens
   :config
-  (progn (show-smartparens-global-mode t))
+  ;; (progn (show-smartparens-global-morde t))
   )
 
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
 ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
 ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)

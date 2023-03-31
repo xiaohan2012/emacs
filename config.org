@@ -6,6 +6,7 @@
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
 - [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
+- [ ] explore [[https://github.com/abo-abo/ace-window][ace-window]] for window switching
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
@@ -833,6 +834,7 @@ enable executing shell scripts in code blocks
 #+RESULTS:
 : t
 
+
 * markdown
 
   #+begin_src emacs-lisp
@@ -1095,6 +1097,7 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : qwerty
 
+** ace-window (alternative for the above)
 ** window splitting and following
 
    #+begin_src emacs-lisp
@@ -2335,7 +2338,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 : my/delete-between-equal
 
 ** TODO copy text between "a pair"
-** smartparen
+** TODO smartparen (how to use it?)
 
    [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
 
@@ -2343,10 +2346,10 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
   (use-package smartparens-config
     :ensure smartparens
     :config
-    (progn (show-smartparens-global-mode t))
+    ;; (progn (show-smartparens-global-morde t))
     )
 
-  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
   ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
   ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
