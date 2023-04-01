@@ -648,14 +648,16 @@ Version 2020-10-17"
   (add-to-list 'ido-ignore-files "__pycache__")
   (add-to-list 'ido-ignore-files "\.pytest_cache")
   (add-to-list 'ido-ignore-files "\.pkl")
-; data files
+  ;; data files
   (add-to-list 'ido-ignore-files "\.hdf5")
-; latex-related
+  ;; latex-related
   (add-to-list 'ido-ignore-files "\.nav")
   (add-to-list 'ido-ignore-files "\.out")
   (add-to-list 'ido-ignore-files "\.pdf")
   (add-to-list 'ido-ignore-files "\.snm")
   (add-to-list 'ido-ignore-files "\.synctex.gz")
+  ;; org
+  (add-to-list 'ido-ignore-files "\.org_archive")
   (ido-mode 1)
   )
 
@@ -887,6 +889,8 @@ acronyms is a list of (list acronym full-name)
     (yas--define mode-sym (car acr) (car (cdr acr)))
     )
   )
+
+(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
@@ -1267,9 +1271,21 @@ acronyms is a list of (list acronym full-name)
   (if (use-region-p)
       (my/surround-region beg end "[")
     (my/surround-sexp "["))
+  )
+
+(defun my/surround-by-plus (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "+")
+    (my/surround-sexp "+"))
   )  
 
-
+(defun my/surround-by-slash (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "/")
+    (my/surround-sexp "/"))
+  )
 
 (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
 (global-set-key (kbd "C-c s \"") 'my/surround-by-double-quote)
@@ -1278,6 +1294,8 @@ acronyms is a list of (list acronym full-name)
 (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
 (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
 (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+(global-set-key (kbd "C-c s +") 'my/surround-by-plus)
+(global-set-key (kbd "C-c s /") 'my/surround-by-slash)
 
 (defun my/surround-path-by-string (str)
   "surround a path-like string by another string"

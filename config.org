@@ -2225,7 +2225,12 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
       (my/surround-sexp "+"))
     )  
 
-
+  (defun my/surround-by-slash (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "/")
+      (my/surround-sexp "/"))
+    )
 
   (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
   (global-set-key (kbd "C-c s \"") 'my/surround-by-double-quote)
@@ -2235,6 +2240,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
   (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
   (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
+  (global-set-key (kbd "C-c s /") 'my/surround-by-slash)
    #+end_src
 
    #+RESULTS:
