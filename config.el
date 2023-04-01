@@ -648,14 +648,16 @@ Version 2020-10-17"
   (add-to-list 'ido-ignore-files "__pycache__")
   (add-to-list 'ido-ignore-files "\.pytest_cache")
   (add-to-list 'ido-ignore-files "\.pkl")
-; data files
+  ;; data files
   (add-to-list 'ido-ignore-files "\.hdf5")
-; latex-related
+  ;; latex-related
   (add-to-list 'ido-ignore-files "\.nav")
   (add-to-list 'ido-ignore-files "\.out")
   (add-to-list 'ido-ignore-files "\.pdf")
   (add-to-list 'ido-ignore-files "\.snm")
   (add-to-list 'ido-ignore-files "\.synctex.gz")
+  ;; org
+  (add-to-list 'ido-ignore-files "\.org_archive")
   (ido-mode 1)
   )
 
@@ -887,6 +889,8 @@ acronyms is a list of (list acronym full-name)
     (yas--define mode-sym (car acr) (car (cdr acr)))
     )
   )
+
+(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
@@ -1282,7 +1286,12 @@ acronyms is a list of (list acronym full-name)
       (my/surround-region beg end "/")
     (my/surround-sexp "/"))
   )    
-
+(defun my/surround-by-plus (beg end)
+  (interactive "r")
+  (if (use-region-p)
+      (my/surround-region beg end "+")
+    (my/surround-sexp "+"))
+  )  
 
 
 (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
@@ -1294,115 +1303,7 @@ acronyms is a list of (list acronym full-name)
 (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
 (global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
 (global-set-key (kbd "C-c s /") 'my/surround-by-backslash)
-
-(defun my/surround-path-by-string (str)
-  "surround a path-like string by another string"
-  (let*  ((open-str str)
-	  (close-str (close-string open-str))
-	  (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
-	  )
-    (save-excursion
-      (skip-chars-backward delimiters)
-      (insert open-str)
-      (skip-chars-forward delimiters)
-      (insert close-str)
-      )
-    )
-  )
-
-(defun my/py-insert-callable (beg end)
-  "prepends a Python callable (e.g., function or method) to a string (e.g., representing an argument, e.g., `args' -> `func(args)'"
-  (interactive "r")
-  (let ((py-callable (read-string "Which callable:")))
-    (save-excursion
-      (my/surround-by-parenthesis beg end)
-      (unless (string= (char-to-string (char-after)) "(") ; if we are not at the begining of the the chunk
-	(search-backward "(")); search backward to the point to insert the prefix
-      (insert py-callable)
-      )
-    )
-  )
-
-;; enable the following keybinding only in Python
-(use-package elpy
-  :bind ("C-c s f" . 'my/py-insert-callable))
-
-(defun delete-in-between (open)
-  "delete the text between a pair of symbols (e.g., `(' and `)'), \
-     the first element of the pair is speicifed by `open', \
-     while the second is inferred automatically using `close-str'"
-  (let ((close (close-string open)))
-    (save-excursion
-      (delete-region
-       (+ (search-backward-no-move open) (length open)) ; leave the open and close string there
-       (- (search-forward close) (length close))
-       )
-      )
-    )
-  )
-
-
-(defun my/delete-between-single-quote  ()
-  (interactive)
-  (delete-in-between "'")
-  )
-(defun my/delete-between-double-quote  ()
-  (interactive)
-  (delete-in-between "\"")
-  )
-(defun my/delete-between-parenthesis  ()
-  (interactive)
-  (delete-in-between "(")
-  )
-(defun my/delete-between-bracket  ()
-  (interactive)
-  (delete-in-between "[")
-  )
-(defun my/delete-between-brace  ()
-  (interactive)
-  (delete-in-between "{")
-  )
-(defun my/delete-between-dollar  ()
-  (interactive)
-  (delete-in-between "$")
-  )    
-
-(defun my/delete-between-equal  ()
-  (interactive)
-  (delete-in-between "=")
-  )
-
-(global-set-key (kbd "C-c d '") 'my/delete-between-single-quote)
-(global-set-key (kbd "C-c d \"") 'my/delete-between-double-quote)
-(global-set-key (kbd "C-c d (") 'my/delete-between-parenthesis)
-(global-set-key (kbd "C-c d [") 'my/delete-between-bracket)
-(global-set-key (kbd "C-c d {") 'my/delete-between-brace)
-(global-set-key (kbd "C-c d $") 'my/delete-between-dollar)
-(global-set-key (kbd "C-c d =") 'my/delete-between-equal)
-
-(use-package smartparens-config
-  :ensure smartparens
-  :config
-  ;; (progn (show-smartparens-global-morde t))
-  )
-
-;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
-
-;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
-
-;; (global-set-key (kbd "C-down") 'sp-down-sexp)
-
-(defun copy-current-line-position-to-clipboard ()
-  "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
-  (interactive)
-  (let ((path-with-line-number
-	 (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
-    (kill-new path-with-line-number)
-    (message (concat path-with-line-number " copied to clipboard"))))
-
-(global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
+(global-set-key (kbd "C-c s +") 'my/surround-by-plus)
 
 (use-package spaceline
   :ensure t
