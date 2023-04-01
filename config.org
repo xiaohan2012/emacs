@@ -13,6 +13,7 @@
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
 - [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
+- [ ] explore [[https://github.com/abo-abo/ace-window][ace-window]] for window switching
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
@@ -840,6 +841,7 @@ enable executing shell scripts in code blocks
 #+RESULTS:
 : t
 
+
 * markdown
 
   #+begin_src emacs-lisp
@@ -1102,6 +1104,7 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : qwerty
 
+** ace-window (alternative for the above)
 ** window splitting and following
 
    #+begin_src emacs-lisp
@@ -2218,6 +2221,13 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
       (my/surround-sexp "["))
     )
 
+  (defun my/surround-by-asterisk (beg end)
+    (interactive "r")
+    (if (use-region-p)
+	(my/surround-region beg end "*")
+      (my/surround-sexp "*"))
+    )    
+
   (defun my/surround-by-plus (beg end)
     (interactive "r")
     (if (use-region-p)
@@ -2239,12 +2249,13 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (global-set-key (kbd "C-c s (") 'my/surround-by-parenthesis)
   (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
   (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
+  (global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
   (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
   (global-set-key (kbd "C-c s /") 'my/surround-by-slash)
    #+end_src
 
    #+RESULTS:
-   : my/surround-by-plus
+   : my/surround-by-slash
 
 ** surround path by string
 *** helper functions
@@ -2401,7 +2412,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+end_src
 
 #+RESULTS:
-: copy-current-line-position-to-clipboard
+: my/surround-by-plus
 
 * mode line
 ** spaceline
