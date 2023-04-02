@@ -910,11 +910,11 @@ acronyms is a list of (list acronym full-name)
   (find-file "~/.zshrc"))
 (global-set-key (kbd "C-c z") 'zshrc-visit)
 
-(use-package multi-term
-  :ensure t
-  :config (setq multi-term-program "/bin/zsh")
-  :bind ("C-c m t" . 'multi-term)
-  )
+;; (use-package multi-term
+;;   :ensure t
+;;   :config (setq multi-term-program "/bin/zsh")
+;;   :bind ("C-c m t" . 'multi-term)
+;;   )
 
 
 
@@ -925,15 +925,18 @@ acronyms is a list of (list acronym full-name)
   (interactive (list my-term-shell)))
 (ad-activate 'ansi-term)
 
-(quelpa '(popon
-	  :fetcher git
-	  :url "https://codeberg.org/akib/emacs-popon.git"))
+;; (quelpa '(popon
+;; 	  :fetcher git
+;; 	  :url "https://codeberg.org/akib/emacs-popon.git"))
 
 
 
-(quelpa '(corfu-terminal
-	  :fetcher git
-	  :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
+;; (quelpa '(corfu-terminal
+;; 	  :fetcher git
+;; 	  :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
+
+(use-package ssh
+  :ensure t)
 
 (line-number-mode 1)
 (column-number-mode 1)
@@ -1162,34 +1165,29 @@ acronyms is a list of (list acronym full-name)
 
 ;; (global-set-key (kbd "C-c d p") 'delete-pair)
 
+(defun path-at-point ()
+  "return a path at point."
+  (let (beg end)
+    (save-excursion
+      (skip-chars-backward my/path-delimiters)
+      (setq beg (point))
+      (skip-chars-forward my/path-delimiters)
+      (setq end (point))
+      (buffer-substring-no-properties beg end)
+      ))
+  )
+
 (defun copy-path-at-point ()
-  "copy a path at point if it exists."
+  "copy a path at point."
   (interactive)
-  (let* (
-	 ($inputStr
-	  (if (use-region-p)
-	      (buffer-substring-no-properties (region-beginning) (region-end))
-	    (let ($p0 $p1 $p2
-		      ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
-		      ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\"))
-	      (setq $p0 (point))
-	      (skip-chars-backward $pathStops)
-	      (setq $p1 (point))
-	      (goto-char $p0)
-	      (skip-chars-forward $pathStops)
-	      (setq $p2 (point))
-	      (goto-char $p0)
-	      (buffer-substring-no-properties $p1 $p2))))
-	 ($path
-	  (replace-regexp-in-string
-	   "^file:///" "/"
-	   (replace-regexp-in-string
-	    ":\\'" "" $inputStr))))
+  (let ((str (path-at-point)))
     (with-temp-buffer
-      (insert $inputStr)
+      (insert str)
       (clipboard-kill-region (point-min) (point-max)))
-    (message (format "copied '%s'" $inputStr))
-    ))
+    (message (format "copied '%s'" str))
+    )
+  )
+
 (global-set-key (kbd "C-c w p") 'copy-path-at-point)
 
 (defun close-string (open-str)
@@ -1305,16 +1303,17 @@ acronyms is a list of (list acronym full-name)
 (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
 (global-set-key (kbd "C-c s /") 'my/surround-by-slash)
 
+(defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
+
 (defun my/surround-path-by-string (str)
   "surround a path-like string by another string"
   (let*  ((open-str str)
 	  (close-str (close-string open-str))
-	  (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
 	  )
     (save-excursion
-      (skip-chars-backward delimiters)
+      (skip-chars-backward my/path-delimiters)
       (insert open-str)
-      (skip-chars-forward delimiters)
+      (skip-chars-forward my/path-delimiters)
       (insert close-str)
       )
     )

@@ -11,7 +11,7 @@
 - [X] gls path and display output in another buffer/window
 - [X] display anything string prefixed by "gs://" as a google cloud storage link
   - https://orgmode.org/manual/Adding-Hyperlink-Types.html
-- [ ] "submit" command in org-babel and execute it on VM  
+- [X] submit commands to VM  
 
 * utility
 
@@ -271,6 +271,60 @@
 : unity/stop-vm
 
 ** remote SSH commands
+*** ensure a terminal is open
+
+#+begin_src emacs-lisp
+  (defvar unity/vm-hostname "hanxiao-dev-vm" "the hostname of my current dev VM")
+
+  (defun get-ssh-buffer-name (hostname)
+    "get the buffer name based on hostname"
+    (format "*ssh %s*" hostname))
+
+  (defun unity/vm-shell/get-buffer ()
+    "get the buffer name of my vm shell" 
+    (get-ssh-buffer-name unity/vm-hostname))
+
+  (defun my/ensure-ssh-terminal (hostname)
+    "if a ssh terminal for a specific hostname is not open, open one"
+    (let* ((ssh-buffer-name (get-ssh-buffer-name hostname)))
+      (when (not (get-buffer ssh-buffer-name))
+	(ssh hostname)
+	)
+      ssh-buffer-name
+      )
+    )
+
+  (defun unity/vm-shell//ensure-ssh-terminal ()
+    "ensure that a ssh terminal is open for my vm"
+    (interactive)
+    (my/ensure-ssh-terminal unity/vm-hostname)
+    )
+#+end_src
+
+#+RESULTS:
+: unity/vm-shell//ensure-ssh-terminal
+
+*** send command to ssh buffer and execute
+
+
+#+begin_src emacs-lisp
+  (defun unity/vm-shell/send-string (string)
+    "send a command string to execute on my VM machine shell
+  (no need to append a newline)"
+    (comint-send-string
+     (get-ssh-buffer-name unity/vm-hostname)
+     (format "%s\n" string))
+    )
+  ;; (unity/vm-shell/send-string "ls")
+  ;; (unity/vm-shell/send-string "mkf")
+#+end_src
+
+#+RESULTS:
+: unity/vm-shell/send-string
+
+
+- open a ssh terminal if not created
+- send a command 
 ** s2c train
 *** helper functions
 #+begin_src emacs-lisp
@@ -278,9 +332,9 @@
   (defvar prd-ds-env "mlp_prd" "name of ds environment in prd mode")
 
   (defun unity/get-train-command (pipeline-name ds-env exp-name run-name)
-    "get the command to run a training pipeline"  
+    "get the command to submit a training job"  
     (format
-     "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name \"%s\" --run_name \"%s\""
+     "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name %s --run_name %s"
      pipeline-name ds-env exp-name run-name))
 
   (defun unity/vm-shell/enter-kubeflow-shell ()
@@ -300,108 +354,68 @@
 #+RESULTS:
 : unity/vm-shell/exit-kubeflow-shell
 
+*** backup
+#+begin_src emacs-lisp
+  (defun unity/submit-pipeline-k-times (model-type ds-env exp-name run-name reps)
+    "submit a pipeline job to KF"  
+    (interactive (list (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)
+		       (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " (format "s2c-train-%s-test" model-type))
+		       (read-number "number of repetitions: " 1)
+		       ))
+    (let* ((command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name)))
+      (unity/vm-shell/enter-kubeflow-shell)
+      (if (eq reps 1)
+	  (unity/vm-shell/send-string command)
+	(dotimes (i reps)
+	  (unity/vm-shell/send-string (format "%s-%d" command i))
+	  )  
+	)    
+      (unity/vm-shell/exit-kubeflow-shell)
+      )
+    )
+#+end_src
+
 *** command wrappers
 - possible improvement:
-  - ds_env choose from two options
-  - reduce the amount of boiler plate code
+  - [X] ds_env choose from two options
+  - [X] reduce the amount of boiler plate code
     
 #+begin_src emacs-lisp
-  (defun unity/train-s2c-bhv (ds-env exp-name run-name)
-    "submit a s2c train bhv job to KF"
-    (interactive (list (read-string "ds_env: " dev-ds-env)
-		       (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "s2c-train-bhv-test")))
-    (let* ((command (unity/get-train-command "s2c_bhv_train" ds-env exp-name run-name)))
-      (unity/vm-shell/enter-kubeflow-shell)
-      (unity/vm-shell/send-string command)
-      (unity/vm-shell/exit-kubeflow-shell)
-      )
-    )
-
-  (defun unity/train-s2c-advctx (ds-env exp-name run-name)
-    "submit a s2c train bhv job to KF"
-    (interactive (list (read-string "ds_env: " dev-ds-env)
-		       (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "s2c-train-advctx-test")))
-    (let* ((command (unity/get-train-command "s2c_advctx_train" ds-env exp-name run-name)))
-      (unity/vm-shell/enter-kubeflow-shell)
-      (unity/vm-shell/send-string command)
-      (unity/vm-shell/exit-kubeflow-shell)
-      )
-    )
-
-  (defun unity/train-s2c-ctx (ds-env exp-name run-name)
-    "submit a s2c train ctx job to KF"
-    (interactive (list (read-string "ds_env: " dev-ds-env)
-		       (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "s2c-train-ctx-test")))
-    (let* ((command (unity/get-train-command "s2c_ctx_train" ds-env exp-name run-name)))
-      (unity/vm-shell/enter-kubeflow-shell)
-      (unity/vm-shell/send-string command)
-      (unity/vm-shell/exit-kubeflow-shell)
-      )
-    )
-#+end_src
-
-#+RESULTS:
-: unity/train-s2c-ctx
-
-*** ensure a terminal is open
-
-#+begin_src emacs-lisp
-  (defvar unity/vm-hostname "hanxiao-dev-vm" "hostname of my current dev VM")
-
-  (defun get-ssh-buffer-name (hostname)
-    "get the buffer name based on hostname"
-    (format "*ssh %s*" hostname))
-
-  (defun unity/vm-shell/get-buffer ()
-    "get the buffer name of my vm shell" 
-    (get-ssh-buffer-name unity/vm-hostname))
-
-  (defun ensure-ssh-terminal (hostname)
-    "if a ssh terminal for a specific hostname is not open, open one"
-    (let* ((ssh-buffer-name (get-ssh-buffer-name hostname)))
-      (when (not (get-buffer ssh-buffer-name))
-	  (ssh hostname)
-	;; (message (format "'%s' is opened already in %s" hostname ssh-buffer-name)
-	  )
-	)
-      ssh-buffer-name
-      )
-    )
-
-  (defun unity/vm-shell//ensure-ssh-terminal ()
-    "ensure that a ssh terminal is open for my vm"
+  (defun unity/submit-s2c-train-jobs ()
+    "submit a s2c training job to KF"
     (interactive)
-    (ensure-ssh-terminal unity/vm-hostname)
+    (let* ((model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
+	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+	   (exp-name (read-string "experiment name: " "han/exps"))
+	   (run-name (format (read-string "run name: " "s2c-train-%s-test") model-type))
+	   (reps (read-number "number of repetitions: " 1))
+	   (command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
+	   )
+      ;; show the ssh buffer in another buffer
+      (split-window-right)
+      (other-window 1)
+      (switch-to-buffer (unity/vm-shell/get-buffer))
+      (other-window 1)
+
+      (unity/vm-shell/enter-kubeflow-shell)
+      (if (eq reps 1)
+	  (unity/vm-shell/send-string command)
+	(dotimes (i reps)
+	  (unity/vm-shell/send-string (format "%s-%d" command i))
+	  )  
+	)    
+      (unity/vm-shell/exit-kubeflow-shell)
+      )
     )
+
+
+
 #+end_src
 
 #+RESULTS:
-: ensure-ssh-terminal
+: unity/submit-s2c-train-jobs
 
-*** send command to ssh buffer and execute
-
-
-#+begin_src emacs-lisp
-  (defun unity/vm-shell/send-string (string)
-    "send a command string to execute on my VM machine shell
-  (no need to append a newline)"
-    (comint-send-string
-     (get-ssh-buffer-name my/vm-hostname)
-     (format "%s\n" string))
-    )
-  ;; (unity/vm-shell/send-string "ls")
-  ;; (unity/vm-shell/send-string "mkf")
-#+end_src
-
-#+RESULTS:
-: unity/vm-shell/send-string
-
-
-- open a ssh terminal if not created
-- send a command 
 ** s2c datagen
 
 #+begin_src emacs-lisp
