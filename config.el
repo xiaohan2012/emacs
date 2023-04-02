@@ -1292,6 +1292,7 @@ acronyms is a list of (list acronym full-name)
   (if (use-region-p)
       (my/surround-region beg end "/")
     (my/surround-sexp "/"))
+  )
 
 (global-set-key (kbd "C-c s '") 'my/surround-by-single-quote)
 (global-set-key (kbd "C-c s \"") 'my/surround-by-double-quote)
@@ -1301,7 +1302,6 @@ acronyms is a list of (list acronym full-name)
 (global-set-key (kbd "C-c s [") 'my/surround-by-bracket)
 (global-set-key (kbd "C-c s {") 'my/surround-by-brace)
 (global-set-key (kbd "C-c s *") 'my/surround-by-asterisk)
-
 (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
 (global-set-key (kbd "C-c s /") 'my/surround-by-slash)
 
@@ -1413,7 +1413,6 @@ acronyms is a list of (list acronym full-name)
     (message (concat path-with-line-number " copied to clipboard"))))
 
 (global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
->>>>>>> 37fd0b196462afda49b201bac1dedadc395e0061
 
 (use-package spaceline
   :ensure t

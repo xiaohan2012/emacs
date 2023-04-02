@@ -1,0 +1,556 @@
+* about
+
+  just for Unity related configurations, keep it secret
+
+* wish list
+
+- [X] run a shell command and display output/error in another buffer
+- [X] vm
+  - [X] unity/start-vm
+  - [X] unity/stop-vm
+- [X] gls path and display output in another buffer/window
+- [X] display anything string prefixed by "gs://" as a google cloud storage link
+  - https://orgmode.org/manual/Adding-Hyperlink-Types.html
+- [ ] "submit" command in org-babel and execute it on VM  
+
+* utility
+
+** buffer
+
+#+begin_src emacs-lisp
+  (defun get-or-create-named-buffer (name)
+    "return a buffer with 'name', create it if it does not exist "
+    (let ((buffer-or-nil (get-buffer name)))
+      (if buffer-or-nil
+	  buffer-or-nil
+	(generate-new-buffer name)	
+	)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: get-or-create-named-buffer
+
+** shell 
+#+begin_src emacs-lisp
+  (defun my/async-shell-command (command buffer-name)
+    "execute command async and display the output and error message in a buffer named buffer-name"
+    (let* ((output-buffer (get-or-create-named-buffer buffer-name)))
+      (async-shell-command command output-buffer output-buffer)
+      ))  
+
+  ;; (my/async-shell-command "ls" "*ls-buffer*")
+#+end_src
+
+#+RESULTS:
+: #<window 94 on *ls-buffer*>
+
+* org config
+
+** python
+
+#+begin_src emacs-lisp
+  (setq org-babel-python-command "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/.venv/bin/python")
+
+#+end_src
+
+#+RESULTS:
+: /Users/hanxiao/code/mz-ds-deep-learning/cpi-model/.venv/bin/python
+
+* file opening shortcuts  
+** open note
+
+  #+begin_src elisp
+    (defun open-note ()
+      (interactive)
+      (find-file "/Users/hanxiao/code/mz-re-ml-new/reshap/notes.org"))
+    (global-set-key (kbd "C-c o n") 'open-note)
+  #+end_src
+
+  #+RESULTS:
+  : open-note  
+
+** shortcut: open onboarding.org
+   #+begin_src emacs-lisp
+     (defun onboarding-org-visit ()
+     "visit ~/docs/notes/onboarding.org"
+     (interactive)
+     (find-file "~/docs/notes/onboarding-ios.org"))
+     (global-set-key (kbd "C-c o o") 'onboarding-org-visit)
+   #+end_src
+
+   #+RESULTS:
+   : onboarding-org-visit
+
+** open this org file
+
+
+    #+begin_src elisp
+    (defun open-unity-org ()
+      (interactive)
+      (find-file "~/.emacs.d/unity.org"))
+    (global-set-key (kbd "C-c o u") 'open-unity-org)
+  #+end_src
+
+  #+RESULTS:
+  : open-unity-org
+
+** open settings file
+
+   #+begin_src emacs-lisp
+
+    (defun open-settings-file ()
+      (interactive)
+      (find-file "~/.emacs.d/unity.org"))
+    (global-set-key (kbd "C-c o u") 'open-unity-org)   
+
+   #+end_src
+** open config file in prd
+
+#+begin_src emacs-lisp
+  (defun replace-in-string (what with in)
+    (replace-regexp-in-string (regexp-quote what) with in nil 'literal))
+
+  (defun unity/open-file-in-prd ()
+    "based on the current config file in dev, open the mirroing file in prd"
+    (interactive)
+    (find-file
+     (replace-in-string
+      "/dev/"
+      "/prd/"
+      (buffer-file-name)
+      ))
+    )
+
+(defun unity/open-file-in-dev ()
+  "based on the current config file in prd, open the mirroing file in dev"
+  (interactive)
+  (find-file
+   (replace-in-string
+    "/prd/"
+    "/dev/"
+    (buffer-file-name)
+    ))
+  )  
+#+end_src
+
+* diff
+** diff prd and dev configs in mz-re-ml
+
+   #+begin_src emacs-lisp
+     (defun diff-prd-dev-configs ()
+       (interactive)
+       (diff "/Users/hanxiao/code/mz-re-ml-new/cpi-model/configs/adx/dev/config_conversion_train_bhv.yaml"
+	     "/Users/hanxiao/code/mz-re-ml-new/cpi-model/configs/adx/prd/config_conversion_train_bhv.yaml")
+       )
+   #+end_src
+
+   #+RESULTS:
+   : diff-prd-dev-configs
+
+** diff on mz-ds-deep-learning
+
+   #+begin_src emacs-lisp
+
+     ; training configs
+     (defun diff-advctx-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_s2c_advctx.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_s2c_advctx.yaml")
+     )
+
+     (defun diff-bhv-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_s2c_bhv.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_s2c_bhv.yaml")
+     )
+
+
+     (defun diff-ctx-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_s2c_ctx.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_s2c_ctx.yaml")
+     )
+
+     ; serving  configs
+     (defun diff-serving-ctx-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_serving_ctx_ios14.5.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_serving_ctx_ios14.5.yaml")
+     )
+
+     (defun diff-serving-bhv-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_serving_bhv_ios14.5.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_serving_bhv_ios14.5.yaml")
+     )
+
+
+     (defun diff-serving-advctx-prd-dev-configs ()
+     (interactive)
+     (diff "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/config_serving_advctx_ios14.5.yaml"
+	   "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/prd/config_serving_advctx_ios14.5.yaml")
+     )
+   #+end_src
+
+   #+RESULTS:
+   : diff-serving-advctx-prd-dev-configs
+* shell commands shortcut
+** +agg datagen+
+
+#+begin_src emacs-lisp
+  (defun unity-agg-datagen (exp-name run-name)
+    "Insert agglabels datagen command at the current position"
+    (interactive (list (read-string "experiment name: " "han/agglabels")
+		       (read-string "run name: " "agg-datagen")))
+    (insert (format
+	     "python kubeflow/pipelines/conv/skad_aggregated_labels_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
+	     exp-name run-name)))
+#+end_src
+
+#+RESULTS:
+: unity-agg-datagen
+
+** +agg train+
+
+#+begin_src emacs-lisp
+  (defun unity-agg-train (model-type exp-name run-name)
+    "Insert agglabels datagen command at the current position"
+    (interactive (list
+		  (read-string "model type: " "LR")
+		  (read-string "experiment name: " "han/agglabels")
+		  (read-string "run name: " "agg-train")))
+    (insert (format
+	     "python kubeflow/pipelines/conv/skad_aggregated_labels_train.py --ds_env mlp_dev --model_type '%s' --experiment_name '%s' --run_name '%s'"
+	     model-type exp-name run-name)))
+#+end_src
+
+#+RESULTS:
+: unity-agg-train
+
+** google storage buckets
+
+#+begin_src emacs-lisp
+  (defun unity-agg-input-buckets ()
+    "Insert insert gls command for input buckets for agglabels data"
+    (interactive)
+    (insert "gls gs://unity-ads-dd-ds-dev-prd-models/tfrecords/skad_aggregated_labels_han_test/v1b/"))
+
+  (defun unity-s2c-input-buckets ()
+    "Insert insert gls command for input buckets for s2c data"
+    (interactive)
+    (insert "gls gs://unity-ads-dd-ds-dev-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e_test/"))  
+
+  (defun unity-serving-buckets ()
+    "Insert insert gls command for serving models uri"
+    (interactive)
+    (insert "gls gs://unity-ads-dd-ds-dev-prd-models/tf-models/serving"))  
+#+end_src
+
+#+RESULTS:
+: unity-serving-buckets
+
+** VM
+
+#+begin_src emacs-lisp
+  (defun unity/start-vm ()
+    "start my VM "
+    (interactive)
+    (my/async-shell-command "cd ~/code/mz-ds-deep-learning; make start-dev-vm; " "*unity/vm*")
+    )
+
+  (defun unity/stop-vm ()
+    "stop my VM "
+    (interactive)
+    (my/async-shell-command "cd ~/code/mz-ds-deep-learning; make stop-dev-vm; " "*unity/vm*")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/stop-vm
+
+** remote SSH commands
+** s2c train
+*** helper functions
+#+begin_src emacs-lisp
+  (defvar dev-ds-env "mlp_dev" "name of ds environment in dev mode")
+  (defvar prd-ds-env "mlp_prd" "name of ds environment in prd mode")
+
+  (defun unity/get-train-command (pipeline-name ds-env exp-name run-name)
+    "get the command to run a training pipeline"  
+    (format
+     "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name \"%s\" --run_name \"%s\""
+     pipeline-name ds-env exp-name run-name))
+
+  (defun unity/vm-shell/enter-kubeflow-shell ()
+    "enter kubeflow shell in the VM"
+    (unity/vm-shell//ensure-ssh-terminal)
+    (unity/vm-shell/send-string "mkf")
+    )
+
+  (defun unity/vm-shell/exit-kubeflow-shell ()
+    "exit kubeflow shell in the VM"
+    (unity/vm-shell//ensure-ssh-terminal)
+    (unity/vm-shell/send-string "exit")
+    )
+
+#+end_src
+
+#+RESULTS:
+: unity/vm-shell/exit-kubeflow-shell
+
+*** command wrappers
+- possible improvement:
+  - ds_env choose from two options
+  - reduce the amount of boiler plate code
+    
+#+begin_src emacs-lisp
+  (defun unity/train-s2c-bhv (ds-env exp-name run-name)
+    "submit a s2c train bhv job to KF"
+    (interactive (list (read-string "ds_env: " dev-ds-env)
+		       (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " "s2c-train-bhv-test")))
+    (let* ((command (unity/get-train-command "s2c_bhv_train" ds-env exp-name run-name)))
+      (unity/vm-shell/enter-kubeflow-shell)
+      (unity/vm-shell/send-string command)
+      (unity/vm-shell/exit-kubeflow-shell)
+      )
+    )
+
+  (defun unity/train-s2c-advctx (ds-env exp-name run-name)
+    "submit a s2c train bhv job to KF"
+    (interactive (list (read-string "ds_env: " dev-ds-env)
+		       (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " "s2c-train-advctx-test")))
+    (let* ((command (unity/get-train-command "s2c_advctx_train" ds-env exp-name run-name)))
+      (unity/vm-shell/enter-kubeflow-shell)
+      (unity/vm-shell/send-string command)
+      (unity/vm-shell/exit-kubeflow-shell)
+      )
+    )
+
+  (defun unity/train-s2c-ctx (ds-env exp-name run-name)
+    "submit a s2c train ctx job to KF"
+    (interactive (list (read-string "ds_env: " dev-ds-env)
+		       (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " "s2c-train-ctx-test")))
+    (let* ((command (unity/get-train-command "s2c_ctx_train" ds-env exp-name run-name)))
+      (unity/vm-shell/enter-kubeflow-shell)
+      (unity/vm-shell/send-string command)
+      (unity/vm-shell/exit-kubeflow-shell)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/train-s2c-ctx
+
+*** ensure a terminal is open
+
+#+begin_src emacs-lisp
+  (defvar unity/vm-hostname "hanxiao-dev-vm" "hostname of my current dev VM")
+
+  (defun get-ssh-buffer-name (hostname)
+    "get the buffer name based on hostname"
+    (format "*ssh %s*" hostname))
+
+  (defun unity/vm-shell/get-buffer ()
+    "get the buffer name of my vm shell" 
+    (get-ssh-buffer-name unity/vm-hostname))
+
+  (defun ensure-ssh-terminal (hostname)
+    "if a ssh terminal for a specific hostname is not open, open one"
+    (let* ((ssh-buffer-name (get-ssh-buffer-name hostname)))
+      (when (not (get-buffer ssh-buffer-name))
+	  (ssh hostname)
+	;; (message (format "'%s' is opened already in %s" hostname ssh-buffer-name)
+	  )
+	)
+      ssh-buffer-name
+      )
+    )
+
+  (defun unity/vm-shell//ensure-ssh-terminal ()
+    "ensure that a ssh terminal is open for my vm"
+    (interactive)
+    (ensure-ssh-terminal unity/vm-hostname)
+    )
+#+end_src
+
+#+RESULTS:
+: ensure-ssh-terminal
+
+*** send command to ssh buffer and execute
+
+
+#+begin_src emacs-lisp
+  (defun unity/vm-shell/send-string (string)
+    "send a command string to execute on my VM machine shell
+  (no need to append a newline)"
+    (comint-send-string
+     (get-ssh-buffer-name my/vm-hostname)
+     (format "%s\n" string))
+    )
+  ;; (unity/vm-shell/send-string "ls")
+  ;; (unity/vm-shell/send-string "mkf")
+#+end_src
+
+#+RESULTS:
+: unity/vm-shell/send-string
+
+
+- open a ssh terminal if not created
+- send a command 
+** s2c datagen
+
+#+begin_src emacs-lisp
+  (defun unity-s2c-datagen (exp-name run-name)
+    "Insert s2c datagen command at the current position"
+    (interactive (list (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " "s2c-datagen")))
+    (insert (format
+	     "python kubeflow/pipelines/conv/s2c_combined_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
+	     exp-name run-name)))
+#+end_src
+
+#+RESULTS:
+: unity-s2c-datagen
+* Google cloud storage
+** ls URI at point
+gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
+
+#+begin_src emacs-lisp
+  (defun unity/gsutil-ls-path (path)
+    (my/async-shell-command (format "gsutil ls %s" path) "*unity/gsutil/ls-results*")
+    )
+  (defun unity/gsutil-ls-at-point ()
+    (interactive)
+    (let ((path (path-at-point)))
+      (unity/gsutil-ls-path path)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/gsutil-ls-at-point
+
+** DONE define gs as new link type in org
+gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
+
+#+begin_src emacs-lisp
+  (require 'ol)
+
+  (org-link-set-parameters "gs"
+			   :follow #'org-gs-open
+			   :export #'org-gs-export
+			   :store #'org-gs-store-link)
+
+  (defcustom org-gs-command 'gs
+    "The Emacs command to be used to display a gs link."
+    :group 'org-link
+    :type '(choice (const man) (const woman)))
+
+					  ; the extracted path by org omits gs:, therefore invalid
+					  ; FIX this!
+  (defun org-gs-open (_)
+    "ls path at point in GCS."
+    (unity/gsutil-ls-at-point))
+
+  (defun org-gs-store-link ()
+    "not implemented yet"
+    )
+
+
+  (defun org-gs-export (link description format _)
+    "not implemented yet"
+    )
+
+  ;; (provide ol-gs)
+#+end_src
+
+#+RESULTS:
+: org-gs-export
+
+** define gs as a new link type in YAML (or globally) ()
+* config update
+** train config: toggle between debug mode and full mode
+*** helper functions
+#+begin_src emacs-lisp
+  (defun buffer-contains-substring (string)
+    "return t if the current buffer contains string"
+    (save-excursion
+      (save-match-data
+	(goto-char (point-min))
+	(search-forward string nil t))))
+
+  (defun quick-replace (regexp new-text)
+    "replace all occurences of regexp by new-text"
+    (beginning-of-buffer)
+    (while (re-search-forward regexp nil t)
+      (replace-match new-text)
+      )
+
+  )
+
+  (defun unity/replace-field-in-buffer (field old new)
+    "replace a field's value (of old) by new"
+    (quick-replace   (concat field ": " old)   (concat field ": " new))
+    )
+#+end_src
+
+#+RESULTS:
+: unity/replace-field-in-buffer
+
+*** main functions
+
+#+begin_src emacs-lisp
+  (defun unity/config-train-to-full ()
+    "config the training to be full by changing the values of a few fields"
+    (interactive)
+    (unity/replace-field-in-buffer "n_iterations" "2" "40")
+    (unity/replace-field-in-buffer "val_loss_limit" "0.9" "0.11")
+    (unity/replace-field-in-buffer "limited_data" "true" "false")
+  )
+
+
+  (defun unity/config-train-to-debug ()
+    "config the training to be debug by changing the values of a few fields"
+    (interactive)
+    (unity/replace-field-in-buffer "n_iterations" "40" "2")
+    (unity/replace-field-in-buffer "val_loss_limit" "0.11" "0.9")
+    (unity/replace-field-in-buffer "limited_data" "false" "true")    
+  )
+
+  (defun unity/toggle-train-config ()
+  "alternate the config  between debug and full training mode"
+  (interactive)
+  (if (buffer-contains-substring "n_iterations: 2")
+      (unity/config-train-to-full) ; in debug mode
+    (unity/config-train-to-debug) ; in full mode
+  ))
+#+end_src
+
+#+RESULTS:
+: unity/toggle-train-config
+
+* Python/dev
+** activating virtualenv under cpi-model
+
+#+begin_src elisp
+  (defun activate-cpi-model-virtualenv (directory)
+    "pyenv-activate the virtual environment under cpi-model, e.g., './cpi-model/.venv'"
+    (interactive (list (read-directory-name "directory name: " "~/code/mz-ds-deep-learning/cpi-model")))
+    (message (format "activating virtuelenv under '%s'" directory))
+    (pyvenv-activate
+     (expand-file-name
+      ".venv" directory))
+    (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+    )
+
+  (global-set-key (kbd "C-c a c v") 'activate-cpi-model-virtualenv)
+#+end_src
+
+#+RESULTS:
+: activate-cpi-model-virtualenv
+

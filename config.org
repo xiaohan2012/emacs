@@ -3,7 +3,6 @@
 
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
 - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
-- [ ] quickly gls in another buffer
 - [ ] jump from left closing "$" to right closing "$" and vice versa
 - [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
   - and when done, render the math
@@ -1706,14 +1705,14 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
    #+end_src
 
 * terminals
-** TODO multi-term
+** +multi-term+
 
 #+begin_src emacs-lisp
-  (use-package multi-term
-    :ensure t
-    :config (setq multi-term-program "/bin/zsh")
-    :bind ("C-c m t" . 'multi-term)
-    )
+  ;; (use-package multi-term
+  ;;   :ensure t
+  ;;   :config (setq multi-term-program "/bin/zsh")
+  ;;   :bind ("C-c m t" . 'multi-term)
+  ;;   )
 #+end_src
 
 #+RESULTS:
@@ -1737,7 +1736,6 @@ how to avoid re-opening a new terminal?
 #+RESULTS:
 : shell
 
-
 ** zsh
 #+BEGIN_SRC emacs-lisp
   (defvar my-term-shell "/bin/zsh")
@@ -1749,20 +1747,31 @@ how to avoid re-opening a new terminal?
 #+RESULTS:
 : ansi-term
 
-** corfu-terminal (with auto-completion)
+** +corfu-terminal (with auto-completion)+
 
 #+begin_src emacs-lisp
 
 
-  (quelpa '(popon
-	    :fetcher git
-	    :url "https://codeberg.org/akib/emacs-popon.git"))
+  ;; (quelpa '(popon
+  ;; 	  :fetcher git
+  ;; 	  :url "https://codeberg.org/akib/emacs-popon.git"))
 
 
 
-  (quelpa '(corfu-terminal
-	    :fetcher git
-	    :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
+  ;; (quelpa '(corfu-terminal
+  ;; 	  :fetcher git
+  ;; 	  :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
+#+end_src
+
+#+RESULTS:
+
+** ssh
+
+start a remote terminal via ssh
+
+#+begin_src emacs-lisp
+  (use-package ssh
+    :ensure t)
 #+end_src
 
 #+RESULTS:
@@ -2096,34 +2105,29 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
 
    #+begin_src emacs-lisp
+     (defun path-at-point ()
+       "return a path at point."
+       (let (beg end)
+	 (save-excursion
+	   (skip-chars-backward my/path-delimiters)
+	   (setq beg (point))
+	   (skip-chars-forward my/path-delimiters)
+	   (setq end (point))
+	   (buffer-substring-no-properties beg end)
+	   ))
+       )
+
      (defun copy-path-at-point ()
-       "copy a path at point if it exists."
+       "copy a path at point."
        (interactive)
-       (let* (
-	      ($inputStr
-	       (if (use-region-p)
-		   (buffer-substring-no-properties (region-beginning) (region-end))
-		 (let ($p0 $p1 $p2
-			   ;; chars that are likely to be delimiters of file path or url, e.g. whitespace, comma. The colon is a problem. cuz it's in url, but not in file name. Don't want to use just space as delimiter because path or url are often in brackets or quotes as in markdown or html
-			   ($pathStops "^  \t\n\"`'‘’“”|[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\"))
-		   (setq $p0 (point))
-		   (skip-chars-backward $pathStops)
-		   (setq $p1 (point))
-		   (goto-char $p0)
-		   (skip-chars-forward $pathStops)
-		   (setq $p2 (point))
-		   (goto-char $p0)
-		   (buffer-substring-no-properties $p1 $p2))))
-	      ($path
-	       (replace-regexp-in-string
-		"^file:///" "/"
-		(replace-regexp-in-string
-		 ":\\'" "" $inputStr))))
+       (let ((str (path-at-point)))
 	 (with-temp-buffer
-	   (insert $inputStr)
+	   (insert str)
 	   (clipboard-kill-region (point-min) (point-max)))
-	 (message (format "copied '%s'" $inputStr))
-	 ))
+	 (message (format "copied '%s'" str))
+	 )
+       )
+
      (global-set-key (kbd "C-c w p") 'copy-path-at-point)
    #+end_src
 
@@ -2258,6 +2262,14 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    : my/surround-by-slash
 
 ** surround path by string
+*** some re-usable global variables
+#+begin_src emacs-lisp
+  (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
+#+end_src
+
+#+RESULTS:
+: my/path-delimiters
+
 *** helper functions
   #+begin_src emacs-lisp :results output
 
@@ -2265,12 +2277,11 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
       "surround a path-like string by another string"
       (let*  ((open-str str)
 	      (close-str (close-string open-str))
-	      (delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\")
 	      )
 	(save-excursion
-	  (skip-chars-backward delimiters)
+	  (skip-chars-backward my/path-delimiters)
 	  (insert open-str)
-	  (skip-chars-forward delimiters)
+	  (skip-chars-forward my/path-delimiters)
 	  (insert close-str)
 	  )
 	)
