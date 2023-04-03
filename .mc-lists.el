@@ -4,6 +4,7 @@
 (setq mc/cmds-to-run-for-all
       '(
 	backward-sexp
+	beginning-of-buffer
 	electric-pair-delete-pair
 	end-of-buffer
 	forward-sexp

@@ -294,7 +294,7 @@
       )
     )
 
-  (defun unity/vm-shell//ensure-ssh-terminal ()
+  (defun unity/vm-shell/ensure-ssh-terminal ()
     "ensure that a ssh terminal is open for my vm"
     (interactive)
     (my/ensure-ssh-terminal unity/vm-hostname)
@@ -302,7 +302,7 @@
 #+end_src
 
 #+RESULTS:
-: unity/vm-shell//ensure-ssh-terminal
+: unity/vm-shell/ensure-ssh-terminal
 
 *** send command to ssh buffer and execute
 
@@ -339,13 +339,13 @@
 
   (defun unity/vm-shell/enter-kubeflow-shell ()
     "enter kubeflow shell in the VM"
-    (unity/vm-shell//ensure-ssh-terminal)
+    (unity/vm-shell/ensure-ssh-terminal)
     (unity/vm-shell/send-string "mkf")
     )
 
   (defun unity/vm-shell/exit-kubeflow-shell ()
     "exit kubeflow shell in the VM"
-    (unity/vm-shell//ensure-ssh-terminal)
+    (unity/vm-shell/ensure-ssh-terminal)
     (unity/vm-shell/send-string "exit")
     )
 
@@ -353,28 +353,6 @@
 
 #+RESULTS:
 : unity/vm-shell/exit-kubeflow-shell
-
-*** backup
-#+begin_src emacs-lisp
-  (defun unity/submit-pipeline-k-times (model-type ds-env exp-name run-name reps)
-    "submit a pipeline job to KF"  
-    (interactive (list (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)
-		       (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " (format "s2c-train-%s-test" model-type))
-		       (read-number "number of repetitions: " 1)
-		       ))
-    (let* ((command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name)))
-      (unity/vm-shell/enter-kubeflow-shell)
-      (if (eq reps 1)
-	  (unity/vm-shell/send-string command)
-	(dotimes (i reps)
-	  (unity/vm-shell/send-string (format "%s-%d" command i))
-	  )  
-	)    
-      (unity/vm-shell/exit-kubeflow-shell)
-      )
-    )
-#+end_src
 
 *** command wrappers
 - possible improvement:
@@ -391,13 +369,15 @@
 	   (run-name (format (read-string "run name: " "s2c-train-%s-test") model-type))
 	   (reps (read-number "number of repetitions: " 1))
 	   (command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
+	   (ssh-buffer-name (unity/vm-shell/get-buffer))
 	   )
-      ;; show the ssh buffer in another buffer
-      (split-window-right)
-      (other-window 1)
-      (switch-to-buffer (unity/vm-shell/get-buffer))
-      (other-window 1)
-
+      ;; show the ssh buffer if invisible
+      (when (not (get-buffer-window ssh-buffer-name))
+	(split-window-right)
+	(other-window 1)
+	(switch-to-buffer ssh-buffer-name)
+	(other-window 1)
+	)
       (unity/vm-shell/enter-kubeflow-shell)
       (if (eq reps 1)
 	  (unity/vm-shell/send-string command)
@@ -405,8 +385,7 @@
 	  (unity/vm-shell/send-string (format "%s-%d" command i))
 	  )  
 	)    
-      (unity/vm-shell/exit-kubeflow-shell)
-      )
+      (unity/vm-shell/exit-kubeflow-shell))
     )
 
 
@@ -471,13 +450,15 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "ls path at point in GCS."
     (unity/gsutil-ls-at-point))
 
-  (defun org-gs-store-link ()
+  (defun org-gs-store-link (link _)
     "not implemented yet"
+    (unity/gsutil-ls-at-point)
     )
 
 
   (defun org-gs-export (link description format _)
     "not implemented yet"
+    (unity/gsutil-ls-at-point)
     )
 
   ;; (provide ol-gs)
