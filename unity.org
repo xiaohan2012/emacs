@@ -424,6 +424,7 @@
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
 
       (unity/vm-shell/update-git-repository git-branch)
+
       (unity/vm-shell/enter-kubeflow-shell)
       (dolist (model-type model-types)
 	(let* ((run-name (format run-name-template model-type))
@@ -431,8 +432,7 @@
 	  (if (eq reps 1)
 	      (unity/vm-shell/send-string command)
 	    (dotimes (i reps)
-	      (print (format "%s-%d" command i))
-	      ;; (unity/vm-shell/send-string (format "%s-%d" command i))
+	      (unity/vm-shell/send-string (format "%s-%d" command i))
 	      )  
 	    )
 	  )
