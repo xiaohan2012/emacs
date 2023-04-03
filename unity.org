@@ -379,7 +379,7 @@
 #+begin_src emacs-lisp
   (defun unity/vm-shell/update-git-repository (branch-name)
     "update the branch under the current git repo"
-    (unity/vm-shell/send-string "fetch")
+    (unity/vm-shell/send-string "git fetch")
     (unity/vm-shell/send-string (format "git checkout %s" branch-name))
     (unity/vm-shell/send-string "git pull") ; git pull
     )
