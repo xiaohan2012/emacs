@@ -1,21 +1,21 @@
 * random
 * wish list
 
+- learn about smart-parenthesis
+- latex
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
-- [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
-- [ ] jump from left closing "$" to right closing "$" and vice versa
-- [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
-  - and when done, render the math
-- flyspell: fix the previous word (no need to move cursor back and forth)
-- [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
+  - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
+  - [ ] jump from left closing "$" to right closing "$" and vice versa
+  - [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
+    - and when done, render the math
+  - flyspell: fix the previous word (no need to move cursor back and forth)
+  - [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
-- [ ] delete parenthesis by pairs
-  - smart-paren mode? 
 - [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - [-] elpy:
   - [X] code folding is not working (turn on the mode)
@@ -408,7 +408,7 @@ Kill from point up to PT.
 : t
 
 * auto completion
-** +company+
+** company
 
 #+begin_src emacs-lisp
   (use-package company
