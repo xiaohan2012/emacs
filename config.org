@@ -1814,7 +1814,7 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 ** indentation (does it work?)
 
 #+begin_src emacs-lisp
-(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 #+end_src
 
 #+RESULTS:
@@ -2617,7 +2617,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
     (diminish 'beacon-mode)
     (diminish 'subword-mode)
     )
-#+End_src
+#+end_src
 
 #+RESULTS:
 
@@ -2654,7 +2654,6 @@ Consult provides search and navigation commands
 #+begin_src emacs-lisp
   (use-package consult
     :ensure t
-
     :bind
     ("C-c f" . 'consult-find)  ;; find file
     ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
@@ -2668,8 +2667,7 @@ Consult provides search and navigation commands
     ("M-g M-g" . 'consult-goto-line)
     ("C-c c e" . 'consult-compile-error)
     )
-
-#+Ends_src
+#+end_src
 
 #+RESULTS:
 : consult-goto-line

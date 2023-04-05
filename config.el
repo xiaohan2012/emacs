@@ -949,7 +949,7 @@ acronyms is a list of (list acronym full-name)
     )
   )
 
-(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
@@ -1517,14 +1517,18 @@ acronyms is a list of (list acronym full-name)
 
 (use-package consult
   :ensure t
-
   :bind
-  ("C-c c f" . 'consult-find)  ;; find file
-  ("C-c s i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  ("C-c f" . 'consult-find)  ;; find file
+  ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+					; consult-imenu-multi for multiple buffers
   ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
   ("C-c y" . 'consult-yank-from-kill-ring)
   ("C-c r s" . 'consult-register-store)
   ("C-c r l" . 'consult-register)
+  ("C-c r l" . 'consult-register)
+  ("C-c m" . 'consult-mark)
+  ("M-g M-g" . 'consult-goto-line)
+  ("C-c c e" . 'consult-compile-error)
   )
 
 (defun swiper-forward-other-window (prefix)
