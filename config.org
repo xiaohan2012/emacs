@@ -12,7 +12,6 @@
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
 - [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
-- [ ] explore [[https://github.com/abo-abo/ace-window][ace-window]] for window switching
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
@@ -838,11 +837,11 @@ enable executing shell scripts in code blocks
 
 #+RESULTS:
 
-** citation
+** +citation+
 
 #+begin_src emacs-lisp
-  (use-package oc-bibtex
-    :ensure t)
+  ;; (use-package oc-bibtex
+  ;;   :ensure t)
 #+end_src
 
 #+RESULTS:
@@ -1078,40 +1077,55 @@ enable executing shell scripts in code blocks
    #+RESULTS:
 
 * window
-** switch-window
+** +switch-window+
 
 let's not use it for now since it works better for => 2= windows.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package switch-window
+  ;; (use-package switch-window
 
-    :ensure t
-    :init
-    (global-set-key (kbd "C-x o") 'switch-window)
-    (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
-    (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
-    (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
-    (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
+  ;;   :ensure t
+  ;;   :init
+  ;;   (global-set-key (kbd "C-x o") 'switch-window)
+  ;;   (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
+  ;;   (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
+  ;;   (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
+  ;;   (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
 
-    (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
-    (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
-    (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
-    (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
+  ;;   (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
+  ;;   (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
+  ;;   (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
 
-    (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
-    (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
+  ;;   (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
 
-    (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
+  ;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
 
-    (setq switch-window-threshold 2)
-    (setq switch-window-input-style 'minibuffer)
-    (setq switch-window-shortcut-style 'qwerty)
+  ;;   (setq switch-window-threshold 2)
+  ;;   (setq switch-window-input-style 'minibuffer)
+  ;;   (setq switch-window-shortcut-style 'qwerty)
 #+END_SRC
 
 #+RESULTS:
 : qwerty
 
-** ace-window (alternative for the above)
+** ace-window
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :ensure t
+    :config
+    (global-set-key (kbd "M-o") 'ace-window)
+    ;; update aw-ignored-buffers ignore certain buffers
+    )
+
+#+end_src
+
+#+RESULTS:
+: t
+
+
 ** window splitting and following
 
    #+begin_src emacs-lisp
@@ -1561,7 +1575,6 @@ why not showing in non-GUI Emacs?
     (org-cite-activate-processor 'citar)
 
   	
-
     :general
     (:keymaps 'org-mode-map
 	      :prefix "C-c b"
@@ -1576,25 +1589,86 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 
 * C++
-resource:
+** resource
 
-- https://tuhdo.github.io/c-ide.html
+- https://tuhdo.github.io/c-ide.html (as early as 2014)
   - what is helm? is it an alternative to consult and vertico?
-  - it is a bit old
 - https://medium.com/linux-with-michael/emacs-for-c-development-766c8b5866f
   - [[https://github.com/emacs-lsp/lsp-mode/][lsp]] (language server protocol)
+    - still developed [[https://github.com/emacs-lsp/lsp-mode/graphs/contributors][these days]]
   - [[https://github.com/MaskRay/ccls][ccls]] (C/C++ language server)
+    - no active development [[https://github.com/MaskRay/ccls/graphs/contributors][since 2019]]
   - [[https://www.tabnine.com/][tabnine]] (AI-based code completion)
   - [[https://emacs-lsp.github.io/lsp-ui/][lsp-ui]] (enhanced UI including documentation, imenu, etc)
-  - https://github.com/emacs-lsp/lsp-treemacs
+  - [[https://github.com/emacs-lsp/lsp-treemacs][lsp-treemacs]] (tree layout file explorer integrated with lsp)
 - https://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html
-- https://linuxhint.com/c_emacs_configuration/
+  - [[https://github.com/Sarcasm/irony-mode][irony]] (language server, e.g., code completion, syntax checking, etc)
+    - not actively developed [[https://github.com/Sarcasm/irony-mode/graphs/contributors][since 2019]]
+  - [[https://github.com/Andersbakken/rtags][rtags]] (indexer of C++ files)
+    - not actively developed [[https://github.com/Andersbakken/rtags/graphs/contributors][since 2021]]
+- https://linuxhint.com/c_emacs_configuration/ (2017)
   - "Compiling and running C++ Code"
 - https://github.com/emacs-exordium/exordium
+  - with some CMAKE support
 - https://www.reddit.com/r/emacs/comments/dlf0w7/whats_your_setup_for_cc_in_emacs/
 - https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
+  - [[https://clangd.llvm.org/installation.html][clangd]] (language server)
+- [[https://github.com/MaskRay/ccls/wiki/lsp-mode][setting up lsp]]
+  - [[https://github.com/tigersoldier/company-lsp][company-lsp]] ([[https://github.com/MaskRay/ccls/wiki/lsp-mode][deprecated]])
+- choice of language servers:
+  - clangd and ccls
+** checklist
 
-** ggtags
+- [X] code completion
+- [X] syntax checking
+- [ ] compilation
+- [X] jump to definition
+- [ ] switch between header and cpp files
+- [ ] lsp-treemacs
+- [ ] symbol reference
+- [X] header file completion
+- [X] Show function interface and variable definition
+- 
+
+** lsp-mode
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp)
+    ; clangd is used by default
+
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode)
+
+  (when (executable-find "clangd")
+    (add-hook 'c++-mode-hook #'lsp))
+    ;; (use-package ccls
+    ;;   :ensure t
+    ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+    ;; 	 (lambda () (require 'ccls) (lsp))))
+#+end_src
+
+#+RESULTS:
+| lsp |
+** lsp-treemacs
+
+#+begin_src emacs-lisp
+  (use-package lsp-treemacs  
+    :ensure t
+    :config
+    (lsp-treemacs-sync-mode 1))
+#+end_src
+
+- lsp-treemacs-errors-list: list error in a tree
+- lsp-treemacs-symbols: display the symbols
+- lsp-treemacs-references: display references at current point
+- lsp-treemacs-call-hierarchy: display the call hierarchy
+- 
+
+** TODO compiling/build the project?
+** 
 * other languages
 ** Matlab
 
@@ -1814,7 +1888,7 @@ start a remote terminal via ssh
 ** not sorted yet
 
 #+BEGIN_SRC emacs-lisp
-  (global-set-key (kbd "M-o")  'mode-line-other-buffer)
+  ;; (global-set-key (kbd "M-o")  'mode-line-other-buffer)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
   (when window-system
