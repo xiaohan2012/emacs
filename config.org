@@ -339,6 +339,14 @@ Kill from point up to PT.
 
 #+RESULTS:
 
+*** cursor type
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'bar)
+  (set-cursor-color "#fdda9a")
+#+end_src
+
+#+RESULTS:
+
 ** rainbow-delimiters
 
    coloring parenthesis by their levels
@@ -1567,6 +1575,26 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 
+* C++
+resource:
+
+- https://tuhdo.github.io/c-ide.html
+  - what is helm? is it an alternative to consult and vertico?
+  - it is a bit old
+- https://medium.com/linux-with-michael/emacs-for-c-development-766c8b5866f
+  - [[https://github.com/emacs-lsp/lsp-mode/][lsp]] (language server protocol)
+  - [[https://github.com/MaskRay/ccls][ccls]] (C/C++ language server)
+  - [[https://www.tabnine.com/][tabnine]] (AI-based code completion)
+  - [[https://emacs-lsp.github.io/lsp-ui/][lsp-ui]] (enhanced UI including documentation, imenu, etc)
+  - https://github.com/emacs-lsp/lsp-treemacs
+- https://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html
+- https://linuxhint.com/c_emacs_configuration/
+  - "Compiling and running C++ Code"
+- https://github.com/emacs-exordium/exordium
+- https://www.reddit.com/r/emacs/comments/dlf0w7/whats_your_setup_for_cc_in_emacs/
+- https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
+
+** ggtags
 * other languages
 ** Matlab
 
@@ -1960,17 +1988,25 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
+** global variables
+#+begin_src emacs-lisp
+  (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
+#+end_src
+
+#+RESULTS:
+: my/path-delimiters
+
 ** kill word, sexp, and line
 
 #+begin_src emacs-lisp
-  (defun kill-current-word ()
+  (defun kill-word-at-point ()
     "kill the current word"
     (interactive)
     (refrained-backward-word)
     (kill-word 1)
     )
 
-  (defun kill-current-sexp ()
+  (defun kill-sexp-at-point ()
     "kill the current sexp"
     (interactive)
     (refrained-backward-sexp)
@@ -1978,7 +2014,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     )
 
 
-  (defun kill-current-line ()
+  (defun kill-line-at-point ()
     "kill the current line"
     (interactive)
     (move-beginning-of-line 1)
@@ -1986,16 +2022,30 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     (previous-line)
     )
 
+  (defun kill-path-at-point ()
+    "kill path at point"
+    (interactive)
+    (let (beg end)        
+      (save-excursion
+	(skip-chars-backward my/path-delimiters)
+	(setq beg (point))
+	(skip-chars-forward my/path-delimiters)
+	(setq end (point))
+	(kill-region beg end))
+      )
+    )
+  
   ;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
   (bind-keys*
-   ("C-c d w" . kill-current-word)
-   ("C-c d l" . kill-current-line)
-   ("C-c d s" . kill-current-sexp)
+   ("C-c d w" . kill-word-at-point)
+   ("C-c d l" . kill-line-at-point)
+   ("C-c d s" . kill-sexp-at-point)
+   ("C-c d p" . kill-path-at-point)
    )
 #+end_src
 
 #+RESULTS:
-: kill-current-sexp
+: kill-path-at-point
 ** kill, copy, and yank in Latex
 # C-c w s on $\apxcntcore$ gives $\apxcntcore$, instead of \apxcntcore
 ** copy word, line, sexp
@@ -2133,7 +2183,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
    #+RESULTS:
    : copy-path-at-point
-
+   
 ** surround sexp by string
 *** main functions
 #+begin_src emacs-lisp
@@ -2262,13 +2312,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    : my/surround-by-slash
 
 ** surround path by string
-*** some re-usable global variables
-#+begin_src emacs-lisp
-  (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
-#+end_src
-
-#+RESULTS:
-: my/path-delimiters
 
 *** helper functions
   #+begin_src emacs-lisp :results output
