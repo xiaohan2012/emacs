@@ -11,15 +11,11 @@
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
-- [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
-- [ ] ivy shortcut switch to multi-chars    
-- [ ] [[https://github.com/magnars/multiple-cursors.el][multicursor]]
-  - like a generalization to rectangle, which cannot deal with discontinuous lines
 - [ ] delete parenthesis by pairs
-  - smart-paren mode?    
+  - smart-paren mode? 
 - [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - [-] elpy:
   - [X] code folding is not working (turn on the mode)
@@ -415,18 +411,21 @@ Kill from point up to PT.
 ** +company+
 
 #+begin_src emacs-lisp
-  ;; (use-package company
-  ;; :ensure t
-  ;; ;; :init
-  ;; ;; (add-hook 'after-init-hook 'global-company-mode)
-  ;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
-  ;; ;; :bind
-  ;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
-  ;; ) ;; global mode, do we need it
+  (use-package company
+  :ensure t
+  :init
+  ;; (add-hook 'after-init-hook 'global-company-mode)
+  (add-hook 'emacs-lisp-mode-hook 'company-mode)
+  ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+  :bind
+  (:map company-active-map ("<tab>" . company-complete-selection))
+
+  )
 
 #+end_src
 
 #+RESULTS:
+: company-complete-selection
 
 should we use =auto-complete-mode=? the recommendation seems to be quite limited.
 
@@ -1574,13 +1573,13 @@ why not showing in non-GUI Emacs?
     (org-cite-follow-processor 'citar)
     (org-cite-activate-processor 'citar)
 
-  	
-    :general
-    (:keymaps 'org-mode-map
-	      :prefix "C-c b"
-	      "b" '(citar-insert-citation :wk "Insert citation")
-	      "r" '(citar-insert-reference :wk "Insert reference")
-	      "o" '(citar-open-notes :wk "Open note"))
+
+    ;; :general
+    ;; (:keymaps 'org-mode-map
+    ;; 	    :prefix "C-c b"
+    ;; 	    "b" '(citar-insert-citation :wk "Insert citation")
+    ;; 	    "r" '(citar-insert-reference :wk "Insert reference")
+    ;; 	    "o" '(citar-open-notes :wk "Open note"))
     )
 
 
@@ -1696,11 +1695,15 @@ use projectile-find-other-file (C-c p a)
 use =compile=
 
 #+begin_src emacs-lisp
-(define-key c++-mode-map (kbd "C-c C-c") 'compile)
+  (add-hook
+     'c++-mode-hook
+      (lambda ()
+	(local-set-key (kbd "C-c C-c") #'compile)))
+  ;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
 #+end_src
 
 #+RESULTS:
-: compile
+| (lambda nil (local-set-key (kbd C-c C-c) #'compile)) | lsp |
 
 ** jump back and forth between treemacs window
 
@@ -1833,11 +1836,11 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 ** config reload
 
 #+BEGIN_SRC emacs-lisp
-(defun config-reload ()
-  "Reloads ~/.emacs.d/config.org at runtime"
-  (interactive)
-  (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-(global-set-key (kbd "C-c r") 'config-reload)
+  (defun config-reload ()
+    "Reloads ~/.emacs.d/config.org at runtime"
+    (interactive)
+    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+  ;; (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
 
 #+RESULTS:
@@ -2633,14 +2636,16 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 * searching
 ** text search
   #+begin_src  emacs-lisp
-	(use-package swiper
-	  :ensure t
-	  :bind
-	  ("C-s" . swiper))
+    (use-package swiper
+      :ensure t
+      :bind
+      ("C-s" . swiper)
+      ("C-r" . swiper-backward)
+      )
   #+end_src
 
   #+RESULTS:
-  : swiper
+  : swiper-backward
 
 ** [[https://github.com/minad/consult][consult]]
 
@@ -2650,13 +2655,31 @@ Consult provides search and navigation commands
   (use-package consult
     :ensure t
 
-    :bind ("C-c c f" . 'consult-find)  ;; find file
-    :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+    :bind
+    ("C-c f" . 'consult-find)  ;; find file
+    ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+					  ; consult-imenu-multi for multiple buffers
+    ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
+    ("C-c y" . 'consult-yank-from-kill-ring)
+    ("C-c r s" . 'consult-register-store)
+    ("C-c r l" . 'consult-register)
+    ("C-c r l" . 'consult-register)
+    ("C-c m" . 'consult-mark)
+    ("M-g M-g" . 'consult-goto-line)
+    ("C-c c e" . 'consult-compile-error)
     )
-#+end_src
+
+#+Ends_src
 
 #+RESULTS:
-: consult-imenu
+: consult-goto-line
+
+other useful functions:
+
+- consult-line-multi: search line in multiple buffers
+- 
+#+RESULTS:
+: consult-goto-line
 
 ** search in the other window
 

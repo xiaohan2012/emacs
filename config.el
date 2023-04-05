@@ -191,14 +191,16 @@
 			(recents . 5)))
 (setq dashboard-banner-logo-title "Hello Han."))
 
-;; (use-package company
-;; :ensure t
-;; ;; :init
-;; ;; (add-hook 'after-init-hook 'global-company-mode)
-;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
-;; ;; :bind
-;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
-;; ) ;; global mode, do we need it
+(use-package company
+:ensure t
+:init
+;; (add-hook 'after-init-hook 'global-company-mode)
+(add-hook 'emacs-lisp-mode-hook 'company-mode)
+;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+:bind
+(:map company-active-map ("<tab>" . company-complete-selection))
+
+)
 
 ;; (use-package corfu
 ;;   :ensure t
@@ -845,12 +847,12 @@ Version 2020-10-17"
   (org-cite-activate-processor 'citar)
 
 
-  :general
-  (:keymaps 'org-mode-map
-	    :prefix "C-c b"
-	    "b" '(citar-insert-citation :wk "Insert citation")
-	    "r" '(citar-insert-reference :wk "Insert reference")
-	    "o" '(citar-open-notes :wk "Open note"))
+  ;; :general
+  ;; (:keymaps 'org-mode-map
+  ;; 	    :prefix "C-c b"
+  ;; 	    "b" '(citar-insert-citation :wk "Insert citation")
+  ;; 	    "r" '(citar-insert-reference :wk "Insert reference")
+  ;; 	    "o" '(citar-open-notes :wk "Open note"))
   )
 
 (use-package lsp-mode
@@ -886,6 +888,20 @@ Version 2020-10-17"
   (defun treemacs-ignore-c++-object-files (file _)
     (s-suffix? ".o" file))
   (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+
+(add-hook
+   'c++-mode-hook
+    (lambda ()
+      (local-set-key (kbd "C-c C-c") #'compile)))
+;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
+
+(defun my/treemacs-back-and-forth ()
+  (interactive)
+  (if (treemacs-is-treemacs-window-selected?)
+      (aw-flip-window)
+    (treemacs-select-window)))
+
+(global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
 
 (when (and (eq system-type 'gnu/linux)
 	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
@@ -945,7 +961,7 @@ acronyms is a list of (list acronym full-name)
   "Reloads ~/.emacs.d/config.org at runtime"
   (interactive)
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-(global-set-key (kbd "C-c r") 'config-reload)
+;; (global-set-key (kbd "C-c r") 'config-reload)
 
 (defun zshrc-visit ()
   "visit ~/.zshrc"
@@ -1495,13 +1511,20 @@ acronyms is a list of (list acronym full-name)
 (use-package swiper
   :ensure t
   :bind
-  ("C-s" . swiper))
+  ("C-s" . swiper)
+  ("C-r" . swiper-backward)
+  )
 
 (use-package consult
   :ensure t
 
-  :bind ("C-c c f" . 'consult-find)  ;; find file
-  :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  :bind
+  ("C-c c f" . 'consult-find)  ;; find file
+  ("C-c s i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
+  ("C-c y" . 'consult-yank-from-kill-ring)
+  ("C-c r s" . 'consult-register-store)
+  ("C-c r l" . 'consult-register)
   )
 
 (defun swiper-forward-other-window (prefix)
