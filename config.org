@@ -1624,8 +1624,8 @@ why not showing in non-GUI Emacs?
 - [ ] compilation
 - [X] jump to definition
 - [ ] switch between header and cpp files
-- [ ] lsp-treemacs
-- [ ] symbol reference
+- [X] lsp-treemacs
+- [X] symbol reference
 - [X] header file completion
 - [X] Show function interface and variable definition
 - 
@@ -1659,16 +1659,64 @@ why not showing in non-GUI Emacs?
     :ensure t
     :config
     (lsp-treemacs-sync-mode 1))
+
+  (defun my/goto-treemacs ()
+    "goto treemacs window, create one if it is not there"
+    (window-list)
+    ;; (print (get-buffer-window-list "Treemacs"))
+    )
+
+  ;; (my/goto-treemacs)
 #+end_src
 
+tips:
 - lsp-treemacs-errors-list: list error in a tree
 - lsp-treemacs-symbols: display the symbols
 - lsp-treemacs-references: display references at current point
 - lsp-treemacs-call-hierarchy: display the call hierarchy
-- 
+- inside treemacs: press "?" to show the help
+** ignore files
 
-** TODO compiling/build the project?
-** 
+#+begin_src emacs-lisp
+  (with-eval-after-load 'treemacs
+    (defun treemacs-ignore-c++-object-files (file _)
+      (s-suffix? ".o" file))
+    (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+#+end_src
+
+#+RESULTS:
+| treemacs-ignore-c++-object-files | treemacs-ignore-c++-object-files | treemacs--std-ignore-file-predicate | treemacs--mac-ignore-file-predicate |
+
+** switch between .h and .cpp
+
+use projectile-find-other-file (C-c p a)
+
+** compiling/build the project
+
+use =compile=
+
+#+begin_src emacs-lisp
+(define-key c++-mode-map (kbd "C-c C-c") 'compile)
+#+end_src
+
+#+RESULTS:
+: compile
+
+** jump back and forth between treemacs window
+
+#+begin_src emacs-lisp
+  (defun my/treemacs-back-and-forth ()
+    (interactive)
+    (if (treemacs-is-treemacs-window-selected?)
+	(aw-flip-window)
+      (treemacs-select-window)))
+
+  (global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
+#+end_src
+
+#+RESULTS:
+: my/treemacs-back-and-forth
+
 * other languages
 ** Matlab
 

@@ -600,6 +600,7 @@ Version 2020-10-17"
   :ensure t
   :config
   (global-set-key (kbd "M-o") 'ace-window)
+  ;; update aw-ignored-buffers ignore certain buffers
   )
 
 (defun split-window-and-follow-vertically ()
@@ -872,6 +873,19 @@ Version 2020-10-17"
   :ensure t
   :config
   (lsp-treemacs-sync-mode 1))
+
+(defun my/goto-treemacs ()
+  "goto treemacs window, create one if it is not there"
+  (window-list)
+  ;; (print (get-buffer-window-list "Treemacs"))
+  )
+
+;; (my/goto-treemacs)
+
+(with-eval-after-load 'treemacs
+  (defun treemacs-ignore-c++-object-files (file _)
+    (s-suffix? ".o" file))
+  (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
 
 (when (and (eq system-type 'gnu/linux)
 	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
