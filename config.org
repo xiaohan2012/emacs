@@ -1,8 +1,7 @@
 * random
 * wish list
 
-- learn about smart-parenthesis
-- latex
+- [ ] latex
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
   - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
   - [ ] jump from left closing "$" to right closing "$" and vice versa
@@ -1115,7 +1114,7 @@ let's not use it for now since it works better for => 2= windows.
   (use-package ace-window
     :ensure t
     :config
-    (global-set-key (kbd "M-o") 'ace-window)
+    (global-set-key (kbd "C-M-o") 'ace-window)
     ;; update aw-ignored-buffers ignore certain buffers
     )
 
@@ -1939,7 +1938,7 @@ start a remote terminal via ssh
 ** not sorted yet
 
 #+BEGIN_SRC emacs-lisp
-  ;; (global-set-key (kbd "M-o")  'mode-line-other-buffer)
+  (global-set-key (kbd "M-o")  'mode-line-other-buffer)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
   (when window-system
@@ -2553,11 +2552,13 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+RESULTS:
 : my/delete-between-equal
 
-** TODO copy text between "a pair"
-** smartparen
+** ❤️ smartparen
 
-   [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
+[[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
 
+*** installation
+
+  
 #+begin_src emacs-lisp
   (use-package smartparens-config
     :ensure smartparens
@@ -2565,7 +2566,8 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
     (progn (show-smartparens-global-mode t))
     )
 
-  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
   ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
   ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
@@ -2575,6 +2577,209 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+end_src
 
 #+RESULTS:
+| turn-on-smartparens-mode | rainbow-delimiters-mode |
+
+*** keybindings
+
+for Mac users: deselect "M-<up>" and "M-<down>" binding in "keyboard short cut" -> "mission control"
+  
+#+begin_src emacs-lisp
+
+  (bind-keys
+   :map smartparens-mode-map
+   ("M-a" . sp-beginning-of-sexp)
+   ("M-e" . sp-end-of-sexp)
+
+   ;; hierarchy-level movement
+   ("C-<down>" . sp-down-sexp)
+					  ; it might be clearer if the name is sp-forward-down-sexp, which forward + down on paren
+					  ; and the cursor stops at the begining of the target sexp
+
+   ("C-<up>" . sp-up-sexp)
+					  ; = forward and up, which jumps out of the current paren
+
+   ("M-<down>" . sp-backward-down-sexp)
+					  ; = backward and "jump in" on paren the reverse of sp-down-sexp
+					  ; the cursor stops at the beginning of the target
+   ("M-<up>" . sp-backward-up-sexp)
+					  ; = backward and "jump out"
+
+   ;; balanced expression-level movement, like normal "C-M-f" and "C-M-b"
+   ("C-M-f" . sp-forward-sexp)
+					  ; forward one sexp (including comments) to the end of the target
+   ("C-M-b" . sp-backward-sexp)
+					  ; backward one sexp to the begining of the target
+
+   ;; sexp-level movement
+   ;; keybinding is set to mimic org-mode's C-c C-[n|p]
+   ("C-c C-n" . sp-next-sexp)
+					  ; move to the begining of the next sexp, which is equals to sp-down-sexp + sp-up-sexp + sp-down-sexp
+   ("C-c C-p" . sp-previous-sexp)           ;
+
+   ;;free-form movement, ignoring the hierarchy
+   ("C-S-f" .  sp-forward-symbol)
+
+   ("C-S-b" .  sp-backward-symbol))
+
+#+end_src
+
+#+RESULTS:
+: sp-backward-symbol
+
+comments in navigation in elisp:
+
+- think of the code as a tree!
+  
+#+begin_src emacs-lisp
+  (let ((x "asdf asdf asdfads ")))
+
+  (defun format-date (format)
+    "Insert date with FORMAT specification using a specific locale."
+    (let (
+	  (system-time-locale "en_US.UTF-8"))
+      (insert (format-time-string format))))
+
+  "asf"
+
+  (defun blah ()
+    "Returns blah of foo."
+    (asf)
+    (asdf))
+  (defun blah () (let ((x 0)) (+ x 1)))
+
+
+  (defun asd ()
+    (insert (a very long and long and long and long list
+) (asdf asdf ads )))
+
+  "asdfasdfads sadf asdf asdf ads"
+#+end_src
+
+#+RESULTS:
+: asdfasdfads sadf asdf asdf ads
+
+*** wrapping
+
+#+begin_src emacs-lisp
+   (defun wrap-with-parens (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "(")
+     )	    
+
+   (defun wrap-with-brackets (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "[")
+     )	    
+
+   (defun wrap-with-braces (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "{")
+     )	    
+
+   (defun wrap-with-single-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "'")
+     )
+
+   (defun wrap-with-double-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "\"")
+     )
+
+   (defun wrap-with-back-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "`")
+     )
+
+   (defun wrap-with-underscores (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "_")
+     )
+
+  (bind-keys
+   :map smartparens-mode-map
+   ("C-c s ("  . wrap-with-parens)
+   ("C-c s ["  . wrap-with-brackets)
+   ("C-c s {"  . wrap-with-braces)
+   ("C-c s '"  . wrap-with-single-quotes)
+   ("C-c s \"" . wrap-with-double-quotes)
+   ("C-c s _"  . wrap-with-underscores)
+   ("C-c s `"  . wrap-with-back-quotes))
+
+#+end_src
+
+#+RESULTS:
+: wrap-with-back-quotes
+
+*** unwrapping
+
+#+begin_src emacs-lisp
+  (bind-keys
+   :map smartparens-mode-map
+   ("M-[" . sp-backward-unwrap-sexp)
+					  ; unwrap the previous expression
+   ("M-]" . sp-unwrap-sexp))
+					  ; unwrap the following expression
+
+
+  ;; (foo (bar x y z))
+#+end_src
+
+#+RESULTS:
+: sp-unwrap-sexp
+
+*** slurp and barf
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-<right>" . sp-forward-slurp-sexp)
+					    ; takes in the next sexp
+     ("C-<left>" . sp-backward-slurp-sexp)
+					  ; takes in the previous sexp
+
+     ("M-<right>" . sp-forward-barf-sexp)
+					    ; takes out the next sexp
+     ("M-<left>" . sp-backward-barf-sexp)
+					    ; takes out the previous sexp   
+     )
+
+  ;; [foo bar "baz"]
+  ;; [foo bar] baz
+#+end_src
+
+#+RESULTS:
+: sp-backward-barf-sexp
+
+*** swapping
+
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-M-t" . sp-transpose-sexp)
+     )
+  ;; (a) (b (c))
+#+end_src
+
+
+#+RESULTS:
+: sp-transpose-sexp
+
+*** deletion
+
+useful to kill an expression (including function)
+
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-M-k" . sp-kill-sexp)
+     )
+
+
+
+#+end_src
+
+#+RESULTS:
+: sp-kill-sexp
 
 ** copy file and line
 
