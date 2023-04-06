@@ -1,26 +1,20 @@
 * random
 * wish list
 
+- [ ] latex
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
-- [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
-- [ ] jump from left closing "$" to right closing "$" and vice versa
-- [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
-  - and when done, render the math
-- flyspell: fix the previous word (no need to move cursor back and forth)
-- [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
+  - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
+  - [ ] jump from left closing "$" to right closing "$" and vice versa
+  - [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
+    - and when done, render the math
+  - flyspell: fix the previous word (no need to move cursor back and forth)
+  - [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
-- [ ] a function to change a variable (or sexp) without moving cursor (kill the sexp and insert new stuff)
-- [ ] explore [[https://github.com/abo-abo/ace-window][ace-window]] for window switching
 - [ ] [[https://emacsrocks.com/e16.html][dired-mode]]
 - [ ] [[https://emacsrocks.com/e05.html][macros]]
 - [ ] [[https://www.youtube.com/watch?v=D6h5dFyyUX0&ab_channel=emacsrocks][paedit]]: treat the code as a abstract syntax tree
-- [ ] ivy shortcut switch to multi-chars    
-- [ ] [[https://github.com/magnars/multiple-cursors.el][multicursor]]
-  - like a generalization to rectangle, which cannot deal with discontinuous lines
-- [ ] delete parenthesis by pairs
-  - smart-paren mode?    
 - [ ] [[https://tony-zorman.com/posts/phd-workflow/2022-05-01-my-phd-workflow.html][a research workflow using emacs]]
 - [-] elpy:
   - [X] code folding is not working (turn on the mode)
@@ -339,6 +333,14 @@ Kill from point up to PT.
 
 #+RESULTS:
 
+*** cursor type
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'bar)
+  (set-cursor-color "#fdda9a")
+#+end_src
+
+#+RESULTS:
+
 ** rainbow-delimiters
 
    coloring parenthesis by their levels
@@ -405,21 +407,24 @@ Kill from point up to PT.
 : t
 
 * auto completion
-** +company+
+** company
 
 #+begin_src emacs-lisp
-  ;; (use-package company
-  ;; :ensure t
-  ;; ;; :init
-  ;; ;; (add-hook 'after-init-hook 'global-company-mode)
-  ;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
-  ;; ;; :bind
-  ;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
-  ;; ) ;; global mode, do we need it
+  (use-package company
+  :ensure t
+  :init
+  ;; (add-hook 'after-init-hook 'global-company-mode)
+  (add-hook 'emacs-lisp-mode-hook 'company-mode)
+  ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+  :bind
+  (:map company-active-map ("<tab>" . company-complete-selection))
+
+  )
 
 #+end_src
 
 #+RESULTS:
+: company-complete-selection
 
 should we use =auto-complete-mode=? the recommendation seems to be quite limited.
 
@@ -830,11 +835,11 @@ enable executing shell scripts in code blocks
 
 #+RESULTS:
 
-** citation
+** +citation+
 
 #+begin_src emacs-lisp
-  (use-package oc-bibtex
-    :ensure t)
+  ;; (use-package oc-bibtex
+  ;;   :ensure t)
 #+end_src
 
 #+RESULTS:
@@ -1070,40 +1075,55 @@ enable executing shell scripts in code blocks
    #+RESULTS:
 
 * window
-** switch-window
+** +switch-window+
 
 let's not use it for now since it works better for => 2= windows.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package switch-window
+  ;; (use-package switch-window
 
-    :ensure t
-    :init
-    (global-set-key (kbd "C-x o") 'switch-window)
-    (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
-    (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
-    (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
-    (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
+  ;;   :ensure t
+  ;;   :init
+  ;;   (global-set-key (kbd "C-x o") 'switch-window)
+  ;;   (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
+  ;;   (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
+  ;;   (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
+  ;;   (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
 
-    (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
-    (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
-    (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
-    (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
+  ;;   (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
+  ;;   (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
+  ;;   (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
 
-    (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
-    (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
+  ;;   (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
+  ;;   (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
 
-    (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
+  ;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
 
-    (setq switch-window-threshold 2)
-    (setq switch-window-input-style 'minibuffer)
-    (setq switch-window-shortcut-style 'qwerty)
+  ;;   (setq switch-window-threshold 2)
+  ;;   (setq switch-window-input-style 'minibuffer)
+  ;;   (setq switch-window-shortcut-style 'qwerty)
 #+END_SRC
 
 #+RESULTS:
 : qwerty
 
-** ace-window (alternative for the above)
+** ace-window
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :ensure t
+    :config
+    (global-set-key (kbd "C-M-o") 'ace-window)
+    ;; update aw-ignored-buffers ignore certain buffers
+    )
+
+#+end_src
+
+#+RESULTS:
+: t
+
+
 ** window splitting and following
 
    #+begin_src emacs-lisp
@@ -1552,20 +1572,152 @@ why not showing in non-GUI Emacs?
     (org-cite-follow-processor 'citar)
     (org-cite-activate-processor 'citar)
 
-  	
 
-    :general
-    (:keymaps 'org-mode-map
-	      :prefix "C-c b"
-	      "b" '(citar-insert-citation :wk "Insert citation")
-	      "r" '(citar-insert-reference :wk "Insert reference")
-	      "o" '(citar-open-notes :wk "Open note"))
+    ;; :general
+    ;; (:keymaps 'org-mode-map
+    ;; 	    :prefix "C-c b"
+    ;; 	    "b" '(citar-insert-citation :wk "Insert citation")
+    ;; 	    "r" '(citar-insert-reference :wk "Insert reference")
+    ;; 	    "o" '(citar-open-notes :wk "Open note"))
     )
 
 
 #+end_src
 
 #+RESULTS:
+
+* C++
+** resource
+
+- https://tuhdo.github.io/c-ide.html (as early as 2014)
+  - what is helm? is it an alternative to consult and vertico?
+- https://medium.com/linux-with-michael/emacs-for-c-development-766c8b5866f
+  - [[https://github.com/emacs-lsp/lsp-mode/][lsp]] (language server protocol)
+    - still developed [[https://github.com/emacs-lsp/lsp-mode/graphs/contributors][these days]]
+  - [[https://github.com/MaskRay/ccls][ccls]] (C/C++ language server)
+    - no active development [[https://github.com/MaskRay/ccls/graphs/contributors][since 2019]]
+  - [[https://www.tabnine.com/][tabnine]] (AI-based code completion)
+  - [[https://emacs-lsp.github.io/lsp-ui/][lsp-ui]] (enhanced UI including documentation, imenu, etc)
+  - [[https://github.com/emacs-lsp/lsp-treemacs][lsp-treemacs]] (tree layout file explorer integrated with lsp)
+- https://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html
+  - [[https://github.com/Sarcasm/irony-mode][irony]] (language server, e.g., code completion, syntax checking, etc)
+    - not actively developed [[https://github.com/Sarcasm/irony-mode/graphs/contributors][since 2019]]
+  - [[https://github.com/Andersbakken/rtags][rtags]] (indexer of C++ files)
+    - not actively developed [[https://github.com/Andersbakken/rtags/graphs/contributors][since 2021]]
+- https://linuxhint.com/c_emacs_configuration/ (2017)
+  - "Compiling and running C++ Code"
+- https://github.com/emacs-exordium/exordium
+  - with some CMAKE support
+- https://www.reddit.com/r/emacs/comments/dlf0w7/whats_your_setup_for_cc_in_emacs/
+- https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
+  - [[https://clangd.llvm.org/installation.html][clangd]] (language server)
+- [[https://github.com/MaskRay/ccls/wiki/lsp-mode][setting up lsp]]
+  - [[https://github.com/tigersoldier/company-lsp][company-lsp]] ([[https://github.com/MaskRay/ccls/wiki/lsp-mode][deprecated]])
+- choice of language servers:
+  - clangd and ccls
+** checklist
+
+- [X] code completion
+- [X] syntax checking
+- [ ] compilation
+- [X] jump to definition
+- [ ] switch between header and cpp files
+- [X] lsp-treemacs
+- [X] symbol reference
+- [X] header file completion
+- [X] Show function interface and variable definition
+- 
+
+** lsp-mode
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp)
+    ; clangd is used by default
+
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode)
+
+  (when (executable-find "clangd")
+    (add-hook 'c++-mode-hook #'lsp))
+    ;; (use-package ccls
+    ;;   :ensure t
+    ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+    ;; 	 (lambda () (require 'ccls) (lsp))))
+#+end_src
+
+#+RESULTS:
+| lsp |
+** lsp-treemacs
+
+#+begin_src emacs-lisp
+  (use-package lsp-treemacs  
+    :ensure t
+    :config
+    (lsp-treemacs-sync-mode 1))
+
+  (defun my/goto-treemacs ()
+    "goto treemacs window, create one if it is not there"
+    (window-list)
+    ;; (print (get-buffer-window-list "Treemacs"))
+    )
+
+  ;; (my/goto-treemacs)
+#+end_src
+
+tips:
+- lsp-treemacs-errors-list: list error in a tree
+- lsp-treemacs-symbols: display the symbols
+- lsp-treemacs-references: display references at current point
+- lsp-treemacs-call-hierarchy: display the call hierarchy
+- inside treemacs: press "?" to show the help
+** ignore files
+
+#+begin_src emacs-lisp
+  (with-eval-after-load 'treemacs
+    (defun treemacs-ignore-c++-object-files (file _)
+      (s-suffix? ".o" file))
+    (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+#+end_src
+
+#+RESULTS:
+| treemacs-ignore-c++-object-files | treemacs-ignore-c++-object-files | treemacs--std-ignore-file-predicate | treemacs--mac-ignore-file-predicate |
+
+** switch between .h and .cpp
+
+use projectile-find-other-file (C-c p a)
+
+** compiling/build the project
+
+use =compile=
+
+#+begin_src emacs-lisp
+  (add-hook
+     'c++-mode-hook
+      (lambda ()
+	(local-set-key (kbd "C-c C-c") #'compile)))
+  ;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
+#+end_src
+
+#+RESULTS:
+| (lambda nil (local-set-key (kbd C-c C-c) #'compile)) | lsp |
+
+** jump back and forth between treemacs window
+
+#+begin_src emacs-lisp
+  (defun my/treemacs-back-and-forth ()
+    (interactive)
+    (if (treemacs-is-treemacs-window-selected?)
+	(aw-flip-window)
+      (treemacs-select-window)))
+
+  (global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
+#+end_src
+
+#+RESULTS:
+: my/treemacs-back-and-forth
 
 * other languages
 ** Matlab
@@ -1661,7 +1813,7 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 ** indentation (does it work?)
 
 #+begin_src emacs-lisp
-(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 #+end_src
 
 #+RESULTS:
@@ -1683,11 +1835,11 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 ** config reload
 
 #+BEGIN_SRC emacs-lisp
-(defun config-reload ()
-  "Reloads ~/.emacs.d/config.org at runtime"
-  (interactive)
-  (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-(global-set-key (kbd "C-c r") 'config-reload)
+  (defun config-reload ()
+    "Reloads ~/.emacs.d/config.org at runtime"
+    (interactive)
+    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+  ;; (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
 
 #+RESULTS:
@@ -1960,17 +2112,25 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
 
+** global variables
+#+begin_src emacs-lisp
+  (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
+#+end_src
+
+#+RESULTS:
+: my/path-delimiters
+
 ** kill word, sexp, and line
 
 #+begin_src emacs-lisp
-  (defun kill-current-word ()
+  (defun kill-word-at-point ()
     "kill the current word"
     (interactive)
     (refrained-backward-word)
     (kill-word 1)
     )
 
-  (defun kill-current-sexp ()
+  (defun kill-sexp-at-point ()
     "kill the current sexp"
     (interactive)
     (refrained-backward-sexp)
@@ -1978,7 +2138,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     )
 
 
-  (defun kill-current-line ()
+  (defun kill-line-at-point ()
     "kill the current line"
     (interactive)
     (move-beginning-of-line 1)
@@ -1986,16 +2146,30 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
     (previous-line)
     )
 
+  (defun kill-path-at-point ()
+    "kill path at point"
+    (interactive)
+    (let (beg end)        
+      (save-excursion
+	(skip-chars-backward my/path-delimiters)
+	(setq beg (point))
+	(skip-chars-forward my/path-delimiters)
+	(setq end (point))
+	(kill-region beg end))
+      )
+    )
+  
   ;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
   (bind-keys*
-   ("C-c d w" . kill-current-word)
-   ("C-c d l" . kill-current-line)
-   ("C-c d s" . kill-current-sexp)
+   ("C-c d w" . kill-word-at-point)
+   ("C-c d l" . kill-line-at-point)
+   ("C-c d s" . kill-sexp-at-point)
+   ("C-c d p" . kill-path-at-point)
    )
 #+end_src
 
 #+RESULTS:
-: kill-current-sexp
+: kill-path-at-point
 ** kill, copy, and yank in Latex
 # C-c w s on $\apxcntcore$ gives $\apxcntcore$, instead of \apxcntcore
 ** copy word, line, sexp
@@ -2133,7 +2307,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
    #+RESULTS:
    : copy-path-at-point
-
+   
 ** surround sexp by string
 *** main functions
 #+begin_src emacs-lisp
@@ -2262,13 +2436,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    : my/surround-by-slash
 
 ** surround path by string
-*** some re-usable global variables
-#+begin_src emacs-lisp
-  (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
-#+end_src
-
-#+RESULTS:
-: my/path-delimiters
 
 *** helper functions
   #+begin_src emacs-lisp :results output
@@ -2385,11 +2552,13 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+RESULTS:
 : my/delete-between-equal
 
-** TODO copy text between "a pair"
-** smartparen
+** ❤️ smartparen
 
-   [[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
+[[https://github.com/Fuco1/smartparens#getting-started][more docs]] and [[https://ebzzry.com/en/emacs-pairs/#wrapping][a tutorial]]
 
+*** installation
+
+  
 #+begin_src emacs-lisp
   (use-package smartparens-config
     :ensure smartparens
@@ -2397,7 +2566,8 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
     (progn (show-smartparens-global-mode t))
     )
 
-  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
   ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
   ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
@@ -2407,6 +2577,209 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 #+end_src
 
 #+RESULTS:
+| turn-on-smartparens-mode | rainbow-delimiters-mode |
+
+*** keybindings
+
+for Mac users: deselect "M-<up>" and "M-<down>" binding in "keyboard short cut" -> "mission control"
+  
+#+begin_src emacs-lisp
+
+  (bind-keys
+   :map smartparens-mode-map
+   ("M-a" . sp-beginning-of-sexp)
+   ("M-e" . sp-end-of-sexp)
+
+   ;; hierarchy-level movement
+   ("C-<down>" . sp-down-sexp)
+					  ; it might be clearer if the name is sp-forward-down-sexp, which forward + down on paren
+					  ; and the cursor stops at the begining of the target sexp
+
+   ("C-<up>" . sp-up-sexp)
+					  ; = forward and up, which jumps out of the current paren
+
+   ("M-<down>" . sp-backward-down-sexp)
+					  ; = backward and "jump in" on paren the reverse of sp-down-sexp
+					  ; the cursor stops at the beginning of the target
+   ("M-<up>" . sp-backward-up-sexp)
+					  ; = backward and "jump out"
+
+   ;; balanced expression-level movement, like normal "C-M-f" and "C-M-b"
+   ("C-M-f" . sp-forward-sexp)
+					  ; forward one sexp (including comments) to the end of the target
+   ("C-M-b" . sp-backward-sexp)
+					  ; backward one sexp to the begining of the target
+
+   ;; sexp-level movement
+   ;; keybinding is set to mimic org-mode's C-c C-[n|p]
+   ("C-c C-n" . sp-next-sexp)
+					  ; move to the begining of the next sexp, which is equals to sp-down-sexp + sp-up-sexp + sp-down-sexp
+   ("C-c C-p" . sp-previous-sexp)           ;
+
+   ;;free-form movement, ignoring the hierarchy
+   ("C-S-f" .  sp-forward-symbol)
+
+   ("C-S-b" .  sp-backward-symbol))
+
+#+end_src
+
+#+RESULTS:
+: sp-backward-symbol
+
+comments in navigation in elisp:
+
+- think of the code as a tree!
+  
+#+begin_src emacs-lisp
+  (let ((x "asdf asdf asdfads ")))
+
+  (defun format-date (format)
+    "Insert date with FORMAT specification using a specific locale."
+    (let (
+	  (system-time-locale "en_US.UTF-8"))
+      (insert (format-time-string format))))
+
+  "asf"
+
+  (defun blah ()
+    "Returns blah of foo."
+    (asf)
+    (asdf))
+  (defun blah () (let ((x 0)) (+ x 1)))
+
+
+  (defun asd ()
+    (insert (a very long and long and long and long list
+) (asdf asdf ads )))
+
+  "asdfasdfads sadf asdf asdf ads"
+#+end_src
+
+#+RESULTS:
+: asdfasdfads sadf asdf asdf ads
+
+*** wrapping
+
+#+begin_src emacs-lisp
+   (defun wrap-with-parens (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "(")
+     )	    
+
+   (defun wrap-with-brackets (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "[")
+     )	    
+
+   (defun wrap-with-braces (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "{")
+     )	    
+
+   (defun wrap-with-single-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "'")
+     )
+
+   (defun wrap-with-double-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "\"")
+     )
+
+   (defun wrap-with-back-quotes (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "`")
+     )
+
+   (defun wrap-with-underscores (&optional arg)
+     (interactive "p")
+     (sp-wrap-with-pair "_")
+     )
+
+  (bind-keys
+   :map smartparens-mode-map
+   ("C-c s ("  . wrap-with-parens)
+   ("C-c s ["  . wrap-with-brackets)
+   ("C-c s {"  . wrap-with-braces)
+   ("C-c s '"  . wrap-with-single-quotes)
+   ("C-c s \"" . wrap-with-double-quotes)
+   ("C-c s _"  . wrap-with-underscores)
+   ("C-c s `"  . wrap-with-back-quotes))
+
+#+end_src
+
+#+RESULTS:
+: wrap-with-back-quotes
+
+*** unwrapping
+
+#+begin_src emacs-lisp
+  (bind-keys
+   :map smartparens-mode-map
+   ("M-[" . sp-backward-unwrap-sexp)
+					  ; unwrap the previous expression
+   ("M-]" . sp-unwrap-sexp))
+					  ; unwrap the following expression
+
+
+  ;; (foo (bar x y z))
+#+end_src
+
+#+RESULTS:
+: sp-unwrap-sexp
+
+*** slurp and barf
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-<right>" . sp-forward-slurp-sexp)
+					    ; takes in the next sexp
+     ("C-<left>" . sp-backward-slurp-sexp)
+					  ; takes in the previous sexp
+
+     ("M-<right>" . sp-forward-barf-sexp)
+					    ; takes out the next sexp
+     ("M-<left>" . sp-backward-barf-sexp)
+					    ; takes out the previous sexp   
+     )
+
+  ;; [foo bar "baz"]
+  ;; [foo bar] baz
+#+end_src
+
+#+RESULTS:
+: sp-backward-barf-sexp
+
+*** swapping
+
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-M-t" . sp-transpose-sexp)
+     )
+  ;; (a) (b (c))
+#+end_src
+
+
+#+RESULTS:
+: sp-transpose-sexp
+
+*** deletion
+
+useful to kill an expression (including function)
+
+#+begin_src emacs-lisp
+  (bind-keys
+     :map smartparens-mode-map
+     ("C-M-k" . sp-kill-sexp)
+     )
+
+
+
+#+end_src
+
+#+RESULTS:
+: sp-kill-sexp
 
 ** copy file and line
 
@@ -2449,7 +2822,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
     (diminish 'beacon-mode)
     (diminish 'subword-mode)
     )
-#+End_src
+#+end_src
 
 #+RESULTS:
 
@@ -2468,14 +2841,16 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 * searching
 ** text search
   #+begin_src  emacs-lisp
-	(use-package swiper
-	  :ensure t
-	  :bind
-	  ("C-s" . swiper))
+    (use-package swiper
+      :ensure t
+      :bind
+      ("C-s" . swiper)
+      ("C-r" . swiper-backward)
+      )
   #+end_src
 
   #+RESULTS:
-  : swiper
+  : swiper-backward
 
 ** [[https://github.com/minad/consult][consult]]
 
@@ -2484,14 +2859,30 @@ Consult provides search and navigation commands
 #+begin_src emacs-lisp
   (use-package consult
     :ensure t
-
-    :bind ("C-c c f" . 'consult-find)  ;; find file
-    :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+    :bind
+    ("C-c f" . 'consult-find)  ;; find file
+    ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+					  ; consult-imenu-multi for multiple buffers
+    ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
+    ("C-c y" . 'consult-yank-from-kill-ring)
+    ("C-c r s" . 'consult-register-store)
+    ("C-c r l" . 'consult-register)
+    ("C-c r l" . 'consult-register)
+    ("C-c m" . 'consult-mark)
+    ("M-g M-g" . 'consult-goto-line)
+    ("C-c c e" . 'consult-compile-error)
     )
 #+end_src
 
 #+RESULTS:
-: consult-imenu
+: consult-goto-line
+
+other useful functions:
+
+- consult-line-multi: search line in multiple buffers
+- 
+#+RESULTS:
+: consult-goto-line
 
 ** search in the other window
 

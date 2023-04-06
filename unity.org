@@ -494,8 +494,9 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
   (org-link-set-parameters "gs"
 			   :follow #'org-gs-open
-			   :export #'org-gs-export
-			   :store #'org-gs-store-link)
+			   ;; :export #'org-gs-export
+			   ;; :store #'org-gs-store-link
+			   )
 
   (defcustom org-gs-command 'gs
     "The Emacs command to be used to display a gs link."
@@ -508,22 +509,22 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "ls path at point in GCS."
     (unity/gsutil-ls-at-point))
 
-  (defun org-gs-store-link (link _)
-    "not implemented yet"
-    (unity/gsutil-ls-at-point)
-    )
+  ;; (defun org-gs-store-link (link &optional _)
+  ;;   "not implemented yet"
+  ;;   (unity/gsutil-ls-at-point)
+  ;;   )
 
 
-  (defun org-gs-export (link description format _)
-    "not implemented yet"
-    (unity/gsutil-ls-at-point)
-    )
+  ;; (defun org-gs-export (link description format _)
+  ;;   "not implemented yet"
+  ;;   (unity/gsutil-ls-at-point)
+  ;;   )
 
   ;; (provide ol-gs)
 #+end_src
 
 #+RESULTS:
-: org-gs-export
+: org-gs-open
 
 ** define gs as a new link type in YAML (or globally) ()
 * config update

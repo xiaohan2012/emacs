@@ -160,6 +160,9 @@
   :init
   (beacon-mode 1))
 
+(setq-default cursor-type 'bar)
+(set-cursor-color "#fdda9a")
+
 (use-package rainbow-delimiters
    :ensure t
    :init
@@ -188,14 +191,16 @@
 			(recents . 5)))
 (setq dashboard-banner-logo-title "Hello Han."))
 
-;; (use-package company
-;; :ensure t
-;; ;; :init
-;; ;; (add-hook 'after-init-hook 'global-company-mode)
-;; ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
-;; ;; :bind
-;; ;; (:map company-active-map ("<tab>" . company-complete-selection))
-;; ) ;; global mode, do we need it
+(use-package company
+:ensure t
+:init
+;; (add-hook 'after-init-hook 'global-company-mode)
+(add-hook 'emacs-lisp-mode-hook 'company-mode)
+;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+:bind
+(:map company-active-map ("<tab>" . company-complete-selection))
+
+)
 
 ;; (use-package corfu
 ;;   :ensure t
@@ -429,8 +434,8 @@
 	'(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
   )
 
-(use-package oc-bibtex
-  :ensure t)
+;; (use-package oc-bibtex
+;;   :ensure t)
 
 (use-package markdown-mode
   :ensure t
@@ -569,29 +574,36 @@ Version 2020-10-17"
   :ensure t
   )
 
-(use-package switch-window
+;; (use-package switch-window
 
+;;   :ensure t
+;;   :init
+;;   (global-set-key (kbd "C-x o") 'switch-window)
+;;   (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
+;;   (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
+;;   (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
+;;   (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
+
+;;   (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
+;;   (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
+;;   (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
+;;   (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
+
+;;   (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
+;;   (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
+
+;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
+
+;;   (setq switch-window-threshold 2)
+;;   (setq switch-window-input-style 'minibuffer)
+;;   (setq switch-window-shortcut-style 'qwerty)
+
+(use-package ace-window
   :ensure t
-  :init
-  (global-set-key (kbd "C-x o") 'switch-window)
-  (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
-  (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
-  (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
-  (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
-
-  (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
-  (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
-  (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
-  (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
-
-  (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
-  (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
-
-  (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
-
-  (setq switch-window-threshold 2)
-  (setq switch-window-input-style 'minibuffer)
-  (setq switch-window-shortcut-style 'qwerty)
+  :config
+  (global-set-key (kbd "C-M-o") 'ace-window)
+  ;; update aw-ignored-buffers ignore certain buffers
+  )
 
 (defun split-window-and-follow-vertically ()
 (interactive)
@@ -835,14 +847,61 @@ Version 2020-10-17"
   (org-cite-activate-processor 'citar)
 
 
-
-  :general
-  (:keymaps 'org-mode-map
-	    :prefix "C-c b"
-	    "b" '(citar-insert-citation :wk "Insert citation")
-	    "r" '(citar-insert-reference :wk "Insert reference")
-	    "o" '(citar-open-notes :wk "Open note"))
+  ;; :general
+  ;; (:keymaps 'org-mode-map
+  ;; 	    :prefix "C-c b"
+  ;; 	    "b" '(citar-insert-citation :wk "Insert citation")
+  ;; 	    "r" '(citar-insert-reference :wk "Insert reference")
+  ;; 	    "o" '(citar-open-notes :wk "Open note"))
   )
+
+(use-package lsp-mode
+  :ensure t
+  :commands lsp)
+  ; clangd is used by default
+
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode)
+
+(when (executable-find "clangd")
+  (add-hook 'c++-mode-hook #'lsp))
+  ;; (use-package ccls
+  ;;   :ensure t
+  ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+  ;; 	 (lambda () (require 'ccls) (lsp))))
+
+(use-package lsp-treemacs  
+  :ensure t
+  :config
+  (lsp-treemacs-sync-mode 1))
+
+(defun my/goto-treemacs ()
+  "goto treemacs window, create one if it is not there"
+  (window-list)
+  ;; (print (get-buffer-window-list "Treemacs"))
+  )
+
+;; (my/goto-treemacs)
+
+(with-eval-after-load 'treemacs
+  (defun treemacs-ignore-c++-object-files (file _)
+    (s-suffix? ".o" file))
+  (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+
+(add-hook
+   'c++-mode-hook
+    (lambda ()
+      (local-set-key (kbd "C-c C-c") #'compile)))
+;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
+
+(defun my/treemacs-back-and-forth ()
+  (interactive)
+  (if (treemacs-is-treemacs-window-selected?)
+      (aw-flip-window)
+    (treemacs-select-window)))
+
+(global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
 
 (when (and (eq system-type 'gnu/linux)
 	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
@@ -890,7 +949,7 @@ acronyms is a list of (list acronym full-name)
     )
   )
 
-(add-hook 'org-mode-hook '(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 
 (defun config-visit ()
 "visit ~/.emacs.d/config.org"
@@ -902,7 +961,7 @@ acronyms is a list of (list acronym full-name)
   "Reloads ~/.emacs.d/config.org at runtime"
   (interactive)
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-(global-set-key (kbd "C-c r") 'config-reload)
+;; (global-set-key (kbd "C-c r") 'config-reload)
 
 (defun zshrc-visit ()
   "visit ~/.zshrc"
@@ -1068,14 +1127,16 @@ acronyms is a list of (list acronym full-name)
 
 (add-hook 'org-mode-hook 'org-add-electric-pairs)
 
-(defun kill-current-word ()
+(defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
+
+(defun kill-word-at-point ()
   "kill the current word"
   (interactive)
   (refrained-backward-word)
   (kill-word 1)
   )
 
-(defun kill-current-sexp ()
+(defun kill-sexp-at-point ()
   "kill the current sexp"
   (interactive)
   (refrained-backward-sexp)
@@ -1083,7 +1144,7 @@ acronyms is a list of (list acronym full-name)
   )
 
 
-(defun kill-current-line ()
+(defun kill-line-at-point ()
   "kill the current line"
   (interactive)
   (move-beginning-of-line 1)
@@ -1091,11 +1152,25 @@ acronyms is a list of (list acronym full-name)
   (previous-line)
   )
 
+(defun kill-path-at-point ()
+  "kill path at point"
+  (interactive)
+  (let (beg end)        
+    (save-excursion
+      (skip-chars-backward my/path-delimiters)
+      (setq beg (point))
+      (skip-chars-forward my/path-delimiters)
+      (setq end (point))
+      (kill-region beg end))
+    )
+  )
+
 ;; to override major-mode keybindings (e.g., C-c C-k in org-mode is used)
 (bind-keys*
- ("C-c d w" . kill-current-word)
- ("C-c d l" . kill-current-line)
- ("C-c d s" . kill-current-sexp)
+ ("C-c d w" . kill-word-at-point)
+ ("C-c d l" . kill-line-at-point)
+ ("C-c d s" . kill-sexp-at-point)
+ ("C-c d p" . kill-path-at-point)
  )
 
 (defun copy-word (&optional arg)
@@ -1303,8 +1378,6 @@ acronyms is a list of (list acronym full-name)
 (global-set-key (kbd "C-c s +") 'my/surround-by-plus)
 (global-set-key (kbd "C-c s /") 'my/surround-by-slash)
 
-(defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
-
 (defun my/surround-path-by-string (str)
   "surround a path-like string by another string"
   (let*  ((open-str str)
@@ -1395,13 +1468,129 @@ acronyms is a list of (list acronym full-name)
   (progn (show-smartparens-global-mode t))
   )
 
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
 ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
 ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
 ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
 
 ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
+
+(bind-keys
+ :map smartparens-mode-map
+ ("M-a" . sp-beginning-of-sexp)
+ ("M-e" . sp-end-of-sexp)
+
+ ;; hierarchy-level movement
+ ("C-<down>" . sp-down-sexp)
+					; it might be clearer if the name is sp-forward-down-sexp, which forward + down on paren
+					; and the cursor stops at the begining of the target sexp
+
+ ("C-<up>" . sp-up-sexp)
+					; = forward and up, which jumps out of the current paren
+
+ ("M-<down>" . sp-backward-down-sexp)
+					; = backward and "jump in" on paren the reverse of sp-down-sexp
+					; the cursor stops at the beginning of the target
+ ("M-<up>" . sp-backward-up-sexp)
+					; = backward and "jump out"
+
+ ;; balanced expression-level movement, like normal "C-M-f" and "C-M-b"
+ ("C-M-f" . sp-forward-sexp)
+					; forward one sexp (including comments) to the end of the target
+ ("C-M-b" . sp-backward-sexp)
+					; backward one sexp to the begining of the target
+
+ ;; sexp-level movement
+ ;; keybinding is set to mimic org-mode's C-c C-[n|p]
+ ("C-c C-n" . sp-next-sexp)
+					; move to the begining of the next sexp, which is equals to sp-down-sexp + sp-up-sexp + sp-down-sexp
+ ("C-c C-p" . sp-previous-sexp)           ;
+
+ ;;free-form movement, ignoring the hierarchy
+ ("C-S-f" .  sp-forward-symbol)
+
+ ("C-S-b" .  sp-backward-symbol))
+
+(let ((x "asdf asdf asdfads ")))
+
+  (defun format-date (format)
+    "Insert date with FORMAT specification using a specific locale."
+    (let (
+	  (system-time-locale "en_US.UTF-8"))
+      (insert (format-time-string format))))
+
+  "asf"
+
+  (defun blah ()
+    "Returns blah of foo."
+    (asf)
+    (asdf))
+  (defun blah () (let ((x 0)) (+ x 1)))
+
+
+  (defun asd ()
+    (insert (a very long and long and long and long list
+) (asdf asdf ads )))
+
+  "asdfasdfads sadf asdf asdf ads"
+
+;; (defmacro def-pairs (pairs)
+;;   "Define functions for pairing. PAIRS is an alist of (NAME . STRING)
+;; conses, where NAME is the function name that will be created and
+;; STRING is a single-character string that marks the opening character.
+
+;;   (def-pairs ((paren . \"(\")
+;; 	      (bracket . \"[\"))
+
+;; defines the functions WRAP-WITH-PAREN and WRAP-WITH-BRACKET,
+;; respectively."
+;;   `(progn
+;;      ,@(loop for (key . val) in pairs
+;; 	     collect
+;; 	     `(defun ,(read (concat
+;; 			     "wrap-with-"
+;; 			     (prin1-to-string key)
+;; 			     "s"))
+;; 		  (&optional arg)
+;; 		(interactive "p")
+;; 		(sp-wrap-with-pair ,val)))))
+
+;; (def-pairs ((paren . "(")
+;; 	    (bracket . "[")
+;; 	    (brace . "{")
+;; 	    (single-quote . "'")
+;; 	    (double-quote . "\"")
+;; 	    (back-quote . "`")))
+
+(bind-keys
+ :map smartparens-mode-map
+ ("M-[" . sp-backward-unwrap-sexp)
+					; unwrap the previous expression
+ ("M-]" . sp-unwrap-sexp))
+					; unwrap the following expression
+
+
+;; (foo (bar x y z))
+
+(bind-keys
+   :map smartparens-mode-map
+   ("C-<right>" . sp-forward-slurp-sexp)
+					  ; takes in the next sexp
+   ("C-<left>" . sp-backward-slurp-sexp)
+					; takes in the previous sexp
+
+   ("M-<right>" . sp-forward-barf-sexp)
+					  ; takes out the next sexp
+   ("M-<left>" . sp-backward-barf-sexp)
+					  ; takes out the previous sexp   
+   )
+
+;; [foo bar "baz"]
+;; [foo bar] baz
+
+;; ("C-M-t" . sp-transpose-sexp)
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
@@ -1438,13 +1627,24 @@ acronyms is a list of (list acronym full-name)
 (use-package swiper
   :ensure t
   :bind
-  ("C-s" . swiper))
+  ("C-s" . swiper)
+  ("C-r" . swiper-backward)
+  )
 
 (use-package consult
   :ensure t
-
-  :bind ("C-c c f" . 'consult-find)  ;; find file
-  :bind ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+  :bind
+  ("C-c f" . 'consult-find)  ;; find file
+  ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
+					; consult-imenu-multi for multiple buffers
+  ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
+  ("C-c y" . 'consult-yank-from-kill-ring)
+  ("C-c r s" . 'consult-register-store)
+  ("C-c r l" . 'consult-register)
+  ("C-c r l" . 'consult-register)
+  ("C-c m" . 'consult-mark)
+  ("M-g M-g" . 'consult-goto-line)
+  ("C-c c e" . 'consult-compile-error)
   )
 
 (defun swiper-forward-other-window (prefix)
