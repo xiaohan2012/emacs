@@ -38,3 +38,5 @@ request/
 
 config.el
 unity.el
+.cache
+.lsp-session-v1
