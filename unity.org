@@ -402,6 +402,7 @@
       (if (eq reps 1)
 	  (unity/vm-shell/send-string command)
 	(dotimes (i reps)
+	  (unity/vm-shell/send-string "sleep 1")
 	  (unity/vm-shell/send-string (format "%s-%d" command i))
 	  )  
 	)    
@@ -432,6 +433,7 @@
 	  (if (eq reps 1)
 	      (unity/vm-shell/send-string command)
 	    (dotimes (i reps)
+	      (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
 	      (unity/vm-shell/send-string (format "%s-%d" command i))
 	      )  
 	    )
@@ -466,7 +468,12 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+begin_src emacs-lisp
   (defun unity/gsutil-ls-path (path)
-    (my/async-shell-command (format "gsutil ls %s" path) "*unity/gsutil/ls-results*")
+    (let ((buffer-name "*unity/gsutil/ls-results*"))
+      (my/async-shell-command (format "gsutil ls %s" path) buffer-name)
+      ;; (with-current-buffer buffer-name
+      ;;   (org-mode) ; to display the links properly
+      ;;   )
+      )
     )
   (defun unity/gsutil-ls-at-point ()
     (interactive)
@@ -555,19 +562,23 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
   (defun unity/config-train-to-full ()
     "config the training to be full by changing the values of a few fields"
     (interactive)
-    (unity/replace-field-in-buffer "n_iterations" "2" "40")
-    (unity/replace-field-in-buffer "val_loss_limit" "0.9" "0.11")
-    (unity/replace-field-in-buffer "limited_data" "true" "false")
-  )
+    (save-excursion
+      (unity/replace-field-in-buffer "n_iterations" "2" "40")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.9" "0.11")
+      (unity/replace-field-in-buffer "limited_data" "true" "false")
+      )
+    )
 
 
   (defun unity/config-train-to-debug ()
     "config the training to be debug by changing the values of a few fields"
     (interactive)
-    (unity/replace-field-in-buffer "n_iterations" "40" "2")
-    (unity/replace-field-in-buffer "val_loss_limit" "0.11" "0.9")
-    (unity/replace-field-in-buffer "limited_data" "false" "true")    
-  )
+    (save-excursion
+      (unity/replace-field-in-buffer "n_iterations" "40" "2")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.11" "0.9")
+      (unity/replace-field-in-buffer "limited_data" "false" "true")    
+      )
+    )
 
   (defun unity/toggle-train-config ()
   "alternate the config  between debug and full training mode"
@@ -576,10 +587,27 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
       (unity/config-train-to-full) ; in debug mode
     (unity/config-train-to-debug) ; in full mode
   ))
+
+  (defvar unity/s2c-train-config-file-path-pattern "/Users/hanxiao/code/mz-ds-deep-learning/cpi-model/configs/dev/conversion/%s/s2c.yaml" "template of s2c train config path")
+
+  (defun unity/get-s2c-train-dev-config-path (model-type)
+    "return the path of training config path (in dev) for a model-type"
+    (format unity/s2c-train-config-file-path-pattern model-type))
+
+  (defun unity/toggle-train-config-for-model-type ()
+    "toggle the training config file for a specific model type"
+    (interactive)
+    (let ((model-type (completing-read "model type: " (list "bhv" "advctx" "ctx"))))
+      (save-excursion
+	(find-file (unity/get-s2c-train-dev-config-path model-type))
+	(unity/toggle-train-config)
+	)
+      )
+    )
 #+end_src
 
 #+RESULTS:
-: unity/toggle-train-config
+: unity/toggle-train-config-for-model-type
 
 * Python/dev
 ** activating virtualenv under cpi-model
