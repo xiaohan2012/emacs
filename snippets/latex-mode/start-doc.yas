@@ -1,0 +1,39 @@
+# -*- mode: snippet -*-
+# name: startdoc
+# key: startdoc
+# --
+
+\documentclass[12pt]{article}
+% Information to be included in the title page:
+
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{bbm}
+\usepackage{soul}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\usepackage{my-defines}
+
+\title{${1:awesome title}}
+\author{${2:somebody}}
+\date{\today}
+
+
+
+\begin{document}
+\maketitle	
+
+\section{Preliminaries}
+\label{sec:prelim}
+
+
+\section{References}
+\label{sec:ref}
+  \bibliographystyle{acm}
+  \bibliography{ref.bib}
+\end{document}
+

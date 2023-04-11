@@ -1,7 +1,8 @@
 * random
 * wish list
 
-- [ ] latex
+- [X] latex
+  - [X] use <TAB> to jump into the beginning of the next pair
 - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
   - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
   - [ ] jump from left closing "$" to right closing "$" and vice versa
@@ -412,15 +413,15 @@ Kill from point up to PT.
 #+begin_src emacs-lisp
   (use-package company
   :ensure t
-  :init
-  ;; (add-hook 'after-init-hook 'global-company-mode)
-  (add-hook 'emacs-lisp-mode-hook 'company-mode)
-  ;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+  :hook
+  (LaTeX-mode . company-mode)
+  (emacs-lisp-mode . company-mode)
   :bind
   (:map company-active-map ("<tab>" . company-complete-selection))
 
   )
 
+  ;; (add-hook 'LaTeX-mode-hook 'my/latex-buffer-setup)
 #+end_src
 
 #+RESULTS:
@@ -903,7 +904,7 @@ enable executing shell scripts in code blocks
      "visit ~/docs/notes/dairy2023.org"
      (interactive)
      (find-file "~/docs/notes/dairy2023.org"))
-     (global-set-key (kbd "C-c o d") 'dairy-org-visit)
+     ;; (global-set-key (kbd "C-c o d") 'dairy-org-visit)
    #+end_src
 
    #+RESULTS:
@@ -1503,13 +1504,13 @@ why not showing in non-GUI Emacs?
 	;; TeX-master 'dwim
 	)
 
-  (setq-default TeX-master "main") ; all master files called "main".
+  (setq-default TeX-master "algs") ; all master files called "main".
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
 #+end_src
 
 #+RESULTS:
-: main
+: algs
 
 ** TODO unbind keybindings
 
@@ -1585,6 +1586,42 @@ why not showing in non-GUI Emacs?
 #+end_src
 
 #+RESULTS:
+
+** file opening short-cuts
+
+#+begin_src emacs-lisp
+  (defun my/open-defines-tex ()
+    "open defines.tex under current directory"
+    (interactive)
+    (find-file "./defines.tex"))
+  (global-set-key (kbd "C-c o d") 'my/open-defines-tex)
+
+#+end_src
+
+#+RESULTS:
+: my/open-defines-tex
+
+** navigation
+
+#+begin_src emacs-lisp
+  (defun forward-jump-into-next-brace ()
+    (interactive)
+    (search-forward "{")
+    )
+  (defun backward-jump-into-next-brace ()
+    (interactive)
+    (search-backward "{")
+    )
+
+  (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
+  (global-set-key (kbd "<backtab>") #'backward-jump-into-next-brace)
+  ;; (add-hook 'LaTex-mode-hook (lambda () (
+  ;; 				       (local-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
+  ;; 				  )))
+#+end_src
+
+#+RESULTS:
+: backward-jump-into-next-brace
 
 * C++
 ** resource
@@ -2096,21 +2133,29 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : t
 
-*** pairs in org mode
+*** pairs for latex
 
 #+begin_src emacs-lisp
-  (defvar org-electric-pairs '(;; (?= . ?=)
-			       (?$ . ?$)) "Electric pairs for org-mode.")
+  (defvar latex-electric-pairs '(;; (?= . ?=)
+				 (?$ . ?$)) "Electric pairs for latex.")
 
-  (defun org-add-electric-pairs ()
-    (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
+  (defun add-latex-electric-pairs ()
+    (setq-local electric-pair-pairs (append electric-pair-pairs latex-electric-pairs))
     (setq-local electric-pair-text-pairs electric-pair-pairs))
 
-  (add-hook 'org-mode-hook 'org-add-electric-pairs)
+  (add-hook 'org-mode-hook 'add-latex-electric-pairs)
+
+  ;; (add-hook 'LaTex-mode-hook 'add-latex-electric-pairs) ; does not work, very weird
+
+  ;; (use-package company
+  ;;   :hook
+  ;;   (LaTex-mode . add-latex-electric-pairs)
+  ;;   )
+
 #+end_src
 
 #+RESULTS:
-| #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | citar-capf-setup | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
+| add-latex-electric-pairs | (lambda nil (define-key LaTex-mode-map (kbd C-M-a) nil)) |
 
 ** global variables
 #+begin_src emacs-lisp
@@ -2564,9 +2609,12 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
     :ensure smartparens
     :config
     (progn (show-smartparens-global-mode t))
+    :hook
+    (LaTeX-mode . turn-on-smartparens-mode)
     )
 
   (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+  ;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
   ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
   ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
@@ -2612,9 +2660,9 @@ for Mac users: deselect "M-<up>" and "M-<down>" binding in "keyboard short cut" 
 
    ;; sexp-level movement
    ;; keybinding is set to mimic org-mode's C-c C-[n|p]
-   ("C-c C-n" . sp-next-sexp)
+   ("C-M-n" . sp-next-sexp)
 					  ; move to the begining of the next sexp, which is equals to sp-down-sexp + sp-up-sexp + sp-down-sexp
-   ("C-c C-p" . sp-previous-sexp)           ;
+   ("C-M-p" . sp-previous-sexp)           ;
 
    ;;free-form movement, ignoring the hierarchy
    ("C-S-f" .  sp-forward-symbol)
@@ -2661,55 +2709,55 @@ comments in navigation in elisp:
 *** wrapping
 
 #+begin_src emacs-lisp
-   (defun wrap-with-parens (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "(")
-     )	    
+  (defun wrap-with-parens (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "(")
+    )	    
 
-   (defun wrap-with-brackets (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "[")
-     )	    
+  (defun wrap-with-brackets (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "[")
+    )	    
 
-   (defun wrap-with-braces (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "{")
-     )	    
+  (defun wrap-with-braces (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "{")
+    )	    
 
-   (defun wrap-with-single-quotes (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "'")
-     )
+  (defun wrap-with-single-quotes (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "'")
+    )
 
-   (defun wrap-with-double-quotes (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "\"")
-     )
+  (defun wrap-with-double-quotes (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "\"")
+    )
 
-   (defun wrap-with-back-quotes (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "`")
-     )
+  (defun wrap-with-back-quotes (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "`")
+    )
 
-   (defun wrap-with-underscores (&optional arg)
-     (interactive "p")
-     (sp-wrap-with-pair "_")
-     )
+  (defun wrap-with-underscores (&optional arg)
+    (interactive "p")
+    (sp-wrap-with-pair "_")
+    )
 
   (bind-keys
    :map smartparens-mode-map
    ("C-c s ("  . wrap-with-parens)
    ("C-c s ["  . wrap-with-brackets)
    ("C-c s {"  . wrap-with-braces)
-   ("C-c s '"  . wrap-with-single-quotes)
+   ;; ("C-c s '"  . wrap-with-single-quotes) ; do not collide with C-' in yasnippet-mode
    ("C-c s \"" . wrap-with-double-quotes)
    ("C-c s _"  . wrap-with-underscores)
-   ("C-c s `"  . wrap-with-back-quotes))
-
+   ;; ("C-c s `"  . wrap-with-back-quotes) ; do not collide with C-` in latex-mode
+   )
 #+end_src
 
 #+RESULTS:
-: wrap-with-back-quotes
+: wrap-with-underscores
 
 *** unwrapping
 

@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: alg2e
+# key: alg2e
+# --
+\begin{algorithm}[H]
+ \KwData{}
+ \KwResult{X2e }
+ \While{condition}{
+  statement\;
+  \eIf{understand}{
+   go to next section\;
+   }{
+   go back to the beginning of current section\;
+  }
+ }
+ \caption{How to write algorithms}
+\end{algorithm}
