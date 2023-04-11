@@ -348,7 +348,7 @@
   (defvar dev-ds-env "mlp_dev" "name of ds environment in dev mode")
   (defvar prd-ds-env "mlp_prd" "name of ds environment in prd mode")
 
-  (defun unity/get-train-command (pipeline-name ds-env exp-name run-name)
+  (defun unity/get-kubeflow-command (pipeline-name ds-env exp-name run-name)
     "get the command to submit a training job"  
     (format
      "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name %s --run_name %s"
@@ -393,7 +393,7 @@
 	   (exp-name (read-string "experiment name: " "han/exps"))
 	   (run-name (format (read-string "run name: " "s2c-train-%s-test") model-type))
 	   (reps (read-number "number of repetitions: " 1))
-	   (command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))         
+	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))         
 	   )
       ;; show the ssh buffer if invisible
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
@@ -429,7 +429,7 @@
       (unity/vm-shell/enter-kubeflow-shell)
       (dolist (model-type model-types)
 	(let* ((run-name (format run-name-template model-type))
-	       (command (unity/get-train-command (format "s2c_%s_train" model-type) ds-env exp-name run-name)))
+	       (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name)))
 	  (if (eq reps 1)
 	      (unity/vm-shell/send-string command)
 	    (dotimes (i reps)
@@ -447,6 +447,41 @@
 
 #+RESULTS:
 : unity/submit-s2c-train-jobs-for-all-model-types
+
+** s2c serving
+
+#+begin_src emacs-lisp
+  (defun unity/submit-s2c-serving-jobs ()
+    "submit a s2c serving job to KF, e.g., python kubeflow/pipelines/conv/s2c_bhv_serving_only.py --ds_env mlp_dev 
+  "
+    (interactive)
+    (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
+	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
+	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+	   (exp-name (read-string "experiment name: " "han/exps"))
+	   (run-name (format (read-string "run name: " "s2c-serve-%s-test") model-type))
+	   (reps (read-number "number of repetitions: " 1))
+	   (command (unity/get-kubeflow-command (format "s2c_%s_serving_only" model-type) ds-env exp-name run-name))         
+	   )
+      ;; show the ssh buffer if invisible
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/update-git-repository git-branch)
+      (unity/vm-shell/enter-kubeflow-shell)
+      (if (eq reps 1)
+	  (unity/vm-shell/send-string command)
+	(dotimes (i reps)
+	  (unity/vm-shell/send-string "sleep 1")
+	  (unity/vm-shell/send-string (format "%s-%d" command i))
+	  )  
+	)    
+      (unity/vm-shell/exit-kubeflow-shell))
+    )
+
+#+end_src
+
+#+RESULTS:
+: unity/submit-s2c-serving-jobs
+
 
 ** s2c datagen
 
