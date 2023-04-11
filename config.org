@@ -1614,7 +1614,7 @@ why not showing in non-GUI Emacs?
     )
 
   (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
-  (global-set-key (kbd "<backtab>") #'backward-jump-into-next-brace)
+  (global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-brace)
   ;; (add-hook 'LaTex-mode-hook (lambda () (
   ;; 				       (local-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
   ;; 				  )))
