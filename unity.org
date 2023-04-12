@@ -504,10 +504,11 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 #+begin_src emacs-lisp
   (defun unity/gsutil-ls-path (path)
     (let ((buffer-name "*unity/gsutil/ls-results*"))
-      (my/async-shell-command (format "gsutil ls %s" path) buffer-name)
-      ;; (with-current-buffer buffer-name
-      ;;   (org-mode) ; to display the links properly
-      ;;   )
+      (cond
+       ;; perhaps apply prettify the string and use javascript-mode
+       ((or (s-suffix? ".json" path) (s-suffix? ".yaml" path)) (my/async-shell-command (format "gsutil cat %s" path) buffer-name))
+       (t (my/async-shell-command (format "gsutil ls %s" path) buffer-name))
+       )
       )
     )
   (defun unity/gsutil-ls-at-point ()
