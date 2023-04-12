@@ -1613,15 +1613,28 @@ why not showing in non-GUI Emacs?
     (search-backward "{")
     )
 
-  (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
-  (global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-brace)
+  (defun forward-jump-into-next-pair ()
+    "however, for $, we may jump into the closing pair, how to fix it?"
+    (interactive)
+    (search-forward-regexp "[{\$]")
+    )
+  (defun backward-jump-into-next-pair ()
+    (interactive)
+    (search-backward-regexp "[{\$]")
+    )
+
+
+  ;; (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
+  ;; (global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-brace)
+  (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-pair)
+  (global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-pair)
   ;; (add-hook 'LaTex-mode-hook (lambda () (
   ;; 				       (local-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
   ;; 				  )))
 #+end_src
 
 #+RESULTS:
-: backward-jump-into-next-brace
+: backward-jump-into-next-pair
 
 * C++
 ** resource
