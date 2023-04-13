@@ -4,15 +4,15 @@
 
 * wish list
 
-- [X] run a shell command and display output/error in another buffer
-- [X] vm
-  - [X] unity/start-vm
-  - [X] unity/stop-vm
-- [X] gls path and display output in another buffer/window
-- [X] display anything string prefixed by "gs://" as a google cloud storage link
-  - https://orgmode.org/manual/Adding-Hyperlink-Types.html
-- [X] submit commands to VM  
-
+- copy s2c-datagen command clipboard
+- run s2c-datagen in a separate shell
+- interactively accept uri for gsutil ls
+- ls buckets for config file
+  - input bucket
+  - output bucket
+- gsutil ls post actions depending on file types:
+  - e.g., for json, pretty-print-buffer and then javascript mode
+  - for yaml, yaml-mode
 * utility
 
 ** buffer
@@ -497,30 +497,95 @@
 
 #+RESULTS:
 : unity-s2c-datagen
-* Google cloud storage
+* gsutil
+** ls URI interactively
+
+#+begin_src emacs-lisp
+  (defvar gsutil/buffer-name "*unity/gsutil/results*" "buffer name to display gsutil execution results")
+
+
+  (defun gsutil/execute (command)
+    "execute a gsutil command and show results in another buffer"
+    (my/async-shell-command command gsutil/buffer-name)
+    )
+
+  (defun gsutil/ls-nint (uri)
+    "run gsutil ls URI in and show results in another buffer"
+      (gsutil/execute (format "gsutil ls %s" uri))
+      )
+
+
+  (defun gsutil/ls ()
+    "run gsutil ls URI in and show results in another buffer"
+    (interactive)
+    (let
+	((uri (read-string "uri: " "gs://")))
+      (gsutil/ls-nint uri)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: gsutil/ls
+
 ** ls URI at point
 gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+begin_src emacs-lisp
-  (defun unity/gsutil-ls-path (path)
-    (let ((buffer-name "*unity/gsutil/ls-results*"))
-      (cond
-       ;; perhaps apply prettify the string and use javascript-mode
-       ((or (s-suffix? ".json" path) (s-suffix? ".yaml" path)) (my/async-shell-command (format "gsutil cat %s" path) buffer-name))
-       (t (my/async-shell-command (format "gsutil ls %s" path) buffer-name))
-       )
-      )
+  (defun unity/gsutil-ls-uri (uri)
+    (cond
+     ;; perhaps apply prettify the string and use javascript-mode
+     ((or (s-suffix? ".json" uri) (s-suffix? ".yaml" uri)) (gsutil/execute (format "gsutil cat %s" uri)))
+     (t (gsutil/execute (format "gsutil ls %s" uri)))
+     )
     )
   (defun unity/gsutil-ls-at-point ()
     (interactive)
-    (let ((path (path-at-point)))
-      (unity/gsutil-ls-path path)
+    (let ((uri (path-at-point)))
+      (unity/gsutil-ls-uri uri)
       )
     )
 #+end_src
 
 #+RESULTS:
 : unity/gsutil-ls-at-point
+
+** TODO ls data output dir for a given file
+
+todo:
+
+- [X] define variable for buffer-name
+- [X] get output-dir
+- [X] get name
+- [ ] save-excursion does not work
+  
+#+begin_src emacs-lisp
+  (defun unity/get-field-value-in-datagen-config (config-path field-name)
+    (save-excursion
+      (find-file config-path)
+      (beginning-of-buffer)
+      (search-forward field-name)
+      (forward-char 1)
+      (path-at-point)
+      )
+    )
+
+  (defun unity/gsutil-ls-datagen-output-bucket ()
+    (interactive)
+    (let* (
+	   (ds-env (completing-read "ds_env:" (list "dev" "prd")))
+	   (config-file-path (format "/Users/hanxiao/code/mz-ds-deep-learning/cpi-datagen/configs/%s/s2c_combined.yaml" ds-env))
+	   (output-dir (unity/get-field-value-in-datagen-config config-file-path "output_dir:"))
+	   (name (unity/get-field-value-in-datagen-config config-file-path "name:")))
+      (gsutil/ls-nint (format "%s/%s"  output-dir name))
+      )
+    )
+
+  ;; (unity/gsutil-ls-output-bucket-for-file)
+#+end_src
+
+#+RESULTS:
+: unity/gsutil-ls-datagen-output-bucket
 
 ** DONE define gs as new link type in org
 gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
