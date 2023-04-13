@@ -5,6 +5,7 @@
       '(
 	backward-sexp
 	beginning-of-buffer
+	comint-delchar-or-maybe-eof
 	electric-pair-delete-pair
 	end-of-buffer
 	forward-sexp

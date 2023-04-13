@@ -196,6 +196,24 @@
 
    #+RESULTS:
    : diff-serving-advctx-prd-dev-configs
+* git
+** get and copy branch name
+
+#+begin_src emacs-lisp
+  (defun unity/get-and-copy-branch ()
+    "submit a s2c training job to KF"
+    (interactive)
+    (let ((git-branch (completing-read "branch name to copy: " (magit-list-branch-names))))
+      (kill-new git-branch)
+      (message (format "\"%s\" copied" git-branch))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/get-and-copy-branch
+
+(magit-list-branch-names)
 * shell commands shortcut
 ** +agg datagen+
 
@@ -387,6 +405,7 @@
   (defun unity/submit-s2c-train-jobs ()
     "submit a s2c training job to KF"
     (interactive)
+    (unity/vm-shell/ensure-ssh-terminal)
     (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
 	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
 	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
@@ -486,13 +505,19 @@
 ** s2c datagen
 
 #+begin_src emacs-lisp
-  (defun unity-s2c-datagen (exp-name run-name)
+  (defun unity/default-version ()
+    (format-time-string "%Y-%m-%d 00" (current-time))
+    )
+
+  (defun unity-s2c-datagen (exp-name run-name version)
     "Insert s2c datagen command at the current position"
     (interactive (list (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "s2c-datagen")))
+		       (read-string "run name: " "s2c-datagen")
+		       (read-string "version:" (unity/default-version))))
     (insert (format
-	     "python kubeflow/pipelines/conv/s2c_combined_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
-	     exp-name run-name)))
+	     "python kubeflow/pipelines/conv/s2c_combined_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s' --version '%s'"
+	     exp-name run-name version)))
+
 #+end_src
 
 #+RESULTS:
@@ -509,18 +534,12 @@
     (my/async-shell-command command gsutil/buffer-name)
     )
 
-  (defun gsutil/ls-nint (uri)
-    "run gsutil ls URI in and show results in another buffer"
-      (gsutil/execute (format "gsutil ls %s" uri))
-      )
-
-
-  (defun gsutil/ls ()
+  (defun gsutil/ls (&optional uri-or-nil)
     "run gsutil ls URI in and show results in another buffer"
     (interactive)
     (let
-	((uri (read-string "uri: " "gs://")))
-      (gsutil/ls-nint uri)
+	((uri (or uri-or-nil (read-string "uri: " ""))))
+      (gsutil/execute (format "gsutil ls %s" uri))
       )
     )
 #+end_src
@@ -532,23 +551,23 @@
 gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+begin_src emacs-lisp
-  (defun unity/gsutil-ls-uri (uri)
+  (defun unity/gls-uri (uri)
     (cond
      ;; perhaps apply prettify the string and use javascript-mode
      ((or (s-suffix? ".json" uri) (s-suffix? ".yaml" uri)) (gsutil/execute (format "gsutil cat %s" uri)))
      (t (gsutil/execute (format "gsutil ls %s" uri)))
      )
     )
-  (defun unity/gsutil-ls-at-point ()
+  (defun unity/gls-at-point ()
     (interactive)
     (let ((uri (path-at-point)))
-      (unity/gsutil-ls-uri uri)
+      (unity/gls-uri uri)
       )
     )
 #+end_src
 
 #+RESULTS:
-: unity/gsutil-ls-at-point
+: unity/gls-at-point
 
 ** TODO ls data output dir for a given file
 
@@ -570,14 +589,14 @@ todo:
       )
     )
 
-  (defun unity/gsutil-ls-datagen-output-bucket ()
+  (defun unity/gls-datagen-output-bucket ()
     (interactive)
     (let* (
 	   (ds-env (completing-read "ds_env:" (list "dev" "prd")))
 	   (config-file-path (format "/Users/hanxiao/code/mz-ds-deep-learning/cpi-datagen/configs/%s/s2c_combined.yaml" ds-env))
 	   (output-dir (unity/get-field-value-in-datagen-config config-file-path "output_dir:"))
 	   (name (unity/get-field-value-in-datagen-config config-file-path "name:")))
-      (gsutil/ls-nint (format "%s/%s"  output-dir name))
+      (gsutil/ls (format "%s/%s"  output-dir name))
       )
     )
 
@@ -585,7 +604,7 @@ todo:
 #+end_src
 
 #+RESULTS:
-: unity/gsutil-ls-datagen-output-bucket
+: unity/gls-datagen-output-bucket
 
 ** DONE define gs as new link type in org
 gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
@@ -608,17 +627,17 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 					  ; FIX this!
   (defun org-gs-open (_)
     "ls path at point in GCS."
-    (unity/gsutil-ls-at-point))
+    (unity/gls-at-point))
 
   ;; (defun org-gs-store-link (link &optional _)
   ;;   "not implemented yet"
-  ;;   (unity/gsutil-ls-at-point)
+  ;;   (unity/gls-at-point)
   ;;   )
 
 
   ;; (defun org-gs-export (link description format _)
   ;;   "not implemented yet"
-  ;;   (unity/gsutil-ls-at-point)
+  ;;   (unity/gls-at-point)
   ;;   )
 
   ;; (provide ol-gs)
