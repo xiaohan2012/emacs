@@ -80,211 +80,6 @@
 
 #+RESULTS:
 
-* avy enhancement
-- what is pop-global-mark? what does it do? (C-x C-SPC)
-
-** customize avy-keys
-  #+begin_src emacs-lisp
-    (use-package avy
-      :config
-      (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
-    )
-  #+end_src
-
-  #+RESULTS:
-  : t
-
-** kill words, lines, etc
-#+begin_src emacs-lisp
-  (defun avy-action-kill-whole-line (pt)
-    (save-excursion
-      (goto-char pt)
-      (kill-whole-line))
-    (select-window
-     (cdr
-      (ring-ref avy-ring 0)))
-    t)
-
-  (use-package avy
-    :ensure t
-    :config
-    (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
-	  (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
-    )
-#+end_src
-
-#+RESULTS:
-: avy-action-kill-whole-line
-
-** yanking
-
-
-#+begin_src emacs-lisp
-  (defun avy-action-copy-whole-line (pt)
-    (save-excursion
-      (goto-char pt)
-      (cl-destructuring-bind (start . end)
-	  (bounds-of-thing-at-point 'line)
-	(copy-region-as-kill start end)))
-    (select-window
-     (cdr
-      (ring-ref avy-ring 0)))
-    t)
-
-  (defun avy-action-yank-whole-line (pt)
-    (avy-action-copy-whole-line pt)
-    (save-excursion (yank))
-    t)
-
-  (use-package avy
-    :config
-    (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
-	  (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
-	  (alist-get ?w avy-dispatch-alist) 'avy-action-copy
-	  (alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
-	  )
-    )
-#+end_src
-
-#+RESULTS:
-: t
-
-** teleport / transpose
-
-=teleporting= moves sexp, e.g., =(print some-var)=, or a word , e.g., =pop-global-mark=
-
-#+begin_src emacs-lisp
-  (defun avy-action-teleport-whole-line (pt)
-    (avy-action-kill-whole-line pt)
-    (save-excursion (yank)) t)
-
-  (use-package avy
-    :config
-    (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
-	  (alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
-    )
-#+end_src
-
-#+RESULTS:
-: t
-
-** zap to char
-
-Kill from point up to PT.
-
-#+begin_src emacs-lisp
-  (use-package avy
-    :config
-    (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
-    )
-#+end_src
-
-** mark (and activate) a candidate word or sexp
-
-- use =m= to highlight an sexp or word, using avy-action-mark
-
-- (the marked region is activated by default)
-
-#+begin_src python
-  exp1 = (1 + 2 + 3)
-  exp2 = (4 + 5 + 6)
-
-
-
-
-#+end_src
-
-** mark the region from point to a candidate
-
-- (it does not activate the region)
-
-- to activate it, use =C-x C-x=
-
-#+begin_src emacs-lisp
-  (defun avy-action-mark-to-char (pt)
-    (activate-mark)
-    (goto-char pt))
-
-  (use-package avy
-    :config
-    (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
-    )
-#+end_src
-
-** look up the documentation for a symbol
-
-#+begin_src emacs-lisp
-  (use-package helpful
-    :ensure t
-    :bind
-    ("C-c h f" . helpful-at-point)
-    )
-
-  (defun avy-action-helpful (pt)
-    (save-excursion
-      (goto-char pt)
-      (helpful-at-point))
-    (select-window
-     (cdr (ring-ref avy-ring 0)))
-    t)
-
-  (use-package avy
-    :config
-    (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
-
-    )
-#+end_src
-
-#+RESULTS:
-: t
-
-** embark
-
-#+begin_src emacs-lisp
-  (use-package embark
-    :ensure t
-
-    :bind
-    (("C-." . embark-act)         ;; pick some comfortable binding
-     ("C-;" . embark-dwim)        ;; good alternative: M-.
-     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-    )
-
-  ;; use citar-embard to enable using citation-key as target
-  (use-package citar-embark
-    :ensure t
-    :after citar embark
-    ;; :config (citar-embark-mode)
-    )
-
-  (defun avy-action-embark (pt)
-    (unwind-protect
-	(save-excursion
-	  (goto-char pt)
-	  (embark-act))
-      (select-window
-       (cdr (ring-ref avy-ring 0))))
-    t)
-
-  (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
-#+end_src
-
-#+RESULTS:
-: avy-action-embark
-
-** smell test
-
-
-- Switching windows multiple times to land my cursor on some text
-
-- Isearching through more than three matches to jump to the right one
-
-- Moving the point a long distance to run a lookup command
-
-- Activating the mark manually (C-SPC) all the time
-
-- Jumping to locations to delete single words
-
 * package installers
 ** use-package
 
@@ -395,6 +190,34 @@ Kill from point up to PT.
 
 #+begin_src emacs-lisp
 (set-face-attribute 'region nil :background "#666")
+#+end_src
+
+#+RESULTS:
+
+** mode line
+** spaceline
+
+#+begin_src emacs-lisp
+  (use-package spaceline
+    :ensure t
+    :config
+    (require 'spaceline-config)
+    (setq powerline-default-separator (quote arrow))
+    (spaceline-spacemacs-theme))
+#+end_src
+
+** diminish
+
+#+begin_src emacs-lisp
+  (use-package diminish
+    :ensure t
+    :init
+    (diminish 'hungry-delete-mode)
+    (diminish 'which-key-mode)
+    (diminish 'rainbow-mode)
+    (diminish 'beacon-mode)
+    (diminish 'subword-mode)
+    )
 #+end_src
 
 #+RESULTS:
@@ -557,7 +380,7 @@ use space to separate the search terms
 #+end_src
 
 #+RESULTS:
-** TODO marginalia (does not quite work with =M-x=)
+** marginalia (does not quite work with =M-x=)
 
 adds annotation in minibuffer completions
 #+begin_src emacs-lisp
@@ -856,30 +679,6 @@ enable executing shell scripts in code blocks
 #+RESULTS:
 : t
 
-
-* markdown
-
-  #+begin_src emacs-lisp
-    (use-package markdown-mode
-      :ensure t
-      :mode ("README\\.md\\'" . gfm-mode)
-      :init (setq markdown-command "multimarkdown"))
-
-
-  #+end_src
-
-  #+RESULTS:
-  : ((\.\(?:md\|markdown\|mkd\|mdown\|mkdn\|mdwn\)\' . markdown-mode) (README\.md\' . gfm-mode) (\.yml\' . yaml-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.hva\' . latex-mode) (\.ipynb\' . ein:ipynb-mode) (\.\(e?ya?\|ra\)ml\' . yaml-mode) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.ad[abs]\' . ada-mode) (\.ad[bs]\.dg\' . ada-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-bsdmake-mode) (\.make\' . makefile-bsdmake-mode) (GNUmakefile\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-bsdmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . javascript-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . latex-mode))
-
-** pandoc
-
-   #+begin_src emacs-lisp
-     (custom-set-variables
-      '(markdown-command "/usr/local/bin/pandoc"))
-   #+end_src
-
-   #+RESULTS:
-
 * file
 ** save last edit place
 #+begin_src emacs-lisp
@@ -969,7 +768,6 @@ enable executing shell scripts in code blocks
   (setq dired-omit-files
 	(concat dired-omit-files "\\|^\\.ipynb_checkpoints$\\|^\\.pytest_cache$\\|^\\.venv$\\|^\\.git$\\|^\\_\\_pycache\\_\\_$"))
 #+end_src
-
 
 
 
@@ -1134,7 +932,6 @@ let's not use it for now since it works better for => 2= windows.
 #+RESULTS:
 : t
 
-
 ** window splitting and following
 
    #+begin_src emacs-lisp
@@ -1158,7 +955,6 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
 
 * buffers
-
 ** ibuffer
 
 
@@ -1167,7 +963,12 @@ let's not use it for now since it works better for => 2= windows.
  #+BEGIN_SRC emacs-lisp
    (global-set-key (kbd "C-x C-b") 'ibuffer)
  #+END_SRC
+** consult-buffer
 
+#+BEGIN_SRC emacs-lisp
+  ;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+  (global-set-key (kbd "C-x b") 'consult-buffer)
+#+END_SRC
 ** expert mode
 
    do not ask for confirmation when killing buffers
@@ -1202,6 +1003,7 @@ let's not use it for now since it works better for => 2= windows.
 
    #+RESULTS:
    : kill-all-buffers
+
 * projectile
 ** install
 #+BEGIN_SRC emacs-lisp
@@ -1229,72 +1031,6 @@ let's not use it for now since it works better for => 2= windows.
 
    #+RESULTS:
 
-* IDO
-** preparation and ignore files
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ido
-    :ensure t
-    :config
-    (setq ido-enable-flex-matching nil
-	  ido-create-new-buffer 'always
-	  ido-everywhere t)
-    (add-to-list 'ido-ignore-files "\.bak")
-    (add-to-list 'ido-ignore-files "\.log")
-    (add-to-list 'ido-ignore-files ".venv")
-    (add-to-list 'ido-ignore-files "__pycache__")
-    (add-to-list 'ido-ignore-files "\.pytest_cache")
-    (add-to-list 'ido-ignore-files "\.pkl")
-    ;; data files
-    (add-to-list 'ido-ignore-files "\.hdf5")
-    ;; latex-related
-    (add-to-list 'ido-ignore-files "\.nav")
-    (add-to-list 'ido-ignore-files "\.out")
-    (add-to-list 'ido-ignore-files "\.pdf")
-    (add-to-list 'ido-ignore-files "\.snm")
-    (add-to-list 'ido-ignore-files "\.synctex.gz")
-    ;; org
-    (add-to-list 'ido-ignore-files "\.org_archive")
-    (ido-mode 1)
-    )
-#+END_SRC
-
-#+RESULTS:
-: t
-** vertical IDO
-
-   #+BEGIN_SRC  emacs-lisp
-     (use-package ido-vertical-mode
-       :ensure t
-       :requires ido
-       :config
-       (ido-vertical-mode 1)
-       (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-       )
-   #+END_SRC
-
-   #+RESULTS:
-   : t
-
-** +smex+
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package smex
-  ;;   :ensure t
-  ;;   :init (smex-initialize)
-  ;;   :bind
-  ;;   ("M-x" . smex))
-#+END_SRC
-
-** buffer switching
-
-#+BEGIN_SRC emacs-lisp
-  ;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
-  (global-set-key (kbd "C-x b") 'consult-buffer)
-#+END_SRC
-
-#+RESULTS:
-: consult-buffer
 * cursor
 ** avy
 
@@ -1342,7 +1078,291 @@ let's not use it for now since it works better for => 2= windows.
   - hit twice to mark even more
 - =mc/edit-lines=: mark a region first and edit continuous lines
 
-* sublimity (make it work)
+* programming
+** lsp-mode
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp
+    :hook
+    ((python-mode . lsp))    
+    )
+
+  ;; clangd is used by default
+  (when (executable-find "clangd")
+    (add-hook 'c++-mode-hook #'lsp))
+
+
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode)
+
+
+  ;; (use-package ccls
+  ;;   :ensure t
+  ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+  ;; 	 (lambda () (require 'ccls) (lsp))))
+#+end_src
+
+#+RESULTS:
+** lsp-treemacs
+
+#+begin_src emacs-lisp
+  (use-package lsp-treemacs  
+    :ensure t
+    :config
+    (lsp-treemacs-sync-mode 1))
+
+  (defun my/goto-treemacs ()
+    "goto treemacs window, create one if it is not there"
+    (window-list)
+    ;; (print (get-buffer-window-list "Treemacs"))
+    )
+
+  ;; (my/goto-treemacs)
+#+end_src
+
+tips:
+- lsp-treemacs-errors-list: list error in a tree
+- lsp-treemacs-symbols: display the symbols
+- lsp-treemacs-references: display references at current point
+- lsp-treemacs-call-hierarchy: display the call hierarchy
+- inside treemacs: press "?" to show the help
+
+** Python
+*** activate virtualenv
+
+   #+begin_src emacs-lisp
+     (defun activate-virtualenv ()
+       "pyenv-activate the current directory + '.venv'
+	 in the future, the name of virtualenv should be specified as input
+	 "
+       (interactive)
+       (message "activating virtualenv")
+       (pyvenv-activate
+	(expand-file-name
+	 ".venv" default-directory))
+       (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+       )
+
+     (global-set-key (kbd "C-c a v") 'activate-virtualenv)
+   #+end_src
+
+   #+RESULTS:
+   : activate-virtualenv
+
+*** lsp-mode
+
+- install the python language server using
+  #+begin_src bash :results output
+    pip install "python-lsp-server[all]"
+  #+end_src
+- elpy or lsp? seems like both have their benefits ([[https://www.reddit.com/r/emacs/comments/10nctt8/comment/j68npq5/][ref]])
+- more info: https://www.mattduck.com/lsp-python-getting-started.html  
+
+*** flycheck
+
+   #+begin_src emacs-lisp
+     (use-package flycheck
+       :ensure t)
+   #+end_src
+
+   #+RESULTS:
+
+*** ein
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ein
+    :ensure t
+    :custom
+    ;; use below to show inline images
+    ;; reference: https://github.com/peterewills/emacs-ipython-notebook
+    (ein:output-area-inlined-images t) ;; not necessary in older versions
+    (ein:slice-image t)
+    (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
+
+    :bind
+    ("C-c C-k C-c" . 'ein:worksheet-kill-cell)
+    )
+
+#+END_SRC
+
+#+RESULTS:
+: ein:worksheet-kill-cell
+
+*** elpy
+
+#+BEGIN_SRC emacs-lisp
+  (use-package elpy
+    :ensure t
+    :config
+    (elpy-enable)
+    (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
+	  elpy-rpc-backend "jedi"
+	  ;; elpy-rpc-project-specific 't
+	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
+	  )
+    ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
+    :bind
+    ;; remap the keys for some navigation functions
+    ("C-s-n" . 'elpy-nav-forward-block)
+    ("C-s-p" . 'elpy-nav-backward-block)
+    ("C-s-f" . 'elpy-nav-forward-indent)
+    ("C-s-b" . 'elpy-nav-backward-indent)
+    ("C-s-<left>" . 'elpy-nav-indent-shift-left)
+    ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+    )
+
+
+#+END_SRC
+
+#+RESULTS:
+: elpy-nav-indent-shift-right
+*** elpy tips
+**** navigation
+
+   - =M-.= and =M-,= to goto-def and goback
+   - =C-c C-o= to list all functions
+   - =M-?= to search for symbols in the current project
+
+**** syntax checking
+
+    - =C-c C-v=: list the errors/warnings (if any) in another window
+*** cython
+
+   #+begin_src emacs-lisp
+     (use-package cython-mode
+       :ensure t)
+   #+end_src
+
+   #+RESULTS:
+*** code block folding
+
+- run =M-x hs-minor-mode= first to enable the minor mode
+- =C-c @ C-t= (hs-hide-all) to hide all functions/classes
+- =C-c @ C-M-S= (hs-show-all) to show all
+- =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
+  
+** C++
+*** resource
+
+- https://tuhdo.github.io/c-ide.html (as early as 2014)
+  - what is helm? is it an alternative to consult and vertico?
+- https://medium.com/linux-with-michael/emacs-for-c-development-766c8b5866f
+  - [[https://github.com/emacs-lsp/lsp-mode/][lsp]] (language server protocol)
+    - still developed [[https://github.com/emacs-lsp/lsp-mode/graphs/contributors][these days]]
+  - [[https://github.com/MaskRay/ccls][ccls]] (C/C++ language server)
+    - no active development [[https://github.com/MaskRay/ccls/graphs/contributors][since 2019]]
+  - [[https://www.tabnine.com/][tabnine]] (AI-based code completion)
+  - [[https://emacs-lsp.github.io/lsp-ui/][lsp-ui]] (enhanced UI including documentation, imenu, etc)
+  - [[https://github.com/emacs-lsp/lsp-treemacs][lsp-treemacs]] (tree layout file explorer integrated with lsp)
+- https://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html
+  - [[https://github.com/Sarcasm/irony-mode][irony]] (language server, e.g., code completion, syntax checking, etc)
+    - not actively developed [[https://github.com/Sarcasm/irony-mode/graphs/contributors][since 2019]]
+  - [[https://github.com/Andersbakken/rtags][rtags]] (indexer of C++ files)
+    - not actively developed [[https://github.com/Andersbakken/rtags/graphs/contributors][since 2021]]
+- https://linuxhint.com/c_emacs_configuration/ (2017)
+  - "Compiling and running C++ Code"
+- https://github.com/emacs-exordium/exordium
+  - with some CMAKE support
+- https://www.reddit.com/r/emacs/comments/dlf0w7/whats_your_setup_for_cc_in_emacs/
+- https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
+  - [[https://clangd.llvm.org/installation.html][clangd]] (language server)
+- [[https://github.com/MaskRay/ccls/wiki/lsp-mode][setting up lsp]]
+  - [[https://github.com/tigersoldier/company-lsp][company-lsp]] ([[https://github.com/MaskRay/ccls/wiki/lsp-mode][deprecated]])
+- choice of language servers:
+  - clangd and ccls
+*** checklist
+
+- [X] code completion
+- [X] syntax checking
+- [ ] compilation
+- [X] jump to definition
+- [ ] switch between header and cpp files
+- [X] lsp-treemacs
+- [X] symbol reference
+- [X] header file completion
+- [X] Show function interface and variable definition
+- 
+
+*** ignore files
+
+#+begin_src emacs-lisp
+  (with-eval-after-load 'treemacs
+    (defun treemacs-ignore-c++-object-files (file _)
+      (s-suffix? ".o" file))
+    (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+#+end_src
+
+#+RESULTS:
+| treemacs-ignore-c++-object-files | treemacs-ignore-c++-object-files | treemacs--std-ignore-file-predicate | treemacs--mac-ignore-file-predicate |
+
+*** switch between .h and .cpp
+
+use projectile-find-other-file (C-c p a)
+
+*** compiling/build the project
+
+use =compile=
+
+#+begin_src emacs-lisp
+  (add-hook
+     'c++-mode-hook
+      (lambda ()
+	(local-set-key (kbd "C-c C-c") #'compile)))
+  ;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
+#+end_src
+
+#+RESULTS:
+| (lambda nil (local-set-key (kbd C-c C-c) #'compile)) | lsp |
+
+*** jump back and forth between treemacs window
+
+#+begin_src emacs-lisp
+  (defun my/treemacs-back-and-forth ()
+    (interactive)
+    (if (treemacs-is-treemacs-window-selected?)
+	(aw-flip-window)
+      (treemacs-select-window)))
+
+  (global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
+#+end_src
+
+#+RESULTS:
+: my/treemacs-back-and-forth
+
+** other languages
+*** Matlab
+
+need to install matlab-mode manually,
+package-install does not work for now
+
+#+BEGIN_SRC emacs-lisp
+  (when (and (eq system-type 'gnu/linux)
+	     (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
+    (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
+    (load-library "matlab-load"))
+
+#+END_SRC
+
+#+RESULTS:
+*** sql
+
+tips: install pgformatter first, e.g., =brew install pgformatter=
+
+#+begin_src emacs-lisp
+  (use-package sqlformat
+    :ensure t
+    :config
+    (setq sqlformat-command 'pgformatter)
+    (setq sqlformat-args '("-s2" "-g")))
+#+end_src
+
+#+RESULTS:
+: t
+
+** TODO sublimity
 
 
 #+begin_src emacs-lisp
@@ -1371,113 +1391,61 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : t
 
-* Python
-** activate virtualenv
-
-   #+begin_src emacs-lisp
-     (defun activate-virtualenv ()
-       "pyenv-activate the current directory + '.venv'
-	 in the future, the name of virtualenv should be specified as input
-	 "
-       (interactive)
-       (message "activating virtualenv")
-       (pyvenv-activate
-	(expand-file-name
-	 ".venv" default-directory))
-       (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
-       )
-
-     (global-set-key (kbd "C-c a v") 'activate-virtualenv)
-   #+end_src
-
-   #+RESULTS:
-   : activate-virtualenv
-
-** flycheck
-
-   #+begin_src emacs-lisp
-     (use-package flycheck
-       :ensure t)
-   #+end_src
-
-   #+RESULTS:
-
-** ein
+* yasnippet
+*** preparation
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ein
-    :ensure t
-    :custom
-    ;; use below to show inline images
-    ;; reference: https://github.com/peterewills/emacs-ipython-notebook
-    (ein:output-area-inlined-images t) ;; not necessary in older versions
-    (ein:slice-image t)
-    (pixel-scroll-mode t) ;; enable pixel scroll mode for better image viewing
-
-    :bind
-    ("C-c C-k C-c" . 'ein:worksheet-kill-cell)
-    )
-
-#+END_SRC
-
-#+RESULTS:
-: ein:worksheet-kill-cell
-
-** elpy
-
-#+BEGIN_SRC emacs-lisp
-  (use-package elpy
+  (use-package yasnippet
     :ensure t
     :config
-    (elpy-enable)
-    (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
-	  elpy-rpc-backend "jedi"
-	  ;; elpy-rpc-project-specific 't
-	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
-	  )
-    ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
-    :bind
-    ;; remap the keys for some navigation functions
-    ("C-s-n" . 'elpy-nav-forward-block)
-    ("C-s-p" . 'elpy-nav-backward-block)
-    ("C-s-f" . 'elpy-nav-forward-indent)
-    ("C-s-b" . 'elpy-nav-backward-indent)
-    ("C-s-<left>" . 'elpy-nav-indent-shift-left)
-    ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+    (setq yas-snippet-dirs
+	  '("~/.emacs.d/snippets"
+	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
+	    ))
+    ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
+    ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
+    (yas-global-mode 1)
     )
-
-
 #+END_SRC
 
 #+RESULTS:
-: elpy-nav-indent-shift-right
-** elpy tips
-*** navigation
+: t
 
-   - =M-.= and =M-,= to goto-def and goback
-   - =C-c C-o= to list all functions
-   - =M-?= to search for symbols in the current project
+*** add some off-the-shelf snippets by the community
 
-*** syntax checking
-
-    - =C-c C-v=: list the errors/warnings (if any) in another window
-** cython
-
-   #+begin_src emacs-lisp
-     (use-package cython-mode
-       :ensure t)
-   #+end_src
+   #+BEGIN_SRC emacs-lisp
+   (use-package yasnippet-snippets
+   :ensure t
+   )
+   #+END_SRC
 
    #+RESULTS:
-** code block folding
 
-- run =M-x hs-minor-mode= first to enable the minor mode
-- =C-c @ C-t= (hs-hide-all) to hide all functions/classes
-- =C-c @ C-M-S= (hs-show-all) to show all
-- =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
-  
-* LaTex
-** preparation
+*** fast acronyms
+
+#+begin_src emacs-lisp
+  (defun my/yas-add-acronyms (mode-sym acronyms)
+    "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+  acronyms is a list of (list acronym full-name)
+  "
+    (dolist (acr acronyms)
+      (yas--define mode-sym (car acr) (car (cdr acr)))
+      )
+    )
+#+end_src
+
+*** indentation (does it work?)
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
+#+end_src
+
+#+RESULTS:
+| (lambda nil (set (make-local-variable 'yas-indent-line) 'fixed)) | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
+* markup languages
+** LaTex
+*** preparation
   #+begin_src emacs-lisp
     (use-package tex
       :defer t
@@ -1497,7 +1465,7 @@ why not showing in non-GUI Emacs?
   #+RESULTS:
   : /usr/local/bin/:/Library/TeX/texbin/:/Users/hanxiao/code/mz-re-ml-new/.venv/bin:/Users/hanxiao/code/mz-re-ml-new/.venv/bin:/Users/hanxiao/google-cloud-sdk/bin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/usr/local/munki:/Library/TeX/texbin/
 
-** source correlation with external PDF viewer
+*** source correlation with external PDF viewer
 
 #+begin_src emacs-lisp
 					  ; forward/reverse search between PDF and Latex source
@@ -1524,7 +1492,7 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : algs
 
-** TODO unbind keybindings
+*** TODO unbind keybindings
 
 #+begin_src emacs-lisp
   ;; (add-hook latex-mode-hook
@@ -1540,8 +1508,8 @@ why not showing in non-GUI Emacs?
 | lambda | nil | (define-key LaTex-mode-map (kbd C-M-a) nil) |
 | lambda | nil | (define-key latex-mode-map (kbd C-M-a) nil) |
 
-** text manipulation
-*** wrap by href
+*** text manipulation
+**** wrap by href
 
 #+begin_src emacs-lisp
   (defun wrap-by-href ()
@@ -1570,7 +1538,7 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : wrap-by-href
 
-** [[https://github.com/emacs-citar/citar][citar]]
+*** [[https://github.com/emacs-citar/citar][citar]]
 
 #+begin_src emacs-lisp
   (use-package citar
@@ -1599,7 +1567,7 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 
-** file opening short-cuts
+*** file opening short-cuts
 
 #+begin_src emacs-lisp
   (defun my/open-defines-tex ()
@@ -1613,7 +1581,7 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : my/open-defines-tex
 
-** navigation
+*** navigation
 
 #+begin_src emacs-lisp
   (defun forward-jump-into-next-brace ()
@@ -1648,155 +1616,6 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : backward-jump-into-next-pair
 
-* C++
-** resource
-
-- https://tuhdo.github.io/c-ide.html (as early as 2014)
-  - what is helm? is it an alternative to consult and vertico?
-- https://medium.com/linux-with-michael/emacs-for-c-development-766c8b5866f
-  - [[https://github.com/emacs-lsp/lsp-mode/][lsp]] (language server protocol)
-    - still developed [[https://github.com/emacs-lsp/lsp-mode/graphs/contributors][these days]]
-  - [[https://github.com/MaskRay/ccls][ccls]] (C/C++ language server)
-    - no active development [[https://github.com/MaskRay/ccls/graphs/contributors][since 2019]]
-  - [[https://www.tabnine.com/][tabnine]] (AI-based code completion)
-  - [[https://emacs-lsp.github.io/lsp-ui/][lsp-ui]] (enhanced UI including documentation, imenu, etc)
-  - [[https://github.com/emacs-lsp/lsp-treemacs][lsp-treemacs]] (tree layout file explorer integrated with lsp)
-- https://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html
-  - [[https://github.com/Sarcasm/irony-mode][irony]] (language server, e.g., code completion, syntax checking, etc)
-    - not actively developed [[https://github.com/Sarcasm/irony-mode/graphs/contributors][since 2019]]
-  - [[https://github.com/Andersbakken/rtags][rtags]] (indexer of C++ files)
-    - not actively developed [[https://github.com/Andersbakken/rtags/graphs/contributors][since 2021]]
-- https://linuxhint.com/c_emacs_configuration/ (2017)
-  - "Compiling and running C++ Code"
-- https://github.com/emacs-exordium/exordium
-  - with some CMAKE support
-- https://www.reddit.com/r/emacs/comments/dlf0w7/whats_your_setup_for_cc_in_emacs/
-- https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
-  - [[https://clangd.llvm.org/installation.html][clangd]] (language server)
-- [[https://github.com/MaskRay/ccls/wiki/lsp-mode][setting up lsp]]
-  - [[https://github.com/tigersoldier/company-lsp][company-lsp]] ([[https://github.com/MaskRay/ccls/wiki/lsp-mode][deprecated]])
-- choice of language servers:
-  - clangd and ccls
-** checklist
-
-- [X] code completion
-- [X] syntax checking
-- [ ] compilation
-- [X] jump to definition
-- [ ] switch between header and cpp files
-- [X] lsp-treemacs
-- [X] symbol reference
-- [X] header file completion
-- [X] Show function interface and variable definition
-- 
-
-** lsp-mode
-
-#+begin_src emacs-lisp
-  (use-package lsp-mode
-    :ensure t
-    :commands lsp)
-    ; clangd is used by default
-
-  (use-package lsp-ui
-    :ensure t
-    :commands lsp-ui-mode)
-
-  (when (executable-find "clangd")
-    (add-hook 'c++-mode-hook #'lsp))
-    ;; (use-package ccls
-    ;;   :ensure t
-    ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
-    ;; 	 (lambda () (require 'ccls) (lsp))))
-#+end_src
-
-#+RESULTS:
-| lsp |
-** lsp-treemacs
-
-#+begin_src emacs-lisp
-  (use-package lsp-treemacs  
-    :ensure t
-    :config
-    (lsp-treemacs-sync-mode 1))
-
-  (defun my/goto-treemacs ()
-    "goto treemacs window, create one if it is not there"
-    (window-list)
-    ;; (print (get-buffer-window-list "Treemacs"))
-    )
-
-  ;; (my/goto-treemacs)
-#+end_src
-
-tips:
-- lsp-treemacs-errors-list: list error in a tree
-- lsp-treemacs-symbols: display the symbols
-- lsp-treemacs-references: display references at current point
-- lsp-treemacs-call-hierarchy: display the call hierarchy
-- inside treemacs: press "?" to show the help
-** ignore files
-
-#+begin_src emacs-lisp
-  (with-eval-after-load 'treemacs
-    (defun treemacs-ignore-c++-object-files (file _)
-      (s-suffix? ".o" file))
-    (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
-#+end_src
-
-#+RESULTS:
-| treemacs-ignore-c++-object-files | treemacs-ignore-c++-object-files | treemacs--std-ignore-file-predicate | treemacs--mac-ignore-file-predicate |
-
-** switch between .h and .cpp
-
-use projectile-find-other-file (C-c p a)
-
-** compiling/build the project
-
-use =compile=
-
-#+begin_src emacs-lisp
-  (add-hook
-     'c++-mode-hook
-      (lambda ()
-	(local-set-key (kbd "C-c C-c") #'compile)))
-  ;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
-#+end_src
-
-#+RESULTS:
-| (lambda nil (local-set-key (kbd C-c C-c) #'compile)) | lsp |
-
-** jump back and forth between treemacs window
-
-#+begin_src emacs-lisp
-  (defun my/treemacs-back-and-forth ()
-    (interactive)
-    (if (treemacs-is-treemacs-window-selected?)
-	(aw-flip-window)
-      (treemacs-select-window)))
-
-  (global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
-#+end_src
-
-#+RESULTS:
-: my/treemacs-back-and-forth
-
-* other languages
-** Matlab
-
-need to install matlab-mode manually,
-package-install does not work for now
-
-#+BEGIN_SRC emacs-lisp
-  (when (and (eq system-type 'gnu/linux)
-	     (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
-    (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
-    (load-library "matlab-load"))
-
-#+END_SRC
-
-#+RESULTS:
-
 ** YAML mode
 
    #+BEGIN_SRC emacs-lisp
@@ -1806,116 +1625,34 @@ package-install does not work for now
    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
    )
    #+END_SRC
+** markdown
+
+  #+begin_src emacs-lisp
+    (use-package markdown-mode
+      :ensure t
+      :mode ("README\\.md\\'" . gfm-mode)
+      :init (setq markdown-command "multimarkdown"))
+
+
+  #+end_src
+
+  #+RESULTS:
+  : ((\.\(?:md\|markdown\|mkd\|mdown\|mkdn\|mdwn\)\' . markdown-mode) (README\.md\' . gfm-mode) (\.yml\' . yaml-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.hva\' . latex-mode) (\.ipynb\' . ein:ipynb-mode) (\.\(e?ya?\|ra\)ml\' . yaml-mode) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.ad[abs]\' . ada-mode) (\.ad[bs]\.dg\' . ada-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-bsdmake-mode) (\.make\' . makefile-bsdmake-mode) (GNUmakefile\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-bsdmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . javascript-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . latex-mode))
+
+**** pandoc
+
+   #+begin_src emacs-lisp
+     (custom-set-variables
+      '(markdown-command "/usr/local/bin/pandoc"))
+   #+end_src
+
+   #+RESULTS:
+
 ** dockerfile mode
 
    #+begin_src emacs-lisp
      (use-package dockerfile-mode
        :ensure t)
-   #+end_src
-
-** sql
-
-tips: install pgformatter first, e.g., =brew install pgformatter=
-
-#+begin_src emacs-lisp
-  (use-package sqlformat
-    :ensure t
-    :config
-    (setq sqlformat-command 'pgformatter)
-    (setq sqlformat-args '("-s2" "-g")))
-#+end_src
-
-#+RESULTS:
-: t
-
-* yasnippet
-** preparation
-
-#+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :ensure t
-    :config
-    (setq yas-snippet-dirs
-	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-	    ))
-    ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
-    ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
-    (yas-global-mode 1)
-    )
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** add some off-the-shelf snippets by the community
-
-   #+BEGIN_SRC emacs-lisp
-   (use-package yasnippet-snippets
-   :ensure t
-   )
-   #+END_SRC
-
-   #+RESULTS:
-
-** fast acronyms
-
-#+begin_src emacs-lisp
-  (defun my/yas-add-acronyms (mode-sym acronyms)
-    "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
-  acronyms is a list of (list acronym full-name)
-  "
-    (dolist (acr acronyms)
-      (yas--define mode-sym (car acr) (car (cdr acr)))
-      )
-    )
-#+end_src
-
-** indentation (does it work?)
-
-#+begin_src emacs-lisp
-(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
-#+end_src
-
-#+RESULTS:
-| (lambda nil (set (make-local-variable 'yas-indent-line) 'fixed)) | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | org-add-electric-pairs | (lambda nil (org-bullets-mode)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes |
-
-* config reload/edit
-** config edit
-#+BEGIN_SRC emacs-lisp
-(defun config-visit ()
-"visit ~/.emacs.d/config.org"
-(interactive)
-(find-file "~/.emacs.d/config.org"))
-(global-set-key (kbd "C-c e") 'config-visit)
-#+END_SRC
-
-#+RESULTS:
-: config-visit
-
-** config reload
-
-#+BEGIN_SRC emacs-lisp
-  (defun config-reload ()
-    "Reloads ~/.emacs.d/config.org at runtime"
-    (interactive)
-    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-  ;; (global-set-key (kbd "C-c r") 'config-reload)
-#+END_SRC
-
-#+RESULTS:
-: config-reload
-
-** open ~/.zshrc file
-
-   #+begin_src emacs-lisp
-     (defun zshrc-visit ()
-       "visit ~/.zshrc"
-       (interactive)
-       (find-file "~/.zshrc"))
-     (global-set-key (kbd "C-c z") 'zshrc-visit)
-
    #+end_src
 
 * terminals
@@ -1991,6 +1728,43 @@ start a remote terminal via ssh
 #+RESULTS:
 
 * miscellaneous
+** config reload/edit
+*** config edit
+#+BEGIN_SRC emacs-lisp
+(defun config-visit ()
+"visit ~/.emacs.d/config.org"
+(interactive)
+(find-file "~/.emacs.d/config.org"))
+(global-set-key (kbd "C-c e") 'config-visit)
+#+END_SRC
+
+#+RESULTS:
+: config-visit
+
+*** config reload
+
+#+BEGIN_SRC emacs-lisp
+  (defun config-reload ()
+    "Reloads ~/.emacs.d/config.org at runtime"
+    (interactive)
+    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+  ;; (global-set-key (kbd "C-c r") 'config-reload)
+#+END_SRC
+
+#+RESULTS:
+: config-reload
+
+*** open ~/.zshrc file
+
+   #+begin_src emacs-lisp
+     (defun zshrc-visit ()
+       "visit ~/.zshrc"
+       (interactive)
+       (find-file "~/.zshrc"))
+     (global-set-key (kbd "C-c z") 'zshrc-visit)
+
+   #+end_src
+
 ** show line/column number
 
 #+begin_src emacs-lisp
@@ -2090,6 +1864,18 @@ start a remote terminal via ssh
 #+RESULTS:
 : word-stats
 
+** dmenu (run a command in shell)
+
+
+#+begin_src emacs-lisp
+(use-package dmenu
+    :ensure t
+    :bind
+    ("C-c d m" . 'dmenu))
+#+end_src
+
+#+RESULTS:
+: dmenu
 * text manipulation
 ** common functions
 
@@ -2901,46 +2687,206 @@ useful to kill an expression (including function)
 #+RESULTS:
 : my/surround-by-plus
 
-* mode line
-** spaceline
+* avy enhancement
+- what is pop-global-mark? what does it do? (C-x C-SPC)
 
+** customize avy-keys
+  #+begin_src emacs-lisp
+    (use-package avy
+      :config
+      (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
+    )
+  #+end_src
+
+  #+RESULTS:
+  : t
+
+** kill words, lines, etc
 #+begin_src emacs-lisp
-  (use-package spaceline
+  (defun avy-action-kill-whole-line (pt)
+    (save-excursion
+      (goto-char pt)
+      (kill-whole-line))
+    (select-window
+     (cdr
+      (ring-ref avy-ring 0)))
+    t)
+
+  (use-package avy
     :ensure t
     :config
-    (require 'spaceline-config)
-    (setq powerline-default-separator (quote arrow))
-    (spaceline-spacemacs-theme))
-#+end_src
-
-** diminish
-
-#+begin_src emacs-lisp
-  (use-package diminish
-    :ensure t
-    :init
-    (diminish 'hungry-delete-mode)
-    (diminish 'which-key-mode)
-    (diminish 'rainbow-mode)
-    (diminish 'beacon-mode)
-    (diminish 'subword-mode)
+    (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
+	  (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
     )
 #+end_src
 
 #+RESULTS:
+: avy-action-kill-whole-line
 
-* dmenu (run a command in shell)
+** yanking
 
 
 #+begin_src emacs-lisp
-(use-package dmenu
-    :ensure t
-    :bind
-    ("C-c d m" . 'dmenu))
+  (defun avy-action-copy-whole-line (pt)
+    (save-excursion
+      (goto-char pt)
+      (cl-destructuring-bind (start . end)
+	  (bounds-of-thing-at-point 'line)
+	(copy-region-as-kill start end)))
+    (select-window
+     (cdr
+      (ring-ref avy-ring 0)))
+    t)
+
+  (defun avy-action-yank-whole-line (pt)
+    (avy-action-copy-whole-line pt)
+    (save-excursion (yank))
+    t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
+	  (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
+	  (alist-get ?w avy-dispatch-alist) 'avy-action-copy
+	  (alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
+	  )
+    )
 #+end_src
 
 #+RESULTS:
-: dmenu
+: t
+
+** teleport / transpose
+
+=teleporting= moves sexp, e.g., =(print some-var)=, or a word , e.g., =pop-global-mark=
+
+#+begin_src emacs-lisp
+  (defun avy-action-teleport-whole-line (pt)
+    (avy-action-kill-whole-line pt)
+    (save-excursion (yank)) t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
+	  (alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
+** zap to char
+
+Kill from point up to PT.
+
+#+begin_src emacs-lisp
+  (use-package avy
+    :config
+    (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
+    )
+#+end_src
+
+** mark (and activate) a candidate word or sexp
+
+- use =m= to highlight an sexp or word, using avy-action-mark
+
+- (the marked region is activated by default)
+
+#+begin_src python
+  exp1 = (1 + 2 + 3)
+  exp2 = (4 + 5 + 6)
+#+end_src
+
+** mark the region from point to a candidate
+
+- (it does not activate the region)
+
+- to activate it, use =C-x C-x=
+
+#+begin_src emacs-lisp
+  (defun avy-action-mark-to-char (pt)
+    (activate-mark)
+    (goto-char pt))
+
+  (use-package avy
+    :config
+    (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
+    )
+#+end_src
+
+** look up the documentation for a symbol
+
+#+begin_src emacs-lisp
+  (use-package helpful
+    :ensure t
+    :bind
+    ("C-c h f" . helpful-at-point)
+    )
+
+  (defun avy-action-helpful (pt)
+    (save-excursion
+      (goto-char pt)
+      (helpful-at-point))
+    (select-window
+     (cdr (ring-ref avy-ring 0)))
+    t)
+
+  (use-package avy
+    :config
+    (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
+
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
+** embark
+
+#+begin_src emacs-lisp
+  (use-package embark
+    :ensure t
+
+    :bind
+    (("C-." . embark-act)         ;; pick some comfortable binding
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+    )
+
+  ;; use citar-embard to enable using citation-key as target
+  (use-package citar-embark
+    :ensure t
+    :after citar embark
+    ;; :config (citar-embark-mode)
+    )
+
+  (defun avy-action-embark (pt)
+    (unwind-protect
+	(save-excursion
+	  (goto-char pt)
+	  (embark-act))
+      (select-window
+       (cdr (ring-ref avy-ring 0))))
+    t)
+
+  (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
+#+end_src
+
+#+RESULTS:
+: avy-action-embark
+
+** smell test
+
+
+- Switching windows multiple times to land my cursor on some text
+
+- Isearching through more than three matches to jump to the right one
+
+- Moving the point a long distance to run a lookup command
+
+- Activating the mark manually (C-SPC) all the time
+
+- Jumping to locations to delete single words
 * searching
 ** +swiper+
 
@@ -3047,3 +2993,64 @@ git config --global core.excludesfile ~/.gitignore
 #+end_src
 
 #+RESULTS:
+* archive
+** +IDO+
+** +preparation and ignore files+
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package ido
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq ido-enable-flex-matching nil
+  ;; 	ido-create-new-buffer 'always
+  ;; 	ido-everywhere t)
+  ;;   (add-to-list 'ido-ignore-files "\.bak")
+  ;;   (add-to-list 'ido-ignore-files "\.log")
+  ;;   (add-to-list 'ido-ignore-files ".venv")
+  ;;   (add-to-list 'ido-ignore-files "__pycache__")
+  ;;   (add-to-list 'ido-ignore-files "\.pytest_cache")
+  ;;   (add-to-list 'ido-ignore-files "\.pkl")
+  ;;   ;; data files
+  ;;   (add-to-list 'ido-ignore-files "\.hdf5")
+  ;;   ;; latex-related
+  ;;   (add-to-list 'ido-ignore-files "\.nav")
+  ;;   (add-to-list 'ido-ignore-files "\.out")
+  ;;   (add-to-list 'ido-ignore-files "\.pdf")
+  ;;   (add-to-list 'ido-ignore-files "\.snm")
+  ;;   (add-to-list 'ido-ignore-files "\.synctex.gz")
+  ;;   ;; org
+  ;;   (add-to-list 'ido-ignore-files "\.org_archive")
+  ;;   (ido-mode 1)
+  ;;   )
+#+END_SRC
+
+#+RESULTS:
+: t
+** +vertical IDO+
+
+   #+BEGIN_SRC  emacs-lisp
+     ;; (use-package ido-vertical-mode
+     ;;   :ensure t
+     ;;   :requires ido
+     ;;   :config
+     ;;   (ido-vertical-mode 1)
+     ;;   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+     ;;   )
+   #+END_SRC
+
+   #+RESULTS:
+   : t
+
+** +smex+
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package smex
+  ;;   :ensure t
+  ;;   :init (smex-initialize)
+  ;;   :bind
+  ;;   ("M-x" . smex))
+#+END_SRC
+
+
+#+RESULTS:
+: consult-buffer
