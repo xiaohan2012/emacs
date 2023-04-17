@@ -1081,13 +1081,30 @@ let's not use it for now since it works better for => 2= windows.
 * programming
 ** lsp-mode
 
+- use "S-l" to start exploring the lsp commands
+  
 #+begin_src emacs-lisp
   (use-package lsp-mode
     :ensure t
     :commands lsp
     :hook
-    ((python-mode . lsp))    
+    ((python-mode . lsp))
+    (lsp-mode . lsp-enable-which-key-integration)
+    :config
+    (setq lsp-idle-delay 0.5
+	  lsp-enable-symbol-highlighting t
+	  lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
+	  lsp-pyls-plugins-pycodestyle-enabled nil
+	  lsp-pyls-plugins-flake8-enabled nil)    
+    ;; how to use the plugins?
+    (lsp-register-custom-settings
+     '(("pyls.plugins.pyls_mypy.enabled" t t)
+       ("pyls.plugins.pyls_mypy.live_mode" nil t)
+       ("pyls.plugins.pyls_black.enabled" t t)
+       ("pyls.plugins.pyls_isort.enabled" t t)))
     )
+
+
 
   ;; clangd is used by default
   (when (executable-find "clangd")
@@ -1201,7 +1218,7 @@ tips:
     (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
 	  elpy-rpc-backend "jedi"
 	  ;; elpy-rpc-project-specific 't
-	  elpy-modules (delq 'elpy-module-flymake elpy-modules)
+	  ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	  )
     ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
     :bind
