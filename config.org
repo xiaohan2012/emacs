@@ -840,7 +840,7 @@ enable executing shell scripts in code blocks
     (setq org-todo-keywords
 	  '((sequence "TODO" "DOING" "DONE")))
     (setq org-todo-keyword-faces
-	  '(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
+	  '(("TODO" . "red") ("DOING" . "cyan") ("DONE" . "green")))
     )
 #+end_src
 
@@ -2684,7 +2684,7 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 
 *** keybindings
 
-for Mac users: deselect "M-<up>" and "M-<down>" binding in "keyboard short cut" -> "mission control"
+for MAC users: deselect "M-<up>" and "M-<down>" binding in "keyboard short cut" -> "mission control"
   
 #+begin_src emacs-lisp
 
@@ -2942,14 +2942,16 @@ useful to kill an expression (including function)
 #+RESULTS:
 : dmenu
 * searching
-** text search
+** +swiper+
+
+using consult-line instead to enable orderless search
   #+begin_src  emacs-lisp
-    (use-package swiper
-      :ensure t
-      :bind
-      ("C-s" . swiper)
-      ("C-r" . swiper-backward)
-      )
+    ;; (use-package swiper
+    ;;   :ensure t
+    ;;   :bind
+    ;;   ("C-s" . swiper)
+    ;;   ("C-r" . swiper-backward)
+    ;;   )
   #+end_src
 
   #+RESULTS:
@@ -2966,6 +2968,7 @@ Consult provides search and navigation commands
     ("C-c f" . 'consult-find)  ;; find file
     ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
 					  ; consult-imenu-multi for multiple buffers
+    ("C-s" . 'consult-line)  ;; line search in current buffer
     ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
     ("C-c y" . 'consult-yank-from-kill-ring)
     ("C-c r s" . 'consult-register-store)
@@ -2978,7 +2981,7 @@ Consult provides search and navigation commands
 #+end_src
 
 #+RESULTS:
-: consult-goto-line
+: consult-compile-error
 
 other useful functions:
 
@@ -2990,33 +2993,33 @@ other useful functions:
 ** search in the other window
 
 #+begin_src emacs-lisp
-  (defun swiper-forward-other-window (prefix)
-      "Function to swiper-forward in other-window."
+  (defun consult-line-other-window (prefix)
+      "Function to consult-line in other-window."
       (interactive "P")
       (unless (one-window-p)
 	(save-excursion
 	  (let ((next (if prefix -1 1)))
 	    (other-window next)
-	    (swiper-isearch)
+	    (consult-line)
 	    (other-window (- next))))))
 
-  (defun swiper-backward-other-window (prefix)
-    "Function to swiper-backward in other-window."
-    (interactive "P")
-    (unless (one-window-p)
-      (save-excursion
-	(let ((next (if prefix 1 -1)))
-	  (other-window next)
-	  (swiper-backward)
-	  (other-window (- next))))))
+  ;; (defun consult-backward-other-window (prefix)
+  ;;   "Function to consult-backward in other-window."
+  ;;   (interactive "P")
+  ;;   (unless (one-window-p)
+  ;;     (save-excursion
+  ;;       (let ((next (if prefix 1 -1)))
+  ;; 	(other-window next)
+  ;; 	(consult-line)
+  ;; 	(other-window (- next))))))
 
-  (define-key global-map (kbd "C-M-s") 'swiper-forward-other-window)
-  (define-key global-map (kbd "C-M-r") 'swiper-backward-other-window)
+  (define-key global-map (kbd "C-M-s") 'consult-line-other-window)
+  ;; (define-key global-map (kbd "C-M-r") 'consult-backward-other-window)
 
 #+end_src
 
 #+RESULTS:
-: swiper-backward-other-window
+: consult-line-other-window
 
 * magit (version control)
 
