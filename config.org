@@ -1,15 +1,22 @@
 * random
 * wish list
 
-- [X] latex
+- [-] latex
   - [X] use <TAB> to jump into the beginning of the next pair
-- [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
+  - [ ] delete enclosing command/macro, e.g., \pr{a + b} -> a + b    
+  - [ ] fast latex input: https://karthinks.com/software/latex-input-for-impatient-scholars/
   - [ ] quickly open the latex buffer inside "$$" and avoid pressing "C-c ."
   - [ ] jump from left closing "$" to right closing "$" and vice versa
   - [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
     - and when done, render the math
-  - flyspell: fix the previous word (no need to move cursor back and forth)
-  - [ ] latex: delete enclosing command/macro, e.g., \pr{a + b} -> a + b
+- python:
+  - lsp-mode: https://www.mattduck.com/lsp-python-getting-started.html
+  - faster import:
+    - say I want to import a function in a file, how to do it without moving to that file, copy the function, and paste it
+    - even without moving to the top of the target/importing file 
+  - [ ] faster look up the correct import
+    - say I want to import dataclass but I'm not sure what is the exact statement I should use
+    - a quick workaround: use yasnippet
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
@@ -591,6 +598,9 @@ adds annotation in minibuffer completions
 #+RESULTS:
 : t
 
+*** tip: fix previous word automatically
+
+  - call flyspell-auto-correct-previous-word with C-;
 * general enhancement
 ** which-key
 
@@ -1432,13 +1442,15 @@ why not showing in non-GUI Emacs?
     ("C-s-p" . 'elpy-nav-backward-block)
     ("C-s-f" . 'elpy-nav-forward-indent)
     ("C-s-b" . 'elpy-nav-backward-indent)
+    ("C-s-<left>" . 'elpy-nav-indent-shift-left)
+    ("C-s-<right>" . 'elpy-nav-indent-shift-right)
     )
 
 
 #+END_SRC
 
 #+RESULTS:
-: elpy-nav-backward-indent
+: elpy-nav-indent-shift-right
 ** elpy tips
 *** navigation
 
@@ -1616,11 +1628,11 @@ why not showing in non-GUI Emacs?
   (defun forward-jump-into-next-pair ()
     "however, for $, we may jump into the closing pair, how to fix it?"
     (interactive)
-    (search-forward-regexp "[{\$]")
+    (search-forward-regexp "[{\$(]")
     )
   (defun backward-jump-into-next-pair ()
     (interactive)
-    (search-backward-regexp "[{\$]")
+    (search-backward-regexp "[{\$(]")
     )
 
 
@@ -2106,6 +2118,36 @@ start a remote terminal via ssh
 
 #+RESULTS:
 : search-backward-no-move
+
+** move line
+
+#+begin_src emacs-lisp
+(defun move-line (n)
+  "Move the current line up or down by N lines."
+  (interactive "p")
+  (setq col (current-column))
+  (beginning-of-line) (setq start (point))
+  (end-of-line) (forward-char) (setq end (point))
+  (let ((line-text (delete-and-extract-region start end)))
+    (forward-line n)
+    (insert line-text)
+    ;; restore point to original column in moved line
+    (forward-line -1)
+    (forward-char col)))
+
+(defun move-line-up (n)
+  "Move the current line up by N lines."
+  (interactive "p")
+  (move-line (if (null n) -1 (- n))))
+
+(defun move-line-down (n)
+  "Move the current line down by N lines."
+  (interactive "p")
+  (move-line (if (null n) 1 n)))
+#+end_src
+
+#+RESULTS:
+: move-line-down
 
 ** line/region copying/deletion in Avy
 
