@@ -202,6 +202,7 @@
 #+begin_src emacs-lisp
   (defun unity/get-and-copy-branch ()
     "submit a s2c training job to KF"
+    (unity/ensure-top-level)
     (interactive)
     (let ((git-branch (completing-read "branch name to copy: " (magit-list-branch-names))))
       (kill-new git-branch)
