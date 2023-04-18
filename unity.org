@@ -419,15 +419,19 @@
 	   (run-name (or run-name-or-nil (format (read-string "run name: " "s2c-train-%s-test") model-type)))
 	   (reps (or reps-or-nil (read-number "number of repetitions: " 1)))
 	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
+	   ;; some flags
+	   (exit-kf-shell-p (or exit-kf-shell-or-nil nil))
+	   (update-repo-p (or update-repo-or-nil t))
+	   (enter-kf-p (or enter-kf-or-nil t))
 	   )
       ;; show the ssh buffer if invisible
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
 
       (unity/vm-shell/send-string (format "git checkout %s" git-branch))
-      (when update-repo-or-nil
+      (when update-repo-p
 	(unity/vm-shell/update-git-repository git-branch)
 	)
-      (when enter-kf-or-nil
+      (when enter-kf-p
 	(unity/vm-shell/enter-kubeflow-shell)
 	)
 
@@ -438,7 +442,7 @@
 	  (unity/vm-shell/send-string (format "%s-%d" command i))
 	  )  
 	)
-      (when exit-kf-shell-or-nil
+      (when exit-kf-shell-p
 	(unity/vm-shell/exit-kubeflow-shell))
       )
   )
@@ -485,6 +489,7 @@
   (defun unity/submit-s2c-serving-jobs ()
     "submit a s2c serving job to KF, e.g., python kubeflow/pipelines/conv/s2c_bhv_serving_only.py --ds_env mlp_dev 
   "
+    (unity/ensure-top-level)
     (interactive)
     (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
 	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))

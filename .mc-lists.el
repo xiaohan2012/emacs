@@ -11,6 +11,7 @@
 	forward-sexp
 	kill-region
 	mc/mark-next-lines
+	multiple-cursors-mode
 	org-beginning-of-line
 	org-delete-char
 	org-edit-src-save

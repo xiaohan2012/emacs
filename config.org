@@ -1416,7 +1416,7 @@ why not showing in non-GUI Emacs?
     :ensure t
     :config
     (setq yas-snippet-dirs
-	  s'("~/.emacs.d/snippets"
+	  '("~/.emacs.d/snippets"
 	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
 	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
 	    ))
