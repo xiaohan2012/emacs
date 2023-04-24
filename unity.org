@@ -248,6 +248,12 @@
 #+RESULTS:
 : unity-agg-train
 
+** global variables
+
+#+begin_src emacs-lisp
+  (defvar unity/model-types (list "bhv" "advctx") "the list of model types by traffic")
+#+end_src
+
 ** google storage buckets
 
 #+begin_src emacs-lisp
@@ -413,7 +419,7 @@
     (interactive)
     (unity/vm-shell/ensure-ssh-terminal)
     (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
-	   (model-type (or model-type-or-nil (completing-read "model type: " '("bhv" "advctx" "ctx"))))
+	   (model-type (or model-type-or-nil (completing-read "model type: " unity/model-types)))
 	   (ds-env (or ds-env-or-nil (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)))
 	   (exp-name (or exp-name-or-nil (read-string "experiment name: " "han/exps")))
 	   (run-name (or run-name-or-nil (format (read-string "run name: " "s2c-train-%s-test") model-type)))
@@ -457,7 +463,7 @@
 	 (exp-name (read-string "experiment name: " "han/exps"))
 	 (run-name-template (read-string "run name template: " "s2c-train-%s-test"))
 	 (reps (read-number "number of repetitions: " 1))
-	 (model-types (list "bhv" "advctx" "ctx")))
+	 (model-types unity/model-types))
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
 
       (unity/vm-shell/update-git-repository git-branch)
@@ -492,7 +498,7 @@
     (unity/ensure-top-level)
     (interactive)
     (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
-	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
+	   (model-type (completing-read "model type: " unity/model-types))
 	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
 	   (exp-name (read-string "experiment name: " "han/exps"))
 	   (run-name (format (read-string "run name: " "s2c-serve-%s-test") model-type))
