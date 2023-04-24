@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: allmodels
+# key: abc
+# --
+
+- [ ] advctx
+- [ ] bhv
+- [ ] ctx
