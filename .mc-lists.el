@@ -9,6 +9,7 @@
 	electric-pair-delete-pair
 	end-of-buffer
 	forward-sexp
+	indent-for-tab-command
 	kill-region
 	mc/mark-next-lines
 	org-beginning-of-line
