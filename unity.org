@@ -202,6 +202,7 @@
 #+begin_src emacs-lisp
   (defun unity/get-and-copy-branch ()
     "submit a s2c training job to KF"
+    (unity/ensure-top-level)
     (interactive)
     (let ((git-branch (completing-read "branch name to copy: " (magit-list-branch-names))))
       (kill-new git-branch)
@@ -246,6 +247,12 @@
 
 #+RESULTS:
 : unity-agg-train
+
+** global variables
+
+#+begin_src emacs-lisp
+  (defvar unity/model-types (list "bhv" "advctx") "the list of model types by traffic")
+#+end_src
 
 ** google storage buckets
 
@@ -363,6 +370,7 @@
 ** s2c train
 *** helper functions
 #+begin_src emacs-lisp
+  (defvar exp-name "han/exps" "name of experiment")
   (defvar dev-ds-env "mlp_dev" "name of ds environment in dev mode")
   (defvar prd-ds-env "mlp_prd" "name of ds environment in prd mode")
 
@@ -384,10 +392,12 @@
     (unity/vm-shell/send-string "exit")
     )
 
+  (defun unity/ensure-top-level ()
+    (setq default-directory "~/code/mz-ds-deep-learning"))
 #+end_src
 
 #+RESULTS:
-: unity/vm-shell/exit-kubeflow-shell
+: unity/ensure-top-level
 
 *** command wrappers
 - possible improvement:
@@ -402,33 +412,46 @@
     (unity/vm-shell/send-string "git pull") ; git pull
     )
 
-  (defun unity/submit-s2c-train-jobs ()
+  (defun unity/submit-s2c-train-jobs (&optional
+				      git-branch-or-nil model-type-or-nil ds-env-or-nil exp-name-or-nil run-name-or-nil reps-or-nil
+				      exit-kf-shell-or-nil update-repo-or-nil enter-kf-or-nil)
     "submit a s2c training job to KF"
     (interactive)
     (unity/vm-shell/ensure-ssh-terminal)
-    (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
-	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
-	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
-	   (exp-name (read-string "experiment name: " "han/exps"))
-	   (run-name (format (read-string "run name: " "s2c-train-%s-test") model-type))
-	   (reps (read-number "number of repetitions: " 1))
-	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))         
+    (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
+	   (model-type (or model-type-or-nil (completing-read "model type: " unity/model-types)))
+	   (ds-env (or ds-env-or-nil (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)))
+	   (exp-name (or exp-name-or-nil (read-string "experiment name: " "han/exps")))
+	   (run-name (or run-name-or-nil (format (read-string "run name: " "s2c-train-%s-test") model-type)))
+	   (reps (or reps-or-nil (read-number "number of repetitions: " 1)))
+	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
+	   ;; some flags
+	   (exit-kf-shell-p (or exit-kf-shell-or-nil nil))
+	   (update-repo-p (or update-repo-or-nil t))
+	   (enter-kf-p (or enter-kf-or-nil t))
 	   )
       ;; show the ssh buffer if invisible
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
-      (unity/vm-shell/update-git-repository git-branch)
-      (unity/vm-shell/enter-kubeflow-shell)
+
+      (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+      (when update-repo-p
+	(unity/vm-shell/update-git-repository git-branch)
+	)
+      (when enter-kf-p
+	(unity/vm-shell/enter-kubeflow-shell)
+	)
+
       (if (eq reps 1)
 	  (unity/vm-shell/send-string command)
 	(dotimes (i reps)
 	  (unity/vm-shell/send-string "sleep 1")
 	  (unity/vm-shell/send-string (format "%s-%d" command i))
 	  )  
-	)    
-      (unity/vm-shell/exit-kubeflow-shell))
-    )
-
-
+	)
+      (when exit-kf-shell-p
+	(unity/vm-shell/exit-kubeflow-shell))
+      )
+  )
 
   (defun unity/submit-s2c-train-jobs-for-all-model-types ()
     "submit the train jobs for all model types at once under a certain branch"
@@ -440,7 +463,7 @@
 	 (exp-name (read-string "experiment name: " "han/exps"))
 	 (run-name-template (read-string "run name template: " "s2c-train-%s-test"))
 	 (reps (read-number "number of repetitions: " 1))
-	 (model-types (list "bhv" "advctx" "ctx")))
+	 (model-types unity/model-types))
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
 
       (unity/vm-shell/update-git-repository git-branch)
@@ -461,7 +484,6 @@
 
       (unity/vm-shell/exit-kubeflow-shell)))
 
-
 #+end_src
 
 #+RESULTS:
@@ -473,9 +495,10 @@
   (defun unity/submit-s2c-serving-jobs ()
     "submit a s2c serving job to KF, e.g., python kubeflow/pipelines/conv/s2c_bhv_serving_only.py --ds_env mlp_dev 
   "
+    (unity/ensure-top-level)
     (interactive)
     (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
-	   (model-type (completing-read "model type: " '("bhv" "advctx" "ctx")))
+	   (model-type (completing-read "model type: " unity/model-types))
 	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
 	   (exp-name (read-string "experiment name: " "han/exps"))
 	   (run-name (format (read-string "run name: " "s2c-serve-%s-test") model-type))
@@ -522,6 +545,97 @@
 
 #+RESULTS:
 : unity-s2c-datagen
+* hyper-parameter tuning
+#+begin_src emacs-lisp
+  (defun unity/git-branch-name-from-hp-configs (base-name hp-configs)
+    "get the name of a git branch from hp configurations
+  (unity/git-branch-name-from-hp-configs \"base-branch\" '((\"batch_size\" 100000) (\"learning_rate\" 0.004))) -> base-branch/batch_size=100000,learning_rate=0.004
+  "
+
+    (concat
+     base-name "-"
+     (mapconcat (lambda (pair) (format "%s-%s" (car pair) (car (cdr pair)))) hp-configs "-")
+     )
+    )
+
+  (defun unity/change-field-in-buffer (file-name field-name new-value)
+    "change value under field-name to new-value"
+    (let ((cur-buffer (current-buffer)))
+      (with-current-buffer
+	  cur-buffer  ;; does not work!
+	(find-file file-name)
+	(beginning-of-buffer)
+	(search-forward (concat field-name ":"))
+	(forward-char 1)  ;move beyond ":"
+	(kill-line)
+	(insert new-value)
+	(save-buffer)
+	(kill-this-buffer) ;; close the config file, to avoid inputtinf interactively from reloading files
+	;; (message (format "updated to %s" (thing-at-point 'line t)))
+	(set-buffer cur-buffer) ;; does not work!
+	)
+      )
+    )
+
+  ;; (unity/change-field-in-buffer (unity/get-s2c-train-dev-config-path "bhv") "n_iterations" "9999")
+
+  (defun unity/update-hp-config-under-branch (config-file start-branch hp-configs)
+    "create a new branch, make changes to training config, commit and push the changes to remote
+
+  an example:
+
+    (unity/update-hp-config-under-branch
+     (unity/get-s2c-train-dev-config-path \"bhv\")
+     \"3891-s2c-DC-tune-bhv\"
+     '((\"batch_size\" \"9999\")))
+  "
+    (let*
+	((branch-name (unity/git-branch-name-from-hp-configs start-branch hp-configs)))
+
+      (print (format "unity-tune: branch name %s" branch-name))
+      (when (not (member branch-name (magit-list-branch-names)))
+	(print "create new branch")
+	(magit-branch-create branch-name start-branch) ; create a new branch
+	)    
+      (print (format "unity-tune: check out %s" branch-name))
+      (magit-branch-checkout branch-name)
+      ;; ;; modify teh configs
+      (print "unity-tune: make changes")
+      (dolist (field-value-pair hp-configs)
+	(unity/change-field-in-buffer config-file (nth 0 field-value-pair) (nth 1 field-value-pair))
+	)
+      (magit-run-git (list "add" config-file))
+      (print "unity-tune: commit and push")
+      (magit-run-git '("commit" "-m" "updated hyperparameters")) ; commit it
+      (magit-run-git (list "push" "--set-upstream" "origin" branch-name)) ; commit it
+      )
+    ) 
+
+
+  (defun unity/get-tune-branch-name (start-branch model-type)
+    (concat start-branch "-" model-type)
+    )
+  (defun unity/update-hp-config-for-model-type  (model-type start-branch hp-configs)
+    "create a new branch for hp config update for a given model type
+  an example: (unity/update-hp-config-for-model-type \"advctx\" \"3891-s2c-DC-tune\" '((\"batch_size\" 10000)))"
+    (interactive)
+    (let* ( (new-branch-name (unity/get-tune-branch-name start-branch model-type)))
+      (when (not (member new-branch-name (magit-list-branch-names)))
+	(message (format "create new branch %s" new-branch-name))
+	(magit-branch-create new-branch-name start-branch) ; create a new branch
+	) 
+      (unity/update-hp-config-under-branch
+       (unity/get-s2c-train-dev-config-path model-type)
+       new-branch-name
+       hp-configs)
+      )  
+    )
+#+end_src
+
+
+#+RESULTS:
+: unity/update-hp-config-for-model-type
+
 * gsutil
 ** ls URI interactively
 
