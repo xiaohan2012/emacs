@@ -12,7 +12,6 @@
 	indent-for-tab-command
 	kill-region
 	mc/mark-next-lines
-	multiple-cursors-mode
 	org-beginning-of-line
 	org-delete-char
 	org-edit-src-save
@@ -21,6 +20,7 @@
 	sp-backward-delete-char
 	sp-backward-kill-word
 	sp-delete-char
+	sp-forward-sexp
 	sp-kill-region
 	sp-kill-word
 	))

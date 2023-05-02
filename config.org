@@ -1270,13 +1270,14 @@ tips:
     ("C-s-b" . 'elpy-nav-backward-indent)
     ("C-s-<left>" . 'elpy-nav-indent-shift-left)
     ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+    ("C-c b" . elpy-black-fix-code)
     )
 
 
 #+END_SRC
 
 #+RESULTS:
-: elpy-nav-indent-shift-right
+: elpy-black-fix-code
 *** elpy tips
 **** navigation
 
@@ -1302,6 +1303,7 @@ tips:
 - =C-c @ C-M-S= (hs-show-all) to show all
 - =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
   
+
 ** C++
 *** resource
 

@@ -2,4 +2,4 @@
 # name: np.array
 # key: npa
 # --
-np.array($1)
+np.array($1, dtype=${2:bool})
