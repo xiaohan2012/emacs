@@ -1270,7 +1270,7 @@ tips:
     ("C-s-b" . 'elpy-nav-backward-indent)
     ("C-s-<left>" . 'elpy-nav-indent-shift-left)
     ("C-s-<right>" . 'elpy-nav-indent-shift-right)
-    ("C-c C-b" . elpy-black-fix-code)
+    ("C-c b" . elpy-black-fix-code)
     )
 
 
