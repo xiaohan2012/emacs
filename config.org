@@ -563,6 +563,7 @@ adds annotation in minibuffer completions
 #+end_src
 
 #+RESULTS:
+|   | my-defines | t |
 |   | han-macros | t |
 
 ** remove latex images
