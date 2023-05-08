@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: logger.debug-variable
+# key: debugv
+# --
+logger.debug(f"$1: {$1}")

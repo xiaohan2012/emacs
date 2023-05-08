@@ -10,7 +10,8 @@
   - [ ] org-mode: when writing math, directly invoke the latex environment in a separate buffer
     - and when done, render the math
 - python:
-  - lsp-mode: https://www.mattduck.com/lsp-python-getting-started.html
+  - [ ] turn off flycheck in lsp (which is too alerting)
+  - organize imports not working
   - faster import:
     - say I want to import a function in a file, how to do it without moving to that file, copy the function, and paste it
     - even without moving to the top of the target/importing file 
@@ -217,6 +218,17 @@
     (diminish 'rainbow-mode)
     (diminish 'beacon-mode)
     (diminish 'subword-mode)
+    (diminish 'smartparens-mode)
+    (diminish 'lsp-lens-mode)
+    (diminish 'auto-revert-mode)
+    :hook
+    (lsp-mode . (lambda ()
+		  (diminish 'lsp-lens-mode)
+		  (diminish 'lsp-mode "LSP")
+		  (diminish 'projectile-mode "projt")
+		  (diminish 'smartparens-mode)
+		  (diminish 'auto-revert-mode)
+		  ))
     )
 #+end_src
 
@@ -403,10 +415,10 @@ adds annotation in minibuffer completions
 #+RESULTS:
 : marginalia-cycle
 
-** flycheck
+** flyspell
 
 #+begin_src emacs-lisp
-  (use-package flycheck
+  (use-package flyspell
     :config
     ; enable flycheck for certain modes
     (dolist (hook '(text-mode-hook))
@@ -551,6 +563,7 @@ adds annotation in minibuffer completions
 #+end_src
 
 #+RESULTS:
+|   | my-defines | t |
 |   | han-macros | t |
 
 ** remove latex images
@@ -726,11 +739,16 @@ enable executing shell scripts in code blocks
      (interactive)
      (find-file "~/docs/notes/corset2.0.org"))
 
-     (global-set-key (kbd "C-c o c") 'corset-org-visit)
+     (defun corels-implementation-file-visit ()
+     (interactive)
+     (find-file "~/docs/bayesian-decision-sets-doc/corels-reading-and-our-implementation.org"))
+
+
+     (global-set-key (kbd "C-c o c") 'corels-implementation-file-visit)
    #+end_src
 
    #+RESULTS:
-   : corset-org-visit
+   : corels-implementation-file-visit
 
 ** shortcut: open songs.org
 
@@ -1016,7 +1034,7 @@ let's not use it for now since it works better for => 2= windows.
 #+END_SRC
 
 #+RESULTS:
-: consult-find
+| (lambda nil (diminish 'projectile-mode projt) (diminish 'smartparens-mode) (diminish 'auto-revert-mode) (diminish 'lsp-lens-mode)) | yasnippet-snippets--fixed-indent | elpy-mode | (lambda nil (flycheck-mode -1)) | lsp | (lambda nil (diminish 'projectile-mode projt)) |
 
 ** set project type to python-pip
 
@@ -1078,6 +1096,18 @@ let's not use it for now since it works better for => 2= windows.
   - hit twice to mark even more
 - =mc/edit-lines=: mark a region first and edit continuous lines
 
+** goto-chg
+
+#+begin_src emacs-lisp
+  (use-package goto-chg
+    :ensure t
+    :bind
+    ("C-c C-g" . 'goto-last-change))
+#+end_src
+
+#+RESULTS:
+: goto-last-change
+
 * programming
 ** lsp-mode
 
@@ -1088,14 +1118,21 @@ let's not use it for now since it works better for => 2= windows.
     :ensure t
     :commands lsp
     :hook
-    ((python-mode . lsp))
-    (lsp-mode . lsp-enable-which-key-integration)
+    ((python-mode . (lambda ()
+		      (lsp-mode 1)
+		      (flycheck-mode nil)  ;; does not turn off
+		      ))
+     (lsp-mode . lsp-enable-which-key-integration)
+     )
     :config
     (setq lsp-idle-delay 0.5
 	  lsp-enable-symbol-highlighting t
 	  lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
 	  lsp-pyls-plugins-pycodestyle-enabled nil
-	  lsp-pyls-plugins-flake8-enabled nil)    
+	  lsp-pyls-plugins-flake8-enabled nil ;; use flake8
+	  lsp-pyls-plugins-flake8-ignore  nil
+	  lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
+	  ) 
     ;; how to use the plugins?
     (lsp-register-custom-settings
      '(("pyls.plugins.pyls_mypy.enabled" t t)
@@ -1182,10 +1219,15 @@ tips:
 
    #+begin_src emacs-lisp
      (use-package flycheck
-       :ensure t)
+       :ensure t
+       :hook
+       (lsp-mode . (lambda () (flycheck-mode nil))) ;; turn it off in lsp-mode
+       )
+
    #+end_src
 
    #+RESULTS:
+   | (lambda nil (flycheck-mode nil)) | (lambda nil (flycheck-mode -1)) | lsp-enable-which-key-integration | (lambda nil (diminish 'lsp-lens-mode) (diminish 'lsp-mode LSP)) |
 
 *** ein
 
@@ -1229,13 +1271,14 @@ tips:
     ("C-s-b" . 'elpy-nav-backward-indent)
     ("C-s-<left>" . 'elpy-nav-indent-shift-left)
     ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+    ("C-c b" . elpy-black-fix-code)
     )
 
 
 #+END_SRC
 
 #+RESULTS:
-: elpy-nav-indent-shift-right
+: elpy-black-fix-code
 *** elpy tips
 **** navigation
 
@@ -1261,6 +1304,7 @@ tips:
 - =C-c @ C-M-S= (hs-show-all) to show all
 - =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
   
+
 ** C++
 *** resource
 
@@ -2767,7 +2811,7 @@ useful to kill an expression (including function)
 #+end_src
 
 #+RESULTS:
-: avy-action-kill-whole-line
+: t
 
 ** yanking
 
