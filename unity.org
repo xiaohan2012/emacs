@@ -4,15 +4,17 @@
 
 * wish list
 
-- copy s2c-datagen command clipboard
-- run s2c-datagen in a separate shell
-- interactively accept uri for gsutil ls
-- ls buckets for config file
+- [X] copy s2c-datagen command clipboard
+- [X] run s2c-datagen in a separate shell
+- [X] interactively accept uri for gsutil ls
+- [ ] ls buckets for config file
   - input bucket
   - output bucket
-- gsutil ls post actions depending on file types:
+- [ ] gsutil ls post actions depending on file types:
   - e.g., for json, pretty-print-buffer and then javascript mode
   - for yaml, yaml-mode
+- [ ] separate shell opening/exit and training commands submission in unity/submit-s2c-train-jobs
+  - 
 * utility
 
 ** buffer
@@ -252,7 +254,11 @@
 
 #+begin_src emacs-lisp
   (defvar unity/model-types (list "bhv" "advctx") "the list of model types by traffic")
+  ;; (setq unity/model-types (list "bhv" "advctx"))
 #+end_src
+
+#+RESULTS:
+| bhv | advctx |
 
 ** google storage buckets
 
@@ -412,21 +418,32 @@
     (unity/vm-shell/send-string "git pull") ; git pull
     )
 
-  (defun unity/submit-s2c-train-jobs (&optional
-				      git-branch-or-nil model-type-or-nil ds-env-or-nil exp-name-or-nil run-name-or-nil reps-or-nil
-				      exit-kf-shell-or-nil update-repo-or-nil enter-kf-or-nil)
-    "submit a s2c training job to KF"
-    (interactive)
-    (unity/vm-shell/ensure-ssh-terminal)
-    (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
+  (defun unity/submit-s2c-train-jobs-in-shell (&optional
+					       git-branch-or-nil model-type-or-nil ds-env-or-nil exp-name-or-nil run-name-or-nil reps-or-nil)
+    "submit s2c train jobs assuming kubeflow-shell is open"
+  (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
 	   (model-type (or model-type-or-nil (completing-read "model type: " unity/model-types)))
 	   (ds-env (or ds-env-or-nil (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)))
 	   (exp-name (or exp-name-or-nil (read-string "experiment name: " "han/exps")))
 	   (run-name (or run-name-or-nil (format (read-string "run name: " "s2c-train-%s-test") model-type)))
 	   (reps (or reps-or-nil (read-number "number of repetitions: " 1)))
 	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
-	   ;; some flags
-	   (exit-kf-shell-p (or exit-kf-shell-or-nil nil))
+	   )
+      (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+      (if (eq reps 1)
+	  (unity/vm-shell/send-string command)
+	(dotimes (i reps)
+	  (unity/vm-shell/send-string "sleep 1")
+	  (unity/vm-shell/send-string (format "%s-%d" command i))
+	  )  
+	)
+      )
+  )
+  (defun unity/submit-s2c-train-jobs (&optional exit-kf-shell-or-nil update-repo-or-nil enter-kf-or-nil)
+    "submit a s2c training job to KF"
+    (interactive)
+    (unity/vm-shell/ensure-ssh-terminal)
+    (let* ((exit-kf-shell-p (or exit-kf-shell-or-nil nil))
 	   (update-repo-p (or update-repo-or-nil t))
 	   (enter-kf-p (or enter-kf-or-nil t))
 	   )
@@ -441,13 +458,8 @@
 	(unity/vm-shell/enter-kubeflow-shell)
 	)
 
-      (if (eq reps 1)
-	  (unity/vm-shell/send-string command)
-	(dotimes (i reps)
-	  (unity/vm-shell/send-string "sleep 1")
-	  (unity/vm-shell/send-string (format "%s-%d" command i))
-	  )  
-	)
+      (unity/submit-s2c-train-jobs-in-shell )
+
       (when exit-kf-shell-p
 	(unity/vm-shell/exit-kubeflow-shell))
       )
@@ -519,10 +531,42 @@
       (unity/vm-shell/exit-kubeflow-shell))
     )
 
+
+
+    (defun unity/submit-s2c-serving-jobs-for-all-model-types ()
+      "submit the serving jobs for all model types at once under a certain branch"
+      (interactive)
+      (let*
+	  (
+	   (git-branch (completing-read "git branch: " (magit-list-branch-names)))
+	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+	   (exp-name (read-string "experiment name: " "han/exps"))
+	   (run-name-template (read-string "run name template: " "s2c-train-%s-test"))
+	   (reps (read-number "number of repetitions: " 1))
+	   (model-types unity/model-types))
+	(unity/vm-shell/ensure-ssh-terminal-is-visible)
+
+	(unity/vm-shell/update-git-repository git-branch)
+
+	(unity/vm-shell/enter-kubeflow-shell)
+	(dolist (model-type model-types)
+	  (let* ((run-name (format run-name-template model-type))
+		 (command (unity/get-kubeflow-command (format "s2c_%s_serving_only" model-type) ds-env exp-name run-name)))
+	    (if (eq reps 1)
+		(unity/vm-shell/send-string command)
+	      (dotimes (i reps)
+		(unity/vm-shell/send-string "sleep 1") ; to avoid launching jobs at the same time
+		(unity/vm-shell/send-string (format "%s-%d" command i))
+		)  
+	      )
+	    )
+	  )
+
+	(unity/vm-shell/exit-kubeflow-shell)))
 #+end_src
 
 #+RESULTS:
-: unity/submit-s2c-serving-jobs
+: unity/submit-s2c-serving-jobs-for-all-model-types
 
 
 ** s2c datagen
@@ -831,7 +875,7 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
   (defun unity/toggle-train-config-for-model-type ()
     "toggle the training config file for a specific model type"
     (interactive)
-    (let ((model-type (completing-read "model type: " (list "bhv" "advctx" "ctx"))))
+    (let ((model-type (completing-read "model type: " unity/model-types)))
       (save-excursion
 	(find-file (unity/get-s2c-train-dev-config-path model-type))
 	(unity/toggle-train-config)
@@ -862,4 +906,32 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : activate-cpi-model-virtualenv
+
+
+* misc
+** copy my Slack handle
+
+#+begin_src emacs-lisp
+  (defun unity/copy-my-slack-handle ()
+    "copy my slack handle to clipboard"
+    (interactive)
+    (kill-new "<@U032B77FUFM>")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/copy-my-slack-handle
+** copy KF namespace
+
+#+begin_src emacs-lisp
+  (defun unity/copy-kf-service-account ()
+    "copy KF service account to clipboard"
+    (interactive)
+    (kill-new "kubeflow-ads-cv")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/copy-kf-service-account
+
 

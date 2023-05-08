@@ -1,0 +1,33 @@
+# -*- mode: snippet -*-
+# name: bigquery-example
+# key: bq
+# --
+
+%env GCLOUD_PROJECT=unity-ads-ds-prd
+
+from google.cloud.bigquery import Client, QueryJobConfig
+client = Client()
+
+query = f"""
+SELECT
+  log_request.target_game as target_games,
+  -- results by reference model
+  reference_response.default_output.campaign.pu AS ref_pu, 
+  reference_response.default_output.campaign.log as ref_log,  
+  reference_response.default_output.campaign.game_id as ref_game_id,
+  reference_response.default_output.campaign.creative_pack_id as ref_creative_pack_id,
+
+  -- results by test model
+  test_response.default_output.campaign.pu AS test_pu, 
+  test_response.default_output.campaign.log as test_log,
+  test_response.default_output.campaign.game_id as test_game_id,
+  test_response.default_output.campaign.creative_pack_id as test_creative_pack_id,
+FROM
+  `unity-ads-dd-ds-dev-prd.regression_tests.conversion-regression-test-4134-update-regression-op-protosxhg6` -- advctx
+WHERE
+  test_response.default_output.campaign.explored IS NULL
+  AND reference_response.default_output.campaign.explored IS NULL
+  AND test_response.default_output.campaign.vu IS NOT NULL
+"""
+job = client.query(query)
+df = job.to_dataframe()
