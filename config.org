@@ -1796,7 +1796,7 @@ start a remote terminal via ssh
 "visit ~/.emacs.d/config.org"
 (interactive)
 (find-file "~/.emacs.d/config.org"))
-(global-set-key (kbd "C-c e") 'config-visit)
+(global-set-key (kbd "C-c o e") 'config-visit)
 #+END_SRC
 
 #+RESULTS:
