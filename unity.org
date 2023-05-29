@@ -421,7 +421,7 @@
   (defun unity/submit-s2c-train-jobs-in-shell (&optional
 					       git-branch-or-nil model-type-or-nil ds-env-or-nil exp-name-or-nil run-name-or-nil reps-or-nil)
     "submit s2c train jobs assuming kubeflow-shell is open"
-  (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
+    (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
 	   (model-type (or model-type-or-nil (completing-read "model type: " unity/model-types)))
 	   (ds-env (or ds-env-or-nil (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env)))
 	   (exp-name (or exp-name-or-nil (read-string "experiment name: " "han/exps")))
@@ -429,6 +429,7 @@
 	   (reps (or reps-or-nil (read-number "number of repetitions: " 1)))
 	   (command (unity/get-kubeflow-command (format "s2c_%s_train" model-type) ds-env exp-name run-name))
 	   )
+      ;;assuming the ssh terminal is open thus commands can be sent there directly
       (unity/vm-shell/send-string (format "git checkout %s" git-branch))
       (if (eq reps 1)
 	  (unity/vm-shell/send-string command)
@@ -438,7 +439,7 @@
 	  )  
 	)
       )
-  )
+    )
   (defun unity/submit-s2c-train-jobs (&optional exit-kf-shell-or-nil update-repo-or-nil enter-kf-or-nil)
     "submit a s2c training job to KF"
     (interactive)
@@ -458,12 +459,13 @@
 	(unity/vm-shell/enter-kubeflow-shell)
 	)
 
-      (unity/submit-s2c-train-jobs-in-shell )
+      ;; call the job submission function, which asks for more inputs
+      (unity/submit-s2c-train-jobs-in-shell)
 
       (when exit-kf-shell-p
 	(unity/vm-shell/exit-kubeflow-shell))
       )
-  )
+    )
 
   (defun unity/submit-s2c-train-jobs-for-all-model-types ()
     "submit the train jobs for all model types at once under a certain branch"
@@ -501,6 +503,7 @@
 #+RESULTS:
 : unity/submit-s2c-train-jobs-for-all-model-types
 
+** c2i train
 ** s2c serving
 
 #+begin_src emacs-lisp
@@ -587,8 +590,22 @@
 
 #+end_src
 
+** c2i datagen
+
+#+begin_src emacs-lisp
+  (defun unity-c2i-datagen (exp-name run-name)
+    "Insert c2i datagen command at the current position"
+    (interactive (list (read-string "experiment name: " "han/exps")
+		       (read-string "run name: " "c2i-datagen")))
+    (insert (format
+	     "python kubeflow/pipelines/conv/c2i_skad_datagen_train.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
+	     exp-name run-name)))
+
+#+end_src
+
+
 #+RESULTS:
-: unity-s2c-datagen
+: unity-c2i-datagen
 * hyper-parameter tuning
 #+begin_src emacs-lisp
   (defun unity/git-branch-name-from-hp-configs (base-name hp-configs)
