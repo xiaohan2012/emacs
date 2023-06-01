@@ -29,4 +29,5 @@
 
 (setq mc/cmds-to-run-once
       '(
+	avy-goto-char-timer
 	))

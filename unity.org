@@ -338,7 +338,7 @@
 	(split-window-right)
 	(other-window 1)
 	(switch-to-buffer ssh-buffer-name)
-	(other-window 1)
+	;; (other-window 1)
 	)  
       )
     )
