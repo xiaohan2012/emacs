@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: test_method
+# key: tm
+# --
+def test_$1(self, $2):
+    $3

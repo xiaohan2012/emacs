@@ -452,7 +452,6 @@ adds annotation in minibuffer completions
 
 * org-mode
 ** basic
-
 *** avoid opening a new window when editing a code snippet
 
 #+begin_src emacs-lisp
@@ -461,6 +460,15 @@ adds annotation in minibuffer completions
 
 #+RESULTS:
 : current-window
+*** org table default size
+
+#+begin_src emacs-lisp
+(setq org-table-default-size "2x3")
+#+end_src
+
+#+RESULTS:
+: 2x3
+
 ** org-bullets
 
 #+BEGIN_SRC emacs-lisp
@@ -1304,6 +1312,23 @@ tips:
 - =C-c @ C-M-S= (hs-show-all) to show all
 - =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
   
+*** profiling
+**** turn on/off profiling
+#+begin_src emacs-lisp
+  (defun my/turn-on-python-profiling ()
+    (interactive)
+    (replace-string "# @profile" "@profile")
+    )
+
+
+  (defun my/turn-off-python-profiling ()
+    (interactive)
+    (replace-string "@profile" "# @profile")
+    )
+#+end_src
+
+#+RESULTS:
+: my/turn-off-python-profiling
 
 ** C++
 *** resource
@@ -1545,13 +1570,14 @@ why not showing in non-GUI Emacs?
 	;; TeX-master 'dwim
 	)
 
-  (setq-default TeX-master "algs") ; all master files called "main".
+  (setq-default TeX-master "main_kais") ; all master files called "main".
+  ;; (setq-default TeX-master "reviews_cover_letter.tex")
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
 #+end_src
 
 #+RESULTS:
-: algs
+: main_kais
 
 *** TODO unbind keybindings
 
@@ -2026,7 +2052,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      (?\{ . ?\})
 			      ;; (?\' . ?\')  ;
 			      (?\" . ?\")
-			      (?\` . ?\`)
+			      ;; (?\` . ?\`)
 			      ;; (?\$ . ?\$)
   ))
   (electric-pair-mode t)

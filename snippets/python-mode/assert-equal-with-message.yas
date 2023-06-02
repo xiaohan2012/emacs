@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: assert-equal-with-message
+# key: asseq
+# --
+assert $1 == $2, f"{$1} != {$2}"

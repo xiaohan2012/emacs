@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: mpz-bin
+# key: mpzb
+# --
+mpz("0b$1")

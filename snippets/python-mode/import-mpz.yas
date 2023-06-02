@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: import-mpz
+# key: mpz
+# --
+from gmpy2 import mpz, mpfr

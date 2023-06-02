@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: import-gmpy2
+# key: gmp
+# --
+import gmpy2 as gmp
