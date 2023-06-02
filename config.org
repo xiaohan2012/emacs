@@ -1822,7 +1822,7 @@ start a remote terminal via ssh
 "visit ~/.emacs.d/config.org"
 (interactive)
 (find-file "~/.emacs.d/config.org"))
-(global-set-key (kbd "C-c e") 'config-visit)
+(global-set-key (kbd "C-c o e") 'config-visit)
 #+END_SRC
 
 #+RESULTS:
@@ -1834,7 +1834,9 @@ start a remote terminal via ssh
   (defun config-reload ()
     "Reloads ~/.emacs.d/config.org at runtime"
     (interactive)
-    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+    (org-babel-load-file (expand-file-name "~/.emacs.d/config.org"))
+    (org-babel-load-file (expand-file-name "~/.emacs.d/unity.org"))
+    )
   ;; (global-set-key (kbd "C-c r") 'config-reload)
 #+END_SRC
 
@@ -1963,6 +1965,33 @@ start a remote terminal via ssh
 
 #+RESULTS:
 : dmenu
+** editing in browser
+
+#+begin_src emacs-lisp
+  (use-package edit-server
+    :ensure t
+    :commands edit-server-start
+    :init (if after-init-time
+		(edit-server-start)
+	      (add-hook 'after-init-hook
+			#'(lambda() (edit-server-start))))
+    :config (setq edit-server-new-frame-alist
+		  '((name . "Edit with Emacs FRAME")
+		    (top . 200)
+		    (left . 200)
+		    (width . 80)
+		    (height . 25)
+		    (minibuffer . t)
+		    (menu-bar-lines . t)
+		    ;; comment out the following due to "No applicable method: frame-creation-function"
+		    ;; reference: https://emacs-china.org/t/edit-server-no-applicable-method-frame-creation-function/17562
+		    ;; (window-system . x)
+		    )))
+#+end_src
+
+#+RESULTS:
+: t
+
 * text manipulation
 ** common functions
 

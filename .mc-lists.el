@@ -28,8 +28,11 @@
 	sp-kill-region
 	sp-kill-word
 	yas-expand
+	yaml-electric-backspace
+	yaml-electric-dash-and-dot
 	))
 
 (setq mc/cmds-to-run-once
       '(
+	avy-goto-char-timer
 	))

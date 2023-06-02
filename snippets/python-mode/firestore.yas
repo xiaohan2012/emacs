@@ -1,0 +1,22 @@
+# -*- mode: snippet -*-
+# name: firestore
+# key: firestore
+# --
+
+from google.cloud import firestore
+
+PROJECT = 'unity-ads-dd-ds-dev-prd'
+COL_ID = 'experiments'
+db = firestore.Client(project=PROJECT)
+col = db.collection(COL_ID)
+
+import pandas as pd
+import seaborn as sns
+import numpy as np
+from datetime import datetime
+
+docs = col.where('created', '>=', datetime(2023, 4, 23, 0, 0, 0)).where('created', '<=', datetime(2023, 4, 25, 0, 0, 0)).stream()
+
+docs = list(docs)
+
+docs = [doc.to_dict() for doc in docs if doc.to_dict()['settings']['model_name'].endswith('3a')]
