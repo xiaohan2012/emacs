@@ -2,4 +2,10 @@
 # name: pytest.mark.parametrize
 # key: pytp
 # --
-@pytest.mark.parametrize('$1', $2)
+@pytest.mark.parametrize(
+    '$1',
+    [
+            (),
+            (),
+    ]    
+)

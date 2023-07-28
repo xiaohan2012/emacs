@@ -1570,14 +1570,15 @@ why not showing in non-GUI Emacs?
 	;; TeX-master 'dwim
 	)
 
-  (setq-default TeX-master "main_kais") ; all master files called "main".
+  ;; (setq-default TeX-master "main_kais") ; all master files called "main".
   ;; (setq-default TeX-master "reviews_cover_letter.tex")
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
+  (setq-default TeX-master "algs") ; all master files called "main".
 #+end_src
 
 #+RESULTS:
-: main_kais
+: algs
 
 *** TODO unbind keybindings
 
@@ -1987,6 +1988,18 @@ start a remote terminal via ssh
 		    ;; reference: https://emacs-china.org/t/edit-server-no-applicable-method-frame-creation-function/17562
 		    ;; (window-system . x)
 		    )))
+#+end_src
+
+#+RESULTS:
+: t
+
+** scrolling
+
+#+begin_src emacs-lisp
+  (use-package good-scroll
+    :ensure t
+    :config (good-scroll-mode)
+    )
 #+end_src
 
 #+RESULTS:

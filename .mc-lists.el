@@ -23,16 +23,14 @@
 	org-self-insert-command
 	sp-backward-delete-char
 	sp-backward-kill-word
+	sp-backward-sexp
 	sp-delete-char
 	sp-forward-sexp
 	sp-kill-region
 	sp-kill-word
 	yas-expand
-	yaml-electric-backspace
-	yaml-electric-dash-and-dot
 	))
 
 (setq mc/cmds-to-run-once
       '(
-	avy-goto-char-timer
 	))
