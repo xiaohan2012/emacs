@@ -727,50 +727,6 @@ enable executing shell scripts in code blocks
 
   #+RESULTS:
   : my-put-file-name-on-clipboard
-** shortcut: open dairy file
-
-   #+begin_src emacs-lisp
-     (defun dairy-org-visit ()
-     "visit ~/docs/notes/dairy2023.org"
-     (interactive)
-     (find-file "~/docs/notes/dairy2023.org"))
-     ;; (global-set-key (kbd "C-c o d") 'dairy-org-visit)
-   #+end_src
-
-   #+RESULTS:
-   : dairy-org-visit
-
-** shortcut: open note for interpretable ML file
-   #+begin_src emacs-lisp
-     (defun corset-org-visit ()
-     "visit ~/docs/notes/corset2.0.org"
-     (interactive)
-     (find-file "~/docs/notes/corset2.0.org"))
-
-     (defun corels-implementation-file-visit ()
-     (interactive)
-     (find-file "~/docs/bayesian-decision-sets-doc/corels-reading-and-our-implementation.org"))
-
-
-     (global-set-key (kbd "C-c o c") 'corels-implementation-file-visit)
-   #+end_src
-
-   #+RESULTS:
-   : corels-implementation-file-visit
-
-** shortcut: open songs.org
-
-   #+begin_src emacs-lisp
-     (defun songs-org-visit ()
-     "visit ~/docs/notes/songs.org"
-     (interactive)
-     (find-file "~/docs/notes/songs.org"))
-     (global-set-key (kbd "C-c o s") 'songs-org-visit)
-   #+end_src
-
-   #+RESULTS:
-   : songs-org-visit
-
 ** dired-subtree
 
    #+begin_src emacs-lisp
@@ -2115,7 +2071,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 
   (add-hook 'org-mode-hook 'add-latex-electric-pairs)
 
-  ;; (add-hook 'LaTex-mode-hook 'add-latex-electric-pairs) ; does not work, very weird
+  (add-hook 'latex-mode-hook 'add-latex-electric-pairs) ; does not work, very weird
 
   ;; (use-package company
   ;;   :hook
@@ -2125,7 +2081,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+end_src
 
 #+RESULTS:
-| add-latex-electric-pairs | (lambda nil (define-key LaTex-mode-map (kbd C-M-a) nil)) |
+| add-latex-electric-pairs |
 
 ** global variables
 #+begin_src emacs-lisp
