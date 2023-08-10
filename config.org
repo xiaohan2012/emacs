@@ -1447,7 +1447,8 @@ why not showing in non-GUI Emacs?
     :ensure t
     :init (global-origami-mode))
 
-    (global-set-key (kbd "C-c c t") 'origami-toggle-node)
+    ; (global-set-key (kbd "C-c c t") 'origami-toggle-node)
+    (global-set-key (kbd "C-c C-t") 'origami-toggle-node)
 #+end_src
 
 #+RESULTS:
