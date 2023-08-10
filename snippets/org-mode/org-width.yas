@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: org-width
+# key: orgwid
+# --
+
+#+ATTR_ORG: :width $1
