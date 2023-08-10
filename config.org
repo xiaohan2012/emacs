@@ -1444,10 +1444,14 @@ why not showing in non-GUI Emacs?
 
 #+begin_src emacs-lisp
   (use-package origami
-    :ensure t)
+    :ensure t
+    :init (global-origami-mode))
+
+    (global-set-key (kbd "C-c c t") 'origami-toggle-node)
 #+end_src
 
 #+RESULTS:
+: origami-toggle-node
 
 * yasnippet
 *** preparation
