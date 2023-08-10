@@ -440,6 +440,16 @@
 	)
       )
     )
+
+  (defun unity/vm-shell/checkout-branch (&optional git-branch-or-nil)
+    (interactive)
+    (let* ((git-branch (or git-branch-or-nil (completing-read "git branch: " (magit-list-branch-names))))
+	   )
+      (unity/vm-shell/send-string (format "git fetch"))
+      (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+      )
+    )
+
   (defun unity/submit-s2c-train-jobs (&optional exit-kf-shell-or-nil update-repo-or-nil enter-kf-or-nil)
     "submit a s2c training job to KF"
     (interactive)
