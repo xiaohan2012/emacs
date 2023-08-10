@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: timer
+# key: timer
+# --
+with Timer() as timer:
+    logger.debug(f'{timer.elapsed:.2f}s')

@@ -3,4 +3,4 @@
 # key: debug
 # --
 
-logger.debug(f"$1")
+logger.debug("$1")

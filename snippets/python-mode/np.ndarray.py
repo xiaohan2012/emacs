@@ -2,4 +2,4 @@
 # name: np.ndarray
 # key: npd
 # --
-np.ndarray($1)
+np.ndarray

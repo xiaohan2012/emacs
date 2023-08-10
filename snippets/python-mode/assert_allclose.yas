@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: allclose
-# key: allclose
+# key: ac
 # --
 np.testing.assert_allclose($1, $2)
