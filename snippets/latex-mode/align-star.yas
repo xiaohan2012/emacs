@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: align-star
+# key: align*
+# --
+\begin{align*}
+\label{$0}
+$1
+\end{align*}
