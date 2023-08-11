@@ -636,7 +636,7 @@ adds annotation in minibuffer completions
     (org-download-image-dir "images")
     (org-download-heading-lvl nil)
     (org-download-timestamp "%Y%m%d-%H%M%S_")
-    (org-image-actual-width 500)
+    ;; (org-image-actual-width 500)
     (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
     :bind
     ("C-M-y" . org-download-screenshot)
@@ -1268,6 +1268,13 @@ tips:
 - =C-c @ C-M-S= (hs-show-all) to show all
 - =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
   
+*** misc
+
+#+begin_src emacs-lisp
+  (setq-default indent-tabs-mode nil)  ; indentation
+#+end_src
+
+#+RESULTS:
 *** profiling
 **** turn on/off profiling
 #+begin_src emacs-lisp
@@ -1432,6 +1439,20 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 : t
+
+** code folding using origami
+
+#+begin_src emacs-lisp
+  (use-package origami
+    :ensure t
+    :init (global-origami-mode))
+
+    ; (global-set-key (kbd "C-c c t") 'origami-toggle-node)
+    (global-set-key (kbd "C-c C-t") 'origami-toggle-node)
+#+end_src
+
+#+RESULTS:
+: origami-toggle-node
 
 * yasnippet
 *** preparation
