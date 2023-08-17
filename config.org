@@ -1551,12 +1551,12 @@ why not showing in non-GUI Emacs?
   ;; (setq-default TeX-master "reviews_cover_letter.tex")
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
-  (setq-default TeX-master "cv") ; all master files called "main".
-  (setq-default TeX-engine 'luatex)
+  (setq-default TeX-master "alg") ; all master files called "main".
+  (setq-default TeX-engine 'default)
 #+end_src
 
 #+RESULTS:
-: luatex
+: default
 
 *** TODO unbind keybindings
 
