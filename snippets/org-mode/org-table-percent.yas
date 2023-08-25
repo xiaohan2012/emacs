@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: org-table-percent
+# key: prct
+# --
+*100;%.1f%%

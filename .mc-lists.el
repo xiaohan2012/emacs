@@ -28,10 +28,11 @@
 	sp-forward-sexp
 	sp-kill-region
 	sp-kill-word
+	sp-remove-active-pair-overlay
+	sp-unwrap-sexp
 	yas-expand
 	))
 
 (setq mc/cmds-to-run-once
       '(
 	))
-
