@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cnote
+# key: cn
+# --
+\cnote[Han]{$2}

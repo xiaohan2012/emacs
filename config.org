@@ -1552,10 +1552,11 @@ why not showing in non-GUI Emacs?
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
   (setq-default TeX-master "algs") ; all master files called "main".
+  (setq-default TeX-engine 'default)
 #+end_src
 
 #+RESULTS:
-: algs
+: default
 
 *** TODO unbind keybindings
 
