@@ -1531,27 +1531,28 @@ why not showing in non-GUI Emacs?
 *** source correlation with external PDF viewer
 
 #+begin_src emacs-lisp
-					  ; forward/reverse search between PDF and Latex source
+                                          ; forward/reverse search between PDF and Latex source
   (defun my/latex-buffer-setup ()
     (TeX-source-correlate-mode)
     (TeX-PDF-mode))
 
   (add-hook 'LaTeX-mode-hook 'my/latex-buffer-setup)
   (setq TeX-source-correlate-method 'synctex
-	TeX-view-program-list   ;; Use Skim, it's awesome
-	'(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -g -b %n %o %b"))
-	TeX-view-program-selection '((output-pdf "Skim"))
-	TeX-auto-save t
-	TeX-parse-self t
-	TeX-save-query nil
-	;; TeX-master 'dwim
-	)
+        TeX-view-program-list   ;; Use Skim, it's awesome
+        '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -g -b %n %o %b"))
+        TeX-view-program-selection '((output-pdf "Skim"))
+        TeX-auto-save t
+        TeX-parse-self t
+        TeX-save-query nil
+        ;; TeX-master 'dwim
+        )
 
   ;; (setq-default TeX-master "main_kais") ; all master files called "main".
   ;; (setq-default TeX-master "reviews_cover_letter.tex")
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
   (setq-default TeX-master "algs") ; all master files called "main".
+  ;; (setq-default TeX-master "cv") ; all master files called "main".
   (setq-default TeX-engine 'default)
 #+end_src
 
