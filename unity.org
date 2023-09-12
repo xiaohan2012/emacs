@@ -513,7 +513,7 @@
 #+RESULTS:
 : unity/submit-s2c-train-jobs-for-all-model-types
 
-** c2i train
+** +c2i train+
 ** s2c serving
 
 #+begin_src emacs-lisp
@@ -554,7 +554,7 @@
 	   (git-branch (completing-read "git branch: " (magit-list-branch-names)))
 	   (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
 	   (exp-name (read-string "experiment name: " "han/exps"))
-	   (run-name-template (read-string "run name template: " "s2c-train-%s-test"))
+	   (run-name-template (read-string "run name template: " "s2c-serving-%s-test"))
 	   (reps (read-number "number of repetitions: " 1))
 	   (model-types unity/model-types))
 	(unity/vm-shell/ensure-ssh-terminal-is-visible)
@@ -581,41 +581,87 @@
 #+RESULTS:
 : unity/submit-s2c-serving-jobs-for-all-model-types
 
-
 ** s2c datagen
 
 #+begin_src emacs-lisp
   (defun unity/default-version ()
     (format-time-string "%Y-%m-%d 00" (current-time))
     )
+  (defun unity/get-s2c-datagen-command (exp-name run-name version)
+      (format
+       "python kubeflow/pipelines/conv/s2c_combined_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s' --version '%s'"
+       exp-name run-name version))
 
-  (defun unity-s2c-datagen (exp-name run-name version)
+  (defun unity/insert-s2c-datagen-command (exp-name run-name version)
     "Insert s2c datagen command at the current position"
     (interactive (list (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "s2c-datagen")
-		       (read-string "version:" (unity/default-version))))
-    (insert (format
-	     "python kubeflow/pipelines/conv/s2c_combined_datagen.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s' --version '%s'"
-	     exp-name run-name version)))
+                       (read-string "run name: " "s2c-datagen")
+                       (read-string "version:" (unity/default-version))))
+    (insert (unity/get-s2c-datagen-command exp-name run-name version)))
 
+
+  (defun unity/submit-s2c-datagen-job ()
+      (unity/ensure-top-level)
+      (interactive)
+      (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
+             (exp-name (read-string "experiment name: " "han/exps"))
+             (run-name (read-string "run name: " "s2c-datagen"))
+             (version (read-string "version:" (unity/default-version)))
+             (command (unity/get-s2c-datagen-command exp-name run-name version))
+             )
+        ;; show the ssh buffer if invisible
+        (unity/vm-shell/ensure-ssh-terminal-is-visible)
+        (unity/vm-shell/update-git-repository git-branch)
+        (unity/vm-shell/enter-kubeflow-shell)
+        (unity/vm-shell/send-string command)
+        (unity/vm-shell/exit-kubeflow-shell))
+      )
 #+end_src
 
-** c2i datagen
+#+RESULTS:
+: unity/submit-s2c-datagen-job
+
+** +c2i datagen+
 
 #+begin_src emacs-lisp
-  (defun unity-c2i-datagen (exp-name run-name)
-    "Insert c2i datagen command at the current position"
-    (interactive (list (read-string "experiment name: " "han/exps")
-		       (read-string "run name: " "c2i-datagen")))
-    (insert (format
-	     "python kubeflow/pipelines/conv/c2i_skad_datagen_train.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
-	     exp-name run-name)))
+  ;; (defun unity-c2i-datagen (exp-name run-name)
+  ;;   "Insert c2i datagen command at the current position"
+  ;;   (interactive (list (read-string "experiment name: " "han/exps")
+  ;; 		     (read-string "run name: " "c2i-datagen")))
+  ;;   (insert (format
+  ;; 	   "python kubeflow/pipelines/conv/c2i_skad_datagen_train.py --ds_env mlp_dev --experiment_name '%s' --run_name '%s'"
+  ;; 	   exp-name run-name)))
 
 #+end_src
 
 
 #+RESULTS:
 : unity-c2i-datagen
+** regression test
+
+#+begin_src emacs-lisp
+  (defun unity/get-regression-tool-upload-command ()
+       "python kubeflow/pipelines/common/conversion_regression_test.py --ds_env mlp_dev --do_upload"
+       )
+
+  (defun unity/upload-regression-tool-pipeline ()
+      (unity/ensure-top-level)
+      (interactive)
+      (let* ((git-branch (completing-read "git branch: " (magit-list-branch-names)))
+             (command (unity/get-regression-tool-upload-command))
+             )
+        ;; show the ssh buffer if invisible
+        (unity/vm-shell/ensure-ssh-terminal-is-visible)
+        (unity/vm-shell/update-git-repository git-branch)
+        (unity/vm-shell/enter-kubeflow-shell)
+        (unity/vm-shell/send-string command)
+        (unity/vm-shell/exit-kubeflow-shell))
+      )
+#+end_src
+
+#+RESULTS:
+: unity/upload-regression-tool-pipeline
+
 * hyper-parameter tuning
 #+begin_src emacs-lisp
   (defun unity/git-branch-name-from-hp-configs (base-name hp-configs)
@@ -960,5 +1006,55 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : unity/copy-kf-service-account
+
+
+
+** copy auth
+
+#+begin_src emacs-lisp
+  (defun unity/copy-google-auth ()
+    "copy google authentication code"
+    (interactive)
+    (kill-new "from google.colab import auth
+  auth.authenticate_user()
+  print('Authenticated')")
+    )
+
+#+end_src
+
+#+RESULTS:
+: unity/copy-google-auth
+
+
+** BQ header in colab
+
+#+begin_src emacs-lisp
+  (defun unity/copy-bq-header-in-colab ()
+    "copy the BQ header in colab notebook"
+    (interactive)
+    (kill-new "%%bigquery --project unity-ads-dd-ds-dev-prd")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/copy-bq-header-in-colab
+
+** SQL: operative ecpm example
+
+#+begin_src emacs-lisp
+      (defun unity/copy-sql-operative-ecpm ()
+        "copy an example SQL for the operative-ecpm table"
+        (interactive)
+        (kill-new "SELECT
+  FROM `unity-ai-data-prd.ads_events_raw.ads_events_operativeecpm_v0`
+  WHERE
+      submit_date = \"2023-08-17\"
+  LIMIT 1000")
+        )
+
+#+end_src
+
+#+RESULTS:
+: unity/copy-sql-operative-ecpm
 
 
