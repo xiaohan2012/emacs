@@ -1,6 +1,7 @@
 * random
 * wish list
 
+- [ ] [[https://github.com/zerolfx/copilot.el][copilot]]
 - [-] latex
   - [X] use <TAB> to jump into the beginning of the next pair
   - [ ] delete enclosing command/macro, e.g., \pr{a + b} -> a + b    
@@ -547,7 +548,7 @@ adds annotation in minibuffer completions
 
 - useful commands to add your own .sty files
 
-  #+begin_src bash
+  #+begin_src shell
     less $(kpsewhich texmf.cnf)  # to see the relevant directories
     kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
 
@@ -557,6 +558,8 @@ adds annotation in minibuffer completions
     # make sure Latex can find your .sty file
     kpsewhich {your-script}.sty
   #+end_src
+
+  #+RESULTS:
 
 - reference:
 
@@ -571,7 +574,6 @@ adds annotation in minibuffer completions
 #+end_src
 
 #+RESULTS:
-|   | my-defines | t |
 |   | han-macros | t |
 
 ** remove latex images

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: plt-rotate-axis
+# key: rot-axis
+# --
+ax.tick_params(axis='x', labelrotation = 45)

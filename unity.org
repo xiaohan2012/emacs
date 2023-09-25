@@ -662,6 +662,23 @@
 #+RESULTS:
 : unity/upload-regression-tool-pipeline
 
+** dataproc cluster creation
+
+#+begin_src emacs-lisp
+  (defun unity/create-dataproc-cluster ()
+    "create a data processing cluster"
+    (interactive)
+    (insert "USER=han.xiao python3 kubeflow/cpi_kubeflow/dataproc/conversion/cluster.py  \\
+          --project=unity-ads-dd-ds-dev-prd \\
+          --cluster_name=han-dev \\
+          --n_workers=10 \\
+          --auto_delete_hours=2 \\
+          --label_ds_team=privacy_performance"))  
+#+end_src
+
+#+RESULTS:
+: unity/create-dataproc-cluster
+
 * hyper-parameter tuning
 #+begin_src emacs-lisp
   (defun unity/git-branch-name-from-hp-configs (base-name hp-configs)
@@ -979,7 +996,6 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : activate-cpi-model-virtualenv
-
 
 * misc
 ** copy my Slack handle
