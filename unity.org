@@ -689,7 +689,7 @@
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
          (exp-name (read-string "experiment name: " "han/exps"))
-         (run-name-template (read-string "run name template: " "cpi-datagen-%s-%s-%s"))
+         (run-name-template (read-string "run name template: " "%s/cpi-datagen-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
          (platforms (completing-read-multiple "Platforms: " '("android" "ios"))))
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
@@ -702,7 +702,7 @@
         ;; (print (format "checking out %s" git-branch))
         (dolist (traffic-type traffic-types)
           (dolist (platform platforms)
-            (let* ((run-name (format run-name-template traffic-type platform git-branch))
+            (let* ((run-name (format run-name-template git-branch traffic-type platform))
                    (command (unity/get-kubeflow-command (format "cpi_%s_datagen_%s" traffic-type platform) ds-env exp-name run-name)))
               (unity/vm-shell/send-string "sleep 1")              
               (unity/vm-shell/send-string command)
@@ -727,7 +727,7 @@
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
          (exp-name (read-string "Experiment name: " "han/exps"))
-         (run-name-template (read-string "Run name template: " "cpi-train-%s-%s-%s"))
+         (run-name-template (read-string "Run name template: " "%s/cpi-train-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
          (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
          (reps (read-number "Number of repetitions: " 1))
@@ -741,7 +741,7 @@
         (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
         (dolist (traffic-type traffic-types)
           (dolist (platform platforms)
-            (let* ((run-name (format run-name-template traffic-type platform git-branch))
+            (let* ((run-name (format run-name-template  git-branch traffic-type platform))
                    (command (unity/get-kubeflow-command (format "cpi_%s_train_%s" traffic-type platform) ds-env exp-name run-name)))
               (if (eq reps 1)
                   (unity/vm-shell/send-string command)
@@ -759,6 +759,51 @@
 
 #+RESULTS:
 : unity/submit-cpi-train-jobs
+
+** s2i serving
+
+#+begin_src emacs-lisp
+  (defun unity/submit-cpi-serving-jobs ()
+    "submit one or more CPI serving jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+         (exp-name (read-string "Experiment name: " "han/exps"))
+         (run-name-template (read-string "Run name template: " "%s/cpi-serving-%s-%s"))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
+         (reps (read-number "Number of repetitions: " 1))
+         )
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")    
+      (unity/vm-shell/enter-kubeflow-shell)  ; enter the shell only once in one session to avoid jobs being dropped
+
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((run-name (format run-name-template  git-branch traffic-type platform))
+                   /Users/hanxiao/code/mz-ds-deep-learning/kubeflow/pipelines/conv/cpi_bhv_serving_model_only_ios.py::8
+                   (command (unity/get-kubeflow-command (format "cpi_%s_serving_model_only_%s" traffic-type platform) ds-env exp-name run-name)))
+              (if (eq reps 1)
+                  (unity/vm-shell/send-string command)
+                ;; (print command)
+                (dotimes (i reps)
+                  (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
+                  (unity/vm-shell/send-string (format "%s-%d" command i))
+                  ;; (print (format "%s-%d" command i))
+                  )))))
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+
+#+end_src
+
+#+RESULTS:
+: unity/submit-cpi-serving-jobs
 
 * hyper-parameter tuning
 #+begin_src emacs-lisp
