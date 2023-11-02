@@ -14,6 +14,7 @@
         indent-for-tab-command
         kill-region
         lsp-signature-stop
+        markdown-outdent-or-delete
         mc/mark-next-lines
         org-beginning-of-line
         org-delete-char
@@ -32,6 +33,8 @@
         sp-kill-word
         sp-remove-active-pair-overlay
         sp-unwrap-sexp
+        yaml-electric-backspace
+        yaml-electric-dash-and-dot
         yas-expand
         ))
 

@@ -943,6 +943,36 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 #+RESULTS:
 : unity/gls-at-point
 
+** DONE gls training data at point
+
+#+begin_src emacs-lisp
+  (defun unity/gls-training-data-at-point ()
+    "list the training data in GS  under the model version at cursor"
+    (interactive)
+    (let* (
+           (data-version (path-at-point))
+           (root-uri
+            (let* (
+                   (dev-pos (save-excursion
+                              (search-backward "dev" nil t)))
+                   (prd-pos (save-excursion
+                              (search-backward "prd" nil t)))
+                   )
+              (if (> (if dev-pos dev-pos 0) prd-pos)
+                  "unity-ads-dd-ds-dev-prd-training-data"
+                "unity-ads-dd-ds-prd-training-data"
+                )
+              )          
+            )
+           )
+      (unity/gls-uri (format "gs://%s/cpi_conversion/%s" root-uri data-version))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/gls-training-data-at-point
+
 ** TODO ls data output dir for a given file
 
 todo:
