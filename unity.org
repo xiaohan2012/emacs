@@ -85,6 +85,17 @@
    #+RESULTS:
    : onboarding-org-visit
 
+** open omega condig file
+#+begin_src emacs-lisp
+  (defun unity/open-omega-config ()
+    (interactive)
+    (find-file "/Users/hanxiao/code/mz-ds-deep-learning/configs/omegaconfig.yaml"))
+  (global-set-key (kbd "C-c o m") 'unity/open-omega-config)
+#+end_src
+
+#+RESULTS:
+: unity/open-omega-config
+
 ** open this org file
 
 
@@ -1184,6 +1195,56 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : activate-cpi-model-virtualenv
+
+** TODO run pytest in docker
+
+#+begin_src elisp
+  (defun unity/datagen-pytest-runner (top file module test)
+    "Test the datagen package in docker image using the py.test test runner "
+    (interactive (elpy-test-at-point))
+    (let* (
+           (test-command-pattern "docker exec -it cpi-datagen-dev-shell env TERM=xterm-256color sh -c 'py.test %s'")
+           (file-in-docker (car (last (split-string file "cpi-datagen/"))))
+           )
+      (cond
+       (test
+        (let ((test-list (split-string test "\\.")))
+          (funcall
+           elpy-test-compilation-function
+           (format
+            test-command-pattern 
+            (mapconcat #'identity
+                       (cons file-in-docker test-list)
+                       "::")
+            )
+           t  ; use COMINT mode to display the escape characters correctly, however, tab does not work properly
+           )))
+       (module
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern file-in-docker 
+          )
+         t)
+        )
+       (t
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern "./"
+          )
+         t)
+        ))
+      )
+    )
+  (bind-keys*
+    ("C-c C-t" . unity/datagen-pytest-runner)
+    )
+  ;; (global-set-key (kbd "C-c C-t") 'unity/datagen-pytest-runner)
+#+end_src
+
+#+RESULTS:
+: unity/datagen-pytest-runner
 
 * misc
 ** copy my Slack handle
