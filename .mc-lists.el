@@ -16,6 +16,7 @@
         lsp-signature-stop
         markdown-outdent-or-delete
         mc/mark-next-lines
+        multiple-cursors-mode
         org-beginning-of-line
         org-delete-char
         org-edit-src-save

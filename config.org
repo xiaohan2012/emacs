@@ -19,6 +19,7 @@
   - [ ] faster look up the correct import
     - say I want to import dataclass but I'm not sure what is the exact statement I should use
     - a quick workaround: use yasnippet
+  - [ ] copy location of a function (which file, which module, etc)
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs

@@ -946,32 +946,60 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 ** DONE gls training data at point
 
 #+begin_src emacs-lisp
-  (defun unity/gls-training-data-at-point ()
+  (defun unity/gls-in-omega-config ()
     "list the training data in GS  under the model version at cursor"
     (interactive)
     (let* (
            (data-version (path-at-point))
-           (root-uri
-            (let* (
-                   (dev-pos (save-excursion
-                              (search-backward "dev" nil t)))
-                   (prd-pos (save-excursion
-                              (search-backward "prd" nil t)))
-                   )
-              (if (> (if dev-pos dev-pos 0) prd-pos)
-                  "unity-ads-dd-ds-dev-prd-training-data"
-                "unity-ads-dd-ds-prd-training-data"
-                )
-              )          
+           (is-datagen
+            (let*
+                (
+                 (conversion-pos
+                  (save-excursion
+                    (search-backward "conversion" nil t)))
+                 (datagen-pos
+                  (save-excursion
+                    (search-backward "cpi_datagen" nil t)))
+                 )
+              (if (not conversion-pos) t
+                (> datagen-pos conversion-pos))
+              )
             )
+            (is-dev
+             (let*
+                 (
+                  (dev-pos (save-excursion
+                             (search-backward "dev:" nil t)))
+                  (prd-pos (save-excursion
+                             (search-backward "prd:" nil t)))
+                  )
+               ;; (print (format "dev-pos %d" dev-pos))
+               ;; (print (format "prd-pos %d" prd-pos))
+               (> (if dev-pos dev-pos 0) prd-pos)
+               ))
+             (root-uri
+              (if is-datagen
+                  (if is-dev
+                      "unity-ads-dd-ds-dev-prd-training-data/cpi_conversion"
+                    "unity-ads-dd-ds-prd-training-data/cpi_conversion"
+                    )
+                (if is-dev
+                    "unity-ads-dd-ds-dev-prd-trained-models/tf-models/conversion"
+                  "unity-ads-dd-ds-prd-trained-models/tf-models/conversion")
+                )
+              )
            )
-      (unity/gls-uri (format "gs://%s/cpi_conversion/%s" root-uri data-version))
+      ;; (print data-version)
+      ;; (print (format "is-datagen %s" is-datagen))
+      ;; (print (format "is-dev %s" is-dev))
+      ;; (print root-uri)
+      (unity/gls-uri (format "gs://%s/%s" root-uri data-version))
       )
     )
 #+end_src
 
 #+RESULTS:
-: unity/gls-training-data-at-point
+: unity/gls-in-omega-config
 
 ** TODO ls data output dir for a given file
 
@@ -1059,21 +1087,22 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "return t if the current buffer contains string"
     (save-excursion
       (save-match-data
-	(goto-char (point-min))
-	(search-forward string nil t))))
+        (goto-char (point-min))
+        (search-forward string nil t))))
+
 
   (defun quick-replace (regexp new-text)
-    "replace all occurences of regexp by new-text"
+    "replace all occurences of line matching regexp by new-text"
     (beginning-of-buffer)
     (while (re-search-forward regexp nil t)
-      (replace-match new-text)
+      (kill-whole-line)
+      (insert (format "%s\n" new-text))
       )
+    )
 
-  )
-
-  (defun unity/replace-field-in-buffer (field old new)
+  (defun unity/replace-field-in-buffer (field new)
     "replace a field's value (of old) by new"
-    (quick-replace   (concat field ": " old)   (concat field ": " new))
+    (quick-replace  field  (concat field ": " new))
     )
 #+end_src
 
@@ -1083,13 +1112,16 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 *** main functions
 
 #+begin_src emacs-lisp
+  (defun unity/modify-attribute (attribute new-value)
+  
+    )  
   (defun unity/config-train-to-full ()
     "config the training to be full by changing the values of a few fields"
     (interactive)
     (save-excursion
-      (unity/replace-field-in-buffer "n_iterations" "2" "40")
-      (unity/replace-field-in-buffer "val_loss_limit" "0.9" "0.11")
-      (unity/replace-field-in-buffer "limited_data" "true" "false")
+      (unity/replace-field-in-buffer "n_iterations" "40")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.11")
+      (unity/replace-field-in-buffer "  limited_data" "false")
       )
     )
 
@@ -1098,9 +1130,9 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "config the training to be debug by changing the values of a few fields"
     (interactive)
     (save-excursion
-      (unity/replace-field-in-buffer "n_iterations" "40" "2")
-      (unity/replace-field-in-buffer "val_loss_limit" "0.11" "0.9")
-      (unity/replace-field-in-buffer "limited_data" "false" "true")    
+      (unity/replace-field-in-buffer "n_iterations" "2")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.9")
+      (unity/replace-field-in-buffer "  limited_data" "true")    
       )
     )
 
@@ -1123,9 +1155,9 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     (interactive)
     (let ((model-type (completing-read "model type: " unity/model-types)))
       (save-excursion
-	(find-file (unity/get-s2c-train-dev-config-path model-type))
-	(unity/toggle-train-config)
-	)
+        (find-file (unity/get-s2c-train-dev-config-path model-type))
+        (unity/toggle-train-config)
+        )
       )
     )
 #+end_src
