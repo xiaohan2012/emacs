@@ -700,7 +700,7 @@
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
          (exp-name (read-string "experiment name: " "han/exps"))
-         (run-name-template (read-string "run name template: " "%s/cpi-datagen-%s-%s"))
+         (run-name-template (read-string "run name template: " "%s/dg-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
          (platforms (completing-read-multiple "Platforms: " '("android" "ios"))))
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
@@ -738,7 +738,7 @@
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
          (exp-name (read-string "Experiment name: " "han/exps"))
-         (run-name-template (read-string "Run name template: " "%s/cpi-train-%s-%s"))
+         (run-name-template (read-string "Run name template: " "%s/tr-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
          (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
          (reps (read-number "Number of repetitions: " 1))
@@ -782,7 +782,7 @@
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
          (exp-name (read-string "Experiment name: " "han/exps"))
-         (run-name-template (read-string "Run name template: " "%s/cpi-serving-%s-%s"))
+         (run-name-template (read-string "Run name template: " "%s/sv-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
          (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
          (reps (read-number "Number of repetitions: " 1))
@@ -1196,7 +1196,7 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 #+RESULTS:
 : activate-cpi-model-virtualenv
 
-** TODO run pytest in docker
+** DONE run pytest in docker
 
 #+begin_src elisp
   (defun unity/datagen-pytest-runner (top file module test)
