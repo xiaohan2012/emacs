@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: pytest.mark.parametrize-inline
+# key: pytpl
+# --
+@pytest.mark.parametrize(
+    '$1', [($2)]
+)

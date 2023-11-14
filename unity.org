@@ -1237,14 +1237,25 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
         ))
       )
     )
-  (bind-keys*
-    ("C-c C-t" . unity/datagen-pytest-runner)
-    )
+  ;; (bind-keys*
+  ;;   ("C-c C-t" . unity/datagen-pytest-runner)
+  ;;   )
+  ;; (eval-after-load 'python-mode
+  ;;   '(define-key python-mode-map "\C-t"; [(tab)] 
+  ;;      'unity/datagen-pytest-runner))
   ;; (global-set-key (kbd "C-c C-t") 'unity/datagen-pytest-runner)
 #+end_src
 
 #+RESULTS:
+
+#+begin_src emacs-lisp
+  (define-key python-mode-map "\C-t"; [(tab)] 
+       'unity/datagen-pytest-runner)
+#+end_src
+
+#+RESULTS:
 : unity/datagen-pytest-runner
+
 
 * misc
 ** copy my Slack handle
