@@ -14,10 +14,12 @@
         indent-for-tab-command
         kill-region
         lsp-signature-stop
+        mark-defun
         markdown-outdent-or-delete
         mc/mark-next-lines
         multiple-cursors-mode
         org-beginning-of-line
+        org-cycle
         org-delete-char
         org-edit-src-save
         org-end-of-line

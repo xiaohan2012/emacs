@@ -38,7 +38,7 @@
 - [ ] conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
 - [ ] [[ https://kristofferbalintona.me/posts/202206141852/#citar][citation in org]]
-  
+- [[https://umarahmad.xyz/blog/editing-remote-code-with-emacs/][remote development]]  
 * good blogs on Emacs
 
 - https://emacsrocks.com/
@@ -1086,20 +1086,20 @@ let's not use it for now since it works better for => 2= windows.
     :commands lsp
     :hook
     ((python-mode . (lambda ()
-		      (lsp-mode 1)
-		      (flycheck-mode nil)  ;; does not turn off
-		      ))
+                      (lsp-mode 1)
+                      (flycheck-mode nil)  ;; does not turn off
+                      ))
      (lsp-mode . lsp-enable-which-key-integration)
      )
     :config
     (setq lsp-idle-delay 0.5
-	  lsp-enable-symbol-highlighting t
-	  lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
-	  lsp-pyls-plugins-pycodestyle-enabled nil
-	  lsp-pyls-plugins-flake8-enabled nil ;; use flake8
-	  lsp-pyls-plugins-flake8-ignore  nil
-	  lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
-	  ) 
+          lsp-enable-symbol-highlighting t
+          lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
+          lsp-pyls-plugins-pycodestyle-enabled nil
+          lsp-pyls-plugins-flake8-enabled nil ;; use flake8
+          lsp-pyls-plugins-flake8-ignore  nil
+          lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
+          ) 
     ;; how to use the plugins?
     (lsp-register-custom-settings
      '(("pyls.plugins.pyls_mypy.enabled" t t)
@@ -1115,9 +1115,11 @@ let's not use it for now since it works better for => 2= windows.
     (add-hook 'c++-mode-hook #'lsp))
 
 
-  (use-package lsp-ui
-    :ensure t
-    :commands lsp-ui-mode)
+  ;; do not use it, it is slow
+  ;; (use-package lsp-ui
+  ;;   :ensure t
+  ;;   ;; :commands lsp-ui-mode
+  ;;   )
 
 
   ;; (use-package ccls
@@ -2079,7 +2081,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      ;; (?\` . ?\`)
 			      ;; (?\$ . ?\$)
   ))
-  (electric-pair-mode t)
+  (electric-pair-mode nil)
 #+end_src
 
 #+RESULTS:

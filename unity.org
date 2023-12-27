@@ -1205,6 +1205,8 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     (let* (
            (test-command-pattern "docker exec -it cpi-datagen-dev-shell env TERM=xterm-256color sh -c 'py.test %s'")
            (file-in-docker (car (last (split-string file "cpi-datagen/"))))
+           ;; (test-command-pattern "docker exec -it cpi-model-shell env TERM=xterm-256color sh -c 'py.test %s'")
+           ;; (file-in-docker (car (last (split-string file "cpi-model/"))))
            )
       (cond
        (test
@@ -1244,17 +1246,59 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
   ;;   '(define-key python-mode-map "\C-t"; [(tab)] 
   ;;      'unity/datagen-pytest-runner))
   ;; (global-set-key (kbd "C-c C-t") 'unity/datagen-pytest-runner)
+
+  (defun unity/cpi-model-pytest-runner (top file module test)
+    "Test the cpi-model package in docker image using the py.test test runner "
+    (interactive (elpy-test-at-point))
+    (let* (
+           (test-command-pattern "docker exec -it cpi-model-dev-shell env TERM=xterm-256color sh -c 'py.test -W ignore::DeprecationWarning %s'")
+           (file-in-docker (car (last (split-string file "cpi-model/"))))
+           )
+      (cond
+       (test
+        (let ((test-list (split-string test "\\.")))
+          (funcall
+           elpy-test-compilation-function
+           (format
+            test-command-pattern 
+            (mapconcat #'identity
+                       (cons file-in-docker test-list)
+                       "::")
+            )
+           t  ; use COMINT mode to display the escape characters correctly, however, tab does not work properly
+           )))
+       (module
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern file-in-docker 
+          )
+         t)
+        )
+       (t
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern "./"
+          )
+         t)
+        ))
+      )
+    )
 #+end_src
 
 #+RESULTS:
+: unity/cpi-model-pytest-runner
 
 #+begin_src emacs-lisp
+  ;; (define-key python-mode-map "\C-t"; [(tab)] 
+  ;;      'unity/datagen-pytest-runner)
   (define-key python-mode-map "\C-t"; [(tab)] 
-       'unity/datagen-pytest-runner)
+       'unity/cpi-model-pytest-runner)
 #+end_src
 
 #+RESULTS:
-: unity/datagen-pytest-runner
+: unity/cpi-model-pytest-runner
 
 
 * misc
