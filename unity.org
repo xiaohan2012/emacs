@@ -125,28 +125,33 @@
   (defun replace-in-string (what with in)
     (replace-regexp-in-string (regexp-quote what) with in nil 'literal))
 
-  (defun unity/open-file-in-prd ()
-    "based on the current config file in dev, open the mirroing file in prd"
-    (interactive)
-    (find-file
-     (replace-in-string
-      "/dev/"
-      "/prd/"
-      (buffer-file-name)
-      ))
+  (defun unity/get-mirror-config-file-name (current-file-name)
+    (let* (
+           (is-dev (string-match "/dev/" current-file-name))
+           )
+      (if is-dev
+          (replace-in-string
+           "/dev/"
+           "/prd/"
+           current-file-name
+           )
+        (replace-in-string
+         "/prd/"
+         "/dev/"
+         current-file-name
+         ))      
+      )
     )
-
-(defun unity/open-file-in-dev ()
-  "based on the current config file in prd, open the mirroing file in dev"
-  (interactive)
-  (find-file
-   (replace-in-string
-    "/prd/"
-    "/dev/"
-    (buffer-file-name)
-    ))
-  )  
+  (defun unity/open-mirror-config-file ()
+    "open the dev/prd file of the currently opened prd/dev file"
+    (interactive)
+    (find-file (unity/get-mirror-config-file-name (buffer-file-name)))    
+    )
 #+end_src
+
+#+RESULTS:
+: unity/open-mirror-config-file
+
 
 * diff
 ** diff prd and dev configs in mz-re-ml
@@ -161,6 +166,25 @@
 
    #+RESULTS:
    : diff-prd-dev-configs
+** diff current file with prd or dev
+
+#+begin_src emacs-lisp
+  (defun unity/diff-mirror-config-file ()
+    "based on the current config file in dev/prd, diff the mirroring file in prd/dev"
+    (interactive)
+    (let* (
+           (is-dev (string-match "/dev/" (buffer-file-name)))
+           (mirror-file-name (unity/get-mirror-config-file-name (buffer-file-name)))
+           )
+      (diff
+       (buffer-file-name)
+       mirror-file-name)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/diff-mirror-config-file
 
 ** diff on mz-ds-deep-learning
 
@@ -209,6 +233,7 @@
 
    #+RESULTS:
    : diff-serving-advctx-prd-dev-configs
+
 * git
 ** get and copy branch name
 
