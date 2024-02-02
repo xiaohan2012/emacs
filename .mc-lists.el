@@ -14,6 +14,7 @@
         indent-for-tab-command
         kill-region
         lsp-signature-stop
+        lsp-ui-doc--handle-mouse-movement
         mark-defun
         markdown-outdent-or-delete
         mc/mark-next-lines
@@ -30,6 +31,7 @@
         sp-backward-kill-word
         sp-backward-sexp
         sp-backward-unwrap-sexp
+        sp-beginning-of-sexp
         sp-delete-char
         sp-forward-sexp
         sp-kill-region

@@ -410,6 +410,8 @@
 - open a ssh terminal if not created
 - send a command 
 ** s2c train
+
+
 *** helper functions
 #+begin_src emacs-lisp
   (defvar exp-name "han/exps" "name of experiment")
@@ -421,6 +423,11 @@
     (format
      "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name %s --run_name %s"
      pipeline-name ds-env exp-name run-name))
+
+  (defun unity/get-kubeflow-upload-command (pipeline-name ds-env)
+    "get the command to upload a pipeline"  
+    (format
+     "python kubeflow/pipelines/conv/%s.py --ds_env %s  --do_upload" pipeline-name ds-env))
 
   (defun unity/vm-shell/enter-kubeflow-shell ()
     "enter kubeflow shell in the VM"
@@ -741,7 +748,7 @@
             (let* ((run-name (format run-name-template git-branch traffic-type platform))
                    (command (unity/get-kubeflow-command (format "cpi_%s_datagen_%s" traffic-type platform) ds-env exp-name run-name)))
               (unity/vm-shell/send-string "sleep 1")              
-              (unity/vm-shell/send-string command)
+              (unity/vm-shell/send-string (format "%s %s" command "--fetch_enrichment_data"))
               ;; (print command)
               )))
         )
@@ -806,11 +813,9 @@
         (
          (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
          (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
-         (exp-name (read-string "Experiment name: " "han/exps"))
          (run-name-template (read-string "Run name template: " "%s/sv-%s-%s"))
          (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
-         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
-         (reps (read-number "Number of repetitions: " 1))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))
          )
       (unity/vm-shell/ensure-ssh-terminal-is-visible)
       (unity/vm-shell/send-string "git fetch")    
@@ -822,7 +827,7 @@
         (dolist (traffic-type traffic-types)
           (dolist (platform platforms)
             (let* ((run-name (format run-name-template  git-branch traffic-type platform))
-                   /Users/hanxiao/code/mz-ds-deep-learning/kubeflow/pipelines/conv/cpi_bhv_serving_model_only_ios.py::8
+                   ;; /Users/hanxiao/code/mz-ds-deep-learning/kubeflow/pipelines/conv/cpi_bhv_serving_model_only_ios.py::8
                    (command (unity/get-kubeflow-command (format "cpi_%s_serving_model_only_%s" traffic-type platform) ds-env exp-name run-name)))
               (if (eq reps 1)
                   (unity/vm-shell/send-string command)
@@ -840,6 +845,54 @@
 
 #+RESULTS:
 : unity/submit-cpi-serving-jobs
+
+** s2i upload pipelines
+
+
+#+begin_src emacs-lisp
+  (defun unity/upload-cpi-pipelines ()
+    "submit one or more CPI train jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t prd-ds-env nil prd-ds-env))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))
+         )
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")    
+      (unity/vm-shell/enter-kubeflow-shell)  ; enter the shell only once in one session to avoid jobs being dropped
+
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((datagen-command (unity/get-kubeflow-upload-command (format "cpi_%s_datagen_%s" traffic-type platform) ds-env))
+                   (train-command (unity/get-kubeflow-upload-command (format "cpi_%s_train_%s" traffic-type platform) ds-env))
+                   (serving-command (unity/get-kubeflow-upload-command (format "cpi_%s_serving_model_only_%s" traffic-type platform) ds-env))
+                   )
+              ;; (print command)
+              ;; (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
+              ;; (print datagen-command)
+              ;; (print train-command)
+              ;; (print serving-command)
+              (unity/vm-shell/send-string datagen-command)
+              (unity/vm-shell/send-string train-command)
+              (unity/vm-shell/send-string serving-command)
+              ;; (print (format "%s-%d" command i))
+              )))
+        ;; remember to upload the trigger_full pipeline
+        (unity/vm-shell/send-string "python kubeflow/pipelines/common/trigger_full.py --ds_env prd  --do_upload")
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+
+#+end_src
+
+#+RESULTS:
+: unity/upload-cpi-pipelines
 
 * hyper-parameter tuning
 #+begin_src emacs-lisp
@@ -1339,6 +1392,20 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : unity/copy-my-slack-handle
+** copy my GCS dev bucket URI
+
+#+begin_src emacs-lisp
+  (defun unity/copy-my-dev-bucket ()
+    "copy GCS dev bucket URI"
+    (interactive)
+    (kill-new "gs://han-xiao-dev")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/copy-my-dev-bucket
+
+
 ** copy KF namespace
 
 #+begin_src emacs-lisp
