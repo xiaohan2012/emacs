@@ -13,123 +13,6 @@
 (use-package compat
   :ensure t)
 
-(use-package avy
-  :config
-  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
-)
-
-(defun avy-action-kill-whole-line (pt)
-  (save-excursion
-    (goto-char pt)
-    (kill-whole-line))
-  (select-window
-   (cdr
-    (ring-ref avy-ring 0)))
-  t)
-
-(use-package avy
-  :ensure t
-  :config
-  (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
-	(alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
-  )
-
-(defun avy-action-copy-whole-line (pt)
-  (save-excursion
-    (goto-char pt)
-    (cl-destructuring-bind (start . end)
-	(bounds-of-thing-at-point 'line)
-      (copy-region-as-kill start end)))
-  (select-window
-   (cdr
-    (ring-ref avy-ring 0)))
-  t)
-
-(defun avy-action-yank-whole-line (pt)
-  (avy-action-copy-whole-line pt)
-  (save-excursion (yank))
-  t)
-
-(use-package avy
-  :config
-  (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
-	(alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
-	(alist-get ?w avy-dispatch-alist) 'avy-action-copy
-	(alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
-	)
-  )
-
-(defun avy-action-teleport-whole-line (pt)
-  (avy-action-kill-whole-line pt)
-  (save-excursion (yank)) t)
-
-(use-package avy
-  :config
-  (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
-	(alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
-  )
-
-(use-package avy
-  :config
-  (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
-  )
-
-(defun avy-action-mark-to-char (pt)
-  (activate-mark)
-  (goto-char pt))
-
-(use-package avy
-  :config
-  (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
-  )
-
-(use-package helpful
-  :ensure t
-  :bind
-  ("C-c h f" . helpful-at-point)
-  )
-
-(defun avy-action-helpful (pt)
-  (save-excursion
-    (goto-char pt)
-    (helpful-at-point))
-  (select-window
-   (cdr (ring-ref avy-ring 0)))
-  t)
-
-(use-package avy
-  :config
-  (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
-
-  )
-
-(use-package embark
-  :ensure t
-
-  :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-  )
-
-;; use citar-embard to enable using citation-key as target
-(use-package citar-embark
-  :ensure t
-  :after citar embark
-  ;; :config (citar-embark-mode)
-  )
-
-(defun avy-action-embark (pt)
-  (unwind-protect
-      (save-excursion
-	(goto-char pt)
-	(embark-act))
-    (select-window
-     (cdr (ring-ref avy-ring 0))))
-  t)
-
-(setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
-
 (require 'package)
 
 
@@ -183,6 +66,34 @@
 
 (set-face-attribute 'region nil :background "#666")
 
+(use-package spaceline
+  :ensure t
+  :config
+  (require 'spaceline-config)
+  (setq powerline-default-separator (quote arrow))
+  (spaceline-spacemacs-theme))
+
+(use-package diminish
+  :ensure t
+  :init
+  (diminish 'hungry-delete-mode)
+  (diminish 'which-key-mode)
+  (diminish 'rainbow-mode)
+  (diminish 'beacon-mode)
+  (diminish 'subword-mode)
+  (diminish 'smartparens-mode)
+  (diminish 'lsp-lens-mode)
+  (diminish 'auto-revert-mode)
+  :hook
+  (lsp-mode . (lambda ()
+		(diminish 'lsp-lens-mode)
+		(diminish 'lsp-mode "LSP")
+		(diminish 'projectile-mode "projt")
+		(diminish 'smartparens-mode)
+		(diminish 'auto-revert-mode)
+		))
+  )
+
 (use-package dashboard
 :ensure t
 :config
@@ -193,14 +104,15 @@
 
 (use-package company
 :ensure t
-:init
-;; (add-hook 'after-init-hook 'global-company-mode)
-(add-hook 'emacs-lisp-mode-hook 'company-mode)
-;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+:hook
+(LaTeX-mode . company-mode)
+(emacs-lisp-mode . company-mode)
 :bind
 (:map company-active-map ("<tab>" . company-complete-selection))
 
 )
+
+;; (add-hook 'LaTeX-mode-hook 'my/latex-buffer-setup)
 
 ;; (use-package corfu
 ;;   :ensure t
@@ -316,7 +228,7 @@
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
 
-(use-package flycheck
+(use-package flyspell
   :config
   ; enable flycheck for certain modes
   (dolist (hook '(text-mode-hook))
@@ -332,6 +244,8 @@
   (which-key-mode))
 
 (setq org-src-window-setup 'current-window)
+
+(setq org-table-default-size "2x3")
 
 (use-package org-bullets
   :ensure t
@@ -405,7 +319,7 @@
   (org-download-image-dir "images")
   (org-download-heading-lvl nil)
   (org-download-timestamp "%Y%m%d-%H%M%S_")
-  (org-image-actual-width 500)
+  ;; (org-image-actual-width 500)
   (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
   :bind
   ("C-M-y" . org-download-screenshot)
@@ -431,19 +345,11 @@
   (setq org-todo-keywords
 	'((sequence "TODO" "DOING" "DONE")))
   (setq org-todo-keyword-faces
-	'(("TODO" . "red") ("DOING" . "scyan") ("DONE" . "green")))
+	'(("TODO" . "red") ("DOING" . "cyan") ("DONE" . "green")))
   )
 
 ;; (use-package oc-bibtex
 ;;   :ensure t)
-
-(use-package markdown-mode
-  :ensure t
-  :mode ("README\\.md\\'" . gfm-mode)
-  :init (setq markdown-command "multimarkdown"))
-
-(custom-set-variables
- '(markdown-command "/usr/local/bin/pandoc"))
 
 (save-place-mode 1)
 
@@ -458,25 +364,6 @@
 	(insert filename)
 	(clipboard-kill-region (point-min) (point-max)))
       (message filename))))
-
-(defun dairy-org-visit ()
-"visit ~/docs/notes/dairy2023.org"
-(interactive)
-(find-file "~/docs/notes/dairy2023.org"))
-(global-set-key (kbd "C-c o d") 'dairy-org-visit)
-
-(defun corset-org-visit ()
-"visit ~/docs/notes/corset2.0.org"
-(interactive)
-(find-file "~/docs/notes/corset2.0.org"))
-
-(global-set-key (kbd "C-c o c") 'corset-org-visit)
-
-(defun songs-org-visit ()
-"visit ~/docs/notes/songs.org"
-(interactive)
-(find-file "~/docs/notes/songs.org"))
-(global-set-key (kbd "C-c o s") 'songs-org-visit)
 
 (use-package dired-subtree
   :ensure t)
@@ -621,6 +508,9 @@ Version 2020-10-17"
 
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
+;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+(global-set-key (kbd "C-x b") 'consult-buffer)
+
 (setq ibuffer-expert t)
 
 (defun kill-and-close-this-buffer ()
@@ -648,48 +538,6 @@ Version 2020-10-17"
   )
 (global-set-key (kbd "C-c t p p") 'projectile-project-type-to-python-pip)
 
-(use-package ido
-  :ensure t
-  :config
-  (setq ido-enable-flex-matching nil
-	ido-create-new-buffer 'always
-	ido-everywhere t)
-  (add-to-list 'ido-ignore-files "\.bak")
-  (add-to-list 'ido-ignore-files "\.log")
-  (add-to-list 'ido-ignore-files ".venv")
-  (add-to-list 'ido-ignore-files "__pycache__")
-  (add-to-list 'ido-ignore-files "\.pytest_cache")
-  (add-to-list 'ido-ignore-files "\.pkl")
-  ;; data files
-  (add-to-list 'ido-ignore-files "\.hdf5")
-  ;; latex-related
-  (add-to-list 'ido-ignore-files "\.nav")
-  (add-to-list 'ido-ignore-files "\.out")
-  (add-to-list 'ido-ignore-files "\.pdf")
-  (add-to-list 'ido-ignore-files "\.snm")
-  (add-to-list 'ido-ignore-files "\.synctex.gz")
-  ;; org
-  (add-to-list 'ido-ignore-files "\.org_archive")
-  (ido-mode 1)
-  )
-
-(use-package ido-vertical-mode
-  :ensure t
-  :requires ido
-  :config
-  (ido-vertical-mode 1)
-  (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-  )
-
-;; (use-package smex
-;;   :ensure t
-;;   :init (smex-initialize)
-;;   :bind
-;;   ("M-x" . smex))
-
-;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
-(global-set-key (kbd "C-x b") 'consult-buffer)
-
 (use-package avy
 :ensure t
 :bind
@@ -706,19 +554,69 @@ Version 2020-10-17"
   ;; ("C-M-<" . 'mc/skip-to-previous-like-this)
   )
 
-;; (use-package sublimity
-	;;   :ensure t
-	;;   :config
-	;;   (sublimity-mode 1))
+(use-package goto-chg
+  :ensure t
+  :bind
+  ("C-c C-g" . 'goto-last-change))
 
-	;; (use-package sublimity-scroll
-	;;   :ensure t
-	;;   :config
-	;;   (sublimity-mode 1))
-;; (require 'sublimity)
-;; (require 'sublimity-scroll)
-;; (sublimity-mode 1)
-      ;; (require 'sublimity-scroll)
+(use-package lsp-mode
+  :ensure t
+  :commands lsp
+  :hook
+  ((python-mode . (lambda ()
+                    (lsp-mode 1)
+                    (flycheck-mode nil)  ;; does not turn off
+                    ))
+   (lsp-mode . lsp-enable-which-key-integration)
+   )
+  :config
+  (setq lsp-idle-delay 0.5
+        lsp-enable-symbol-highlighting t
+        lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
+        lsp-pyls-plugins-pycodestyle-enabled nil
+        lsp-pyls-plugins-flake8-enabled nil ;; use flake8
+        lsp-pyls-plugins-flake8-ignore  nil
+        lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
+        ) 
+  ;; how to use the plugins?
+  (lsp-register-custom-settings
+   '(("pyls.plugins.pyls_mypy.enabled" t t)
+     ("pyls.plugins.pyls_mypy.live_mode" nil t)
+     ("pyls.plugins.pyls_black.enabled" t t)
+     ("pyls.plugins.pyls_isort.enabled" t t)))
+  )
+
+
+
+;; clangd is used by default
+(when (executable-find "clangd")
+  (add-hook 'c++-mode-hook #'lsp))
+
+
+;; do not use it, it is slow
+;; (use-package lsp-ui
+;;   :ensure t
+;;   ;; :commands lsp-ui-mode
+;;   )
+
+
+;; (use-package ccls
+;;   :ensure t
+;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+;; 	 (lambda () (require 'ccls) (lsp))))
+
+(use-package lsp-treemacs  
+  :ensure t
+  :config
+  (lsp-treemacs-sync-mode 1))
+
+(defun my/goto-treemacs ()
+  "goto treemacs window, create one if it is not there"
+  (window-list)
+  ;; (print (get-buffer-window-list "Treemacs"))
+  )
+
+;; (my/goto-treemacs)
 
 (defun activate-virtualenv ()
   "pyenv-activate the current directory + '.venv'
@@ -735,7 +633,10 @@ Version 2020-10-17"
 (global-set-key (kbd "C-c a v") 'activate-virtualenv)
 
 (use-package flycheck
-  :ensure t)
+  :ensure t
+  :hook
+  (lsp-mode . (lambda () (flycheck-mode nil))) ;; turn it off in lsp-mode
+  )
 
 (use-package ein
   :ensure t
@@ -757,7 +658,7 @@ Version 2020-10-17"
   (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
 	elpy-rpc-backend "jedi"
 	;; elpy-rpc-project-specific 't
-	elpy-modules (delq 'elpy-module-flymake elpy-modules)
+	;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
 	)
   ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
   :bind
@@ -766,10 +667,105 @@ Version 2020-10-17"
   ("C-s-p" . 'elpy-nav-backward-block)
   ("C-s-f" . 'elpy-nav-forward-indent)
   ("C-s-b" . 'elpy-nav-backward-indent)
+  ("C-s-<left>" . 'elpy-nav-indent-shift-left)
+  ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+  ("C-c b" . elpy-black-fix-code)
   )
 
 (use-package cython-mode
   :ensure t)
+
+(setq-default indent-tabs-mode nil)  ; indentation
+
+(defun my/turn-on-python-profiling ()
+  (interactive)
+  (replace-string "# @profile" "@profile")
+  )
+
+
+(defun my/turn-off-python-profiling ()
+  (interactive)
+  (replace-string "@profile" "# @profile")
+  )
+
+(with-eval-after-load 'treemacs
+  (defun treemacs-ignore-c++-object-files (file _)
+    (s-suffix? ".o" file))
+  (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
+
+(add-hook
+   'c++-mode-hook
+    (lambda ()
+      (local-set-key (kbd "C-c C-c") #'compile)))
+;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
+
+(defun my/treemacs-back-and-forth ()
+  (interactive)
+  (if (treemacs-is-treemacs-window-selected?)
+      (aw-flip-window)
+    (treemacs-select-window)))
+
+(global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
+
+(when (and (eq system-type 'gnu/linux)
+	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
+  (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
+  (load-library "matlab-load"))
+
+(use-package sqlformat
+  :ensure t
+  :config
+  (setq sqlformat-command 'pgformatter)
+  (setq sqlformat-args '("-s2" "-g")))
+
+;; (use-package sublimity
+	;;   :ensure t
+	;;   :config
+	;;   (sublimity-mode 1))
+
+	;; (use-package sublimity-scroll
+	;;   :ensure t
+	;;   :config
+	;;   (sublimity-mode 1))
+;; (require 'sublimity)
+;; (require 'sublimity-scroll)
+;; (sublimity-mode 1)
+      ;; (require 'sublimity-scroll)
+
+(use-package origami
+  :ensure t
+  :init (global-origami-mode))
+
+  ; (global-set-key (kbd "C-c c t") 'origami-toggle-node)
+  (global-set-key (kbd "C-c o t") 'origami-toggle-node)
+
+(use-package yasnippet
+  :ensure t
+  :config
+  (setq yas-snippet-dirs
+	'("~/.emacs.d/snippets"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+	  "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
+	  ))
+  ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
+  ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
+  (yas-global-mode 1)
+  )
+
+(use-package yasnippet-snippets
+:ensure t
+)
+
+(defun my/yas-add-acronyms (mode-sym acronyms)
+  "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
+acronyms is a list of (list acronym full-name)
+"
+  (dolist (acr acronyms)
+    (yas--define mode-sym (car acr) (car (cdr acr)))
+    )
+  )
+
+(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
 
 (use-package tex
       :defer t
@@ -801,9 +797,13 @@ Version 2020-10-17"
       ;; TeX-master 'dwim
       )
 
-(setq-default TeX-master "main") ; all master files called "main".
+;; (setq-default TeX-master "main_kais") ; all master files called "main".
+;; (setq-default TeX-master "reviews_cover_letter.tex")
 ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
 ;; (setq-default TeX-master "cover") ; all master files called "cover".
+(setq-default TeX-master "algs") ; all master files called "main".
+;; (setq-default TeX-master "cv") ; all master files called "main".
+(setq-default TeX-engine 'default)
 
 ;; (add-hook latex-mode-hook
 ;; 	  (lambda()
@@ -855,58 +855,39 @@ Version 2020-10-17"
   ;; 	    "o" '(citar-open-notes :wk "Open note"))
   )
 
-(use-package lsp-mode
-  :ensure t
-  :commands lsp)
-  ; clangd is used by default
+(defun my/open-defines-tex ()
+  "open defines.tex under current directory"
+  (interactive)
+  (find-file "./defines.tex"))
+(global-set-key (kbd "C-c o d") 'my/open-defines-tex)
 
-(use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode)
-
-(when (executable-find "clangd")
-  (add-hook 'c++-mode-hook #'lsp))
-  ;; (use-package ccls
-  ;;   :ensure t
-  ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
-  ;; 	 (lambda () (require 'ccls) (lsp))))
-
-(use-package lsp-treemacs  
-  :ensure t
-  :config
-  (lsp-treemacs-sync-mode 1))
-
-(defun my/goto-treemacs ()
-  "goto treemacs window, create one if it is not there"
-  (window-list)
-  ;; (print (get-buffer-window-list "Treemacs"))
+(defun forward-jump-into-next-brace ()
+  (interactive)
+  (search-forward "{")
+  )
+(defun backward-jump-into-next-brace ()
+  (interactive)
+  (search-backward "{")
   )
 
-;; (my/goto-treemacs)
-
-(with-eval-after-load 'treemacs
-  (defun treemacs-ignore-c++-object-files (file _)
-    (s-suffix? ".o" file))
-  (push #'treemacs-ignore-c++-object-files treemacs-ignored-file-predicates))
-
-(add-hook
-   'c++-mode-hook
-    (lambda ()
-      (local-set-key (kbd "C-c C-c") #'compile)))
-;; (define-key c++-mode-map (kbd "C-c C-c") 'compile)
-
-(defun my/treemacs-back-and-forth ()
+(defun forward-jump-into-next-pair ()
+  "however, for $, we may jump into the closing pair, how to fix it?"
   (interactive)
-  (if (treemacs-is-treemacs-window-selected?)
-      (aw-flip-window)
-    (treemacs-select-window)))
+  (search-forward-regexp "[{\$(]")
+  )
+(defun backward-jump-into-next-pair ()
+  (interactive)
+  (search-backward-regexp "[{\$(]")
+  )
 
-(global-set-key (kbd "C-x m") 'my/treemacs-back-and-forth)
 
-(when (and (eq system-type 'gnu/linux)
-	   (file-exists-p "/home/xiaoh1/code/matlab-emacs-src"))
-  (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
-  (load-library "matlab-load"))
+;; (global-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
+;; (global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-brace)
+(global-set-key (kbd "C-<tab>") #'forward-jump-into-next-pair)
+(global-set-key (kbd "C-S-<tab>") #'backward-jump-into-next-pair)
+;; (add-hook 'LaTex-mode-hook (lambda () (
+;; 				       (local-set-key (kbd "C-<tab>") #'forward-jump-into-next-brace)
+;; 				  )))
 
 (use-package yaml-mode
 :ensure t
@@ -914,60 +895,16 @@ Version 2020-10-17"
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 )
 
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown"))
+
+(custom-set-variables
+ '(markdown-command "/usr/local/bin/pandoc"))
+
 (use-package dockerfile-mode
   :ensure t)
-
-(use-package sqlformat
-  :ensure t
-  :config
-  (setq sqlformat-command 'pgformatter)
-  (setq sqlformat-args '("-s2" "-g")))
-
-(use-package yasnippet
-  :ensure t
-  :config
-  (setq yas-snippet-dirs
-	'("~/.emacs.d/snippets"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
-	  "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-	  ))
-  ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
-  ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
-  (yas-global-mode 1)
-  )
-
-(use-package yasnippet-snippets
-:ensure t
-)
-
-(defun my/yas-add-acronyms (mode-sym acronyms)
-  "add 'acronyms' to yasnippets for a given mode, e.g., 'org-mode
-acronyms is a list of (list acronym full-name)
-"
-  (dolist (acr acronyms)
-    (yas--define mode-sym (car acr) (car (cdr acr)))
-    )
-  )
-
-(add-hook 'org-mode-hook #'(lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))
-
-(defun config-visit ()
-"visit ~/.emacs.d/config.org"
-(interactive)
-(find-file "~/.emacs.d/config.org"))
-(global-set-key (kbd "C-c e") 'config-visit)
-
-(defun config-reload ()
-  "Reloads ~/.emacs.d/config.org at runtime"
-  (interactive)
-  (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
-;; (global-set-key (kbd "C-c r") 'config-reload)
-
-(defun zshrc-visit ()
-  "visit ~/.zshrc"
-  (interactive)
-  (find-file "~/.zshrc"))
-(global-set-key (kbd "C-c z") 'zshrc-visit)
 
 ;; (use-package multi-term
 ;;   :ensure t
@@ -996,6 +933,26 @@ acronyms is a list of (list acronym full-name)
 
 (use-package ssh
   :ensure t)
+
+(defun config-visit ()
+"visit ~/.emacs.d/config.org"
+(interactive)
+(find-file "~/.emacs.d/config.org"))
+(global-set-key (kbd "C-c o e") 'config-visit)
+
+(defun config-reload ()
+  "Reloads ~/.emacs.d/config.org at runtime"
+  (interactive)
+  (org-babel-load-file (expand-file-name "~/.emacs.d/config.org"))
+  (org-babel-load-file (expand-file-name "~/.emacs.d/unity.org"))
+  )
+;; (global-set-key (kbd "C-c r") 'config-reload)
+
+(defun zshrc-visit ()
+  "visit ~/.zshrc"
+  (interactive)
+  (find-file "~/.zshrc"))
+(global-set-key (kbd "C-c z") 'zshrc-visit)
 
 (line-number-mode 1)
 (column-number-mode 1)
@@ -1079,6 +1036,36 @@ acronyms is a list of (list acronym full-name)
       (org-table-sort-lines nil ?N)))
   (pop-to-buffer "*word-statistics*"))
 
+(use-package dmenu
+    :ensure t
+    :bind
+    ("C-c d m" . 'dmenu))
+
+(use-package edit-server
+  :ensure t
+  :commands edit-server-start
+  :init (if after-init-time
+	      (edit-server-start)
+	    (add-hook 'after-init-hook
+		      #'(lambda() (edit-server-start))))
+  :config (setq edit-server-new-frame-alist
+		'((name . "Edit with Emacs FRAME")
+		  (top . 200)
+		  (left . 200)
+		  (width . 80)
+		  (height . 25)
+		  (minibuffer . t)
+		  (menu-bar-lines . t)
+		  ;; comment out the following due to "No applicable method: frame-creation-function"
+		  ;; reference: https://emacs-china.org/t/edit-server-no-applicable-method-frame-creation-function/17562
+		  ;; (window-system . x)
+		  )))
+
+(use-package good-scroll
+  :ensure t
+  :config (good-scroll-mode)
+  )
+
 (defun refrained-backward-word ()
   "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
   (unless (member  ;; check if the previous point is left paren or space, or newline
@@ -1100,6 +1087,29 @@ acronyms is a list of (list acronym full-name)
   (save-excursion (search-backward str))
   )
 
+(defun move-line (n)
+  "Move the current line up or down by N lines."
+  (interactive "p")
+  (setq col (current-column))
+  (beginning-of-line) (setq start (point))
+  (end-of-line) (forward-char) (setq end (point))
+  (let ((line-text (delete-and-extract-region start end)))
+    (forward-line n)
+    (insert line-text)
+    ;; restore point to original column in moved line
+    (forward-line -1)
+    (forward-char col)))
+
+(defun move-line-up (n)
+  "Move the current line up by N lines."
+  (interactive "p")
+  (move-line (if (null n) -1 (- n))))
+
+(defun move-line-down (n)
+  "Move the current line down by N lines."
+  (interactive "p")
+  (move-line (if (null n) 1 n)))
+
 ;; (global-set-key (kbd "C-c w l") 'avy-copy-line)  ; copy a line
 (global-set-key (kbd "C-c w r") 'avy-copy-region)  ; copy a region
 ;; (global-set-key (kbd "C-c d l") 'avy-kill-whole-line)  ; kill&save a line
@@ -1113,19 +1123,26 @@ acronyms is a list of (list acronym full-name)
 			    (?\{ . ?\})
 			    ;; (?\' . ?\')  ;
 			    (?\" . ?\")
-			    (?\` . ?\`)
+			    ;; (?\` . ?\`)
 			    ;; (?\$ . ?\$)
 ))
-(electric-pair-mode t)
+(electric-pair-mode nil)
 
-(defvar org-electric-pairs '(;; (?= . ?=)
-			     (?$ . ?$)) "Electric pairs for org-mode.")
+(defvar latex-electric-pairs '(;; (?= . ?=)
+			       (?$ . ?$)) "Electric pairs for latex.")
 
-(defun org-add-electric-pairs ()
-  (setq-local electric-pair-pairs (append electric-pair-pairs org-electric-pairs))
+(defun add-latex-electric-pairs ()
+  (setq-local electric-pair-pairs (append electric-pair-pairs latex-electric-pairs))
   (setq-local electric-pair-text-pairs electric-pair-pairs))
 
-(add-hook 'org-mode-hook 'org-add-electric-pairs)
+(add-hook 'org-mode-hook 'add-latex-electric-pairs)
+
+(add-hook 'latex-mode-hook 'add-latex-electric-pairs) ; does not work, very weird
+
+;; (use-package company
+;;   :hook
+;;   (LaTex-mode . add-latex-electric-pairs)
+;;   )
 
 (defvar my/path-delimiters "^  \t\n\"`'‘’“”|()[]{}「」<>〔〕〈〉《》【】〖〗«»‹›❮❯❬❭〘〙·。\\" "characters that delimit a path")
 
@@ -1466,9 +1483,12 @@ acronyms is a list of (list acronym full-name)
   :ensure smartparens
   :config
   (progn (show-smartparens-global-mode t))
+  :hook
+  (LaTeX-mode . turn-on-smartparens-mode)
   )
 
 (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
 ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
 ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
@@ -1504,9 +1524,9 @@ acronyms is a list of (list acronym full-name)
 
  ;; sexp-level movement
  ;; keybinding is set to mimic org-mode's C-c C-[n|p]
- ("C-c C-n" . sp-next-sexp)
+ ("C-M-n" . sp-next-sexp)
 					; move to the begining of the next sexp, which is equals to sp-down-sexp + sp-up-sexp + sp-down-sexp
- ("C-c C-p" . sp-previous-sexp)           ;
+ ("C-M-p" . sp-previous-sexp)           ;
 
  ;;free-form movement, ignoring the hierarchy
  ("C-S-f" .  sp-forward-symbol)
@@ -1536,33 +1556,51 @@ acronyms is a list of (list acronym full-name)
 
   "asdfasdfads sadf asdf asdf ads"
 
-;; (defmacro def-pairs (pairs)
-;;   "Define functions for pairing. PAIRS is an alist of (NAME . STRING)
-;; conses, where NAME is the function name that will be created and
-;; STRING is a single-character string that marks the opening character.
+(defun wrap-with-parens (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "(")
+  )	    
 
-;;   (def-pairs ((paren . \"(\")
-;; 	      (bracket . \"[\"))
+(defun wrap-with-brackets (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "[")
+  )	    
 
-;; defines the functions WRAP-WITH-PAREN and WRAP-WITH-BRACKET,
-;; respectively."
-;;   `(progn
-;;      ,@(loop for (key . val) in pairs
-;; 	     collect
-;; 	     `(defun ,(read (concat
-;; 			     "wrap-with-"
-;; 			     (prin1-to-string key)
-;; 			     "s"))
-;; 		  (&optional arg)
-;; 		(interactive "p")
-;; 		(sp-wrap-with-pair ,val)))))
+(defun wrap-with-braces (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "{")
+  )	    
 
-;; (def-pairs ((paren . "(")
-;; 	    (bracket . "[")
-;; 	    (brace . "{")
-;; 	    (single-quote . "'")
-;; 	    (double-quote . "\"")
-;; 	    (back-quote . "`")))
+(defun wrap-with-single-quotes (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "'")
+  )
+
+(defun wrap-with-double-quotes (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "\"")
+  )
+
+(defun wrap-with-back-quotes (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "`")
+  )
+
+(defun wrap-with-underscores (&optional arg)
+  (interactive "p")
+  (sp-wrap-with-pair "_")
+  )
+
+(bind-keys
+ :map smartparens-mode-map
+ ("C-c s ("  . wrap-with-parens)
+ ("C-c s ["  . wrap-with-brackets)
+ ("C-c s {"  . wrap-with-braces)
+ ;; ("C-c s '"  . wrap-with-single-quotes) ; do not collide with C-' in yasnippet-mode
+ ("C-c s \"" . wrap-with-double-quotes)
+ ("C-c s _"  . wrap-with-underscores)
+ ;; ("C-c s `"  . wrap-with-back-quotes) ; do not collide with C-` in latex-mode
+ )
 
 (bind-keys
  :map smartparens-mode-map
@@ -1590,7 +1628,16 @@ acronyms is a list of (list acronym full-name)
 ;; [foo bar "baz"]
 ;; [foo bar] baz
 
-;; ("C-M-t" . sp-transpose-sexp)
+(bind-keys
+   :map smartparens-mode-map
+   ("C-M-t" . sp-transpose-sexp)
+   )
+;; (a) (b (c))
+
+(bind-keys
+   :map smartparens-mode-map
+   ("C-M-k" . sp-kill-sexp)
+   )
 
 (defun copy-current-line-position-to-clipboard ()
   "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
@@ -1602,34 +1649,129 @@ acronyms is a list of (list acronym full-name)
 
 (global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
 
-(use-package spaceline
+(use-package avy
+  :config
+  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l))
+)
+
+(defun avy-action-kill-whole-line (pt)
+  (save-excursion
+    (goto-char pt)
+    (kill-whole-line))
+  (select-window
+   (cdr
+    (ring-ref avy-ring 0)))
+  t)
+
+(use-package avy
   :ensure t
   :config
-  (require 'spaceline-config)
-  (setq powerline-default-separator (quote arrow))
-  (spaceline-spacemacs-theme))
-
-(use-package diminish
-  :ensure t
-  :init
-  (diminish 'hungry-delete-mode)
-  (diminish 'which-key-mode)
-  (diminish 'rainbow-mode)
-  (diminish 'beacon-mode)
-  (diminish 'subword-mode)
+  (setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
+	(alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
   )
 
-(use-package dmenu
-    :ensure t
-    :bind
-    ("C-c d m" . 'dmenu))
+(defun avy-action-copy-whole-line (pt)
+  (save-excursion
+    (goto-char pt)
+    (cl-destructuring-bind (start . end)
+	(bounds-of-thing-at-point 'line)
+      (copy-region-as-kill start end)))
+  (select-window
+   (cdr
+    (ring-ref avy-ring 0)))
+  t)
 
-(use-package swiper
+(defun avy-action-yank-whole-line (pt)
+  (avy-action-copy-whole-line pt)
+  (save-excursion (yank))
+  t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?y avy-dispatch-alist) 'avy-action-yank
+	(alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
+	(alist-get ?w avy-dispatch-alist) 'avy-action-copy
+	(alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
+	)
+  )
+
+(defun avy-action-teleport-whole-line (pt)
+  (avy-action-kill-whole-line pt)
+  (save-excursion (yank)) t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
+	(alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line)
+  )
+
+(use-package avy
+  :config
+  (setf (alist-get ?z avy-dispatch-alist) 'avy-action-zap-to-char)
+  )
+
+(defun avy-action-mark-to-char (pt)
+  (activate-mark)
+  (goto-char pt))
+
+(use-package avy
+  :config
+  (setf (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char)
+  )
+
+(use-package helpful
   :ensure t
   :bind
-  ("C-s" . swiper)
-  ("C-r" . swiper-backward)
+  ("C-c h f" . helpful-at-point)
   )
+
+(defun avy-action-helpful (pt)
+  (save-excursion
+    (goto-char pt)
+    (helpful-at-point))
+  (select-window
+   (cdr (ring-ref avy-ring 0)))
+  t)
+
+(use-package avy
+  :config
+  (setf (alist-get ?H avy-dispatch-alist) 'avy-action-helpful)
+
+  )
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  )
+
+;; use citar-embard to enable using citation-key as target
+(use-package citar-embark
+  :ensure t
+  :after citar embark
+  ;; :config (citar-embark-mode)
+  )
+
+(defun avy-action-embark (pt)
+  (unwind-protect
+      (save-excursion
+	(goto-char pt)
+	(embark-act))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+(setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
+
+;; (use-package swiper
+;;   :ensure t
+;;   :bind
+;;   ("C-s" . swiper)
+;;   ("C-r" . swiper-backward)
+;;   )
 
 (use-package consult
   :ensure t
@@ -1637,6 +1779,7 @@ acronyms is a list of (list acronym full-name)
   ("C-c f" . 'consult-find)  ;; find file
   ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
 					; consult-imenu-multi for multiple buffers
+  ("C-s" . 'consult-line)  ;; line search in current buffer
   ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
   ("C-c y" . 'consult-yank-from-kill-ring)
   ("C-c r s" . 'consult-register-store)
@@ -1647,31 +1790,70 @@ acronyms is a list of (list acronym full-name)
   ("C-c c e" . 'consult-compile-error)
   )
 
-(defun swiper-forward-other-window (prefix)
-    "Function to swiper-forward in other-window."
+(defun consult-line-other-window (prefix)
+    "Function to consult-line in other-window."
     (interactive "P")
     (unless (one-window-p)
       (save-excursion
 	(let ((next (if prefix -1 1)))
 	  (other-window next)
-	  (swiper-isearch)
+	  (consult-line)
 	  (other-window (- next))))))
 
-(defun swiper-backward-other-window (prefix)
-  "Function to swiper-backward in other-window."
-  (interactive "P")
-  (unless (one-window-p)
-    (save-excursion
-      (let ((next (if prefix 1 -1)))
-	(other-window next)
-	(swiper-backward)
-	(other-window (- next))))))
+;; (defun consult-backward-other-window (prefix)
+;;   "Function to consult-backward in other-window."
+;;   (interactive "P")
+;;   (unless (one-window-p)
+;;     (save-excursion
+;;       (let ((next (if prefix 1 -1)))
+;; 	(other-window next)
+;; 	(consult-line)
+;; 	(other-window (- next))))))
 
-(define-key global-map (kbd "C-M-s") 'swiper-forward-other-window)
-(define-key global-map (kbd "C-M-r") 'swiper-backward-other-window)
+(define-key global-map (kbd "C-M-s") 'consult-line-other-window)
+;; (define-key global-map (kbd "C-M-r") 'consult-backward-other-window)
 
 (use-package magit
   :ensure t)
 
 (use-package simple-mpc
   :ensure t)
+
+;; (use-package ido
+;;   :ensure t
+;;   :config
+;;   (setq ido-enable-flex-matching nil
+;; 	ido-create-new-buffer 'always
+;; 	ido-everywhere t)
+;;   (add-to-list 'ido-ignore-files "\.bak")
+;;   (add-to-list 'ido-ignore-files "\.log")
+;;   (add-to-list 'ido-ignore-files ".venv")
+;;   (add-to-list 'ido-ignore-files "__pycache__")
+;;   (add-to-list 'ido-ignore-files "\.pytest_cache")
+;;   (add-to-list 'ido-ignore-files "\.pkl")
+;;   ;; data files
+;;   (add-to-list 'ido-ignore-files "\.hdf5")
+;;   ;; latex-related
+;;   (add-to-list 'ido-ignore-files "\.nav")
+;;   (add-to-list 'ido-ignore-files "\.out")
+;;   (add-to-list 'ido-ignore-files "\.pdf")
+;;   (add-to-list 'ido-ignore-files "\.snm")
+;;   (add-to-list 'ido-ignore-files "\.synctex.gz")
+;;   ;; org
+;;   (add-to-list 'ido-ignore-files "\.org_archive")
+;;   (ido-mode 1)
+;;   )
+
+;; (use-package ido-vertical-mode
+;;   :ensure t
+;;   :requires ido
+;;   :config
+;;   (ido-vertical-mode 1)
+;;   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+;;   )
+
+;; (use-package smex
+;;   :ensure t
+;;   :init (smex-initialize)
+;;   :bind
+;;   ("M-x" . smex))
