@@ -234,6 +234,31 @@
 
 #+RESULTS:
 
+** scrolling
+
+#+begin_src emacs-lisp
+  ;; (pixel-scroll-precision-mode)
+  ;; (setq mouse-wheel-scroll-amount '(0.1))
+  ;; (setq mouse-wheel-progressive-speed nil)
+  ;; (setq ring-bell-function 'ignore)
+#+end_src
+
+#+RESULTS:
+: ignore
+
+
+
+
+#+begin_src emacs-lisp
+  (use-package good-scroll
+    :ensure t
+    :config (good-scroll-mode)
+    )
+#+end_src
+
+#+RESULTS:
+: t
+
 * dashboard
 
 #+begin_src emacs-lisp
@@ -1083,20 +1108,20 @@ let's not use it for now since it works better for => 2= windows.
     :commands lsp
     :hook
     ((python-mode . (lambda ()
-		      (lsp-mode 1)
-		      (flycheck-mode nil)  ;; does not turn off
-		      ))
+                      (lsp-mode 1)
+                      (flycheck-mode nil)  ;; does not turn off
+                      ))
      (lsp-mode . lsp-enable-which-key-integration)
      )
     :config
     (setq lsp-idle-delay 0.5
-	  lsp-enable-symbol-highlighting t
-	  lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
-	  lsp-pyls-plugins-pycodestyle-enabled nil
-	  lsp-pyls-plugins-flake8-enabled nil ;; use flake8
-	  lsp-pyls-plugins-flake8-ignore  nil
-	  lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
-	  ) 
+          lsp-enable-symbol-highlighting t
+          lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
+          lsp-pyls-plugins-pycodestyle-enabled nil
+          lsp-pyls-plugins-flake8-enabled nil ;; use flake8
+          lsp-pyls-plugins-flake8-ignore  nil
+          lsp-diagnostics-provider nil  ;; do not use any provider, but flake8
+          ) 
     ;; how to use the plugins?
     (lsp-register-custom-settings
      '(("pyls.plugins.pyls_mypy.enabled" t t)
@@ -1114,7 +1139,8 @@ let's not use it for now since it works better for => 2= windows.
 
   (use-package lsp-ui
     :ensure t
-    :commands lsp-ui-mode)
+    ;; :commands lsp-ui-mode  ;; disable it for now
+    )
 
 
   ;; (use-package ccls
@@ -1261,13 +1287,7 @@ tips:
    #+end_src
 
    #+RESULTS:
-*** code block folding
-
-- run =M-x hs-minor-mode= first to enable the minor mode
-- =C-c @ C-t= (hs-hide-all) to hide all functions/classes
-- =C-c @ C-M-S= (hs-show-all) to show all
-- =C-c @ C-c= (elpy-folding-toggle-at-point) to hide one function/class at the current cursor
-  
+*** code block folding (use origami)
 *** misc
 
 #+begin_src emacs-lisp
@@ -1413,6 +1433,8 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 
 ** TODO sublimity
 
+#+RESULTS:
+: sublimity
 
 #+begin_src emacs-lisp
 	  ;; (use-package sublimity
@@ -1448,7 +1470,7 @@ why not showing in non-GUI Emacs?
     :init (global-origami-mode))
 
     ; (global-set-key (kbd "C-c c t") 'origami-toggle-node)
-    (global-set-key (kbd "C-c C-t") 'origami-toggle-node)
+    (global-set-key (kbd "C-c g t") 'origami-toggle-node)
 #+end_src
 
 #+RESULTS:
@@ -1547,11 +1569,13 @@ why not showing in non-GUI Emacs?
         ;; TeX-master 'dwim
         )
 
+  (setq-default TeX-master "main_kdd") ; all master files called "main_kdd".
+  ;; (setq-default TeX-master "appendix") ; all master files called "main".
   ;; (setq-default TeX-master "main_kais") ; all master files called "main".
   ;; (setq-default TeX-master "reviews_cover_letter.tex")
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
-  (setq-default TeX-master "algs") ; all master files called "main".
+  ;; (setq-default TeX-master "algs") ; all master files called "main".
   ;; (setq-default TeX-master "cv") ; all master files called "main".
   (setq-default TeX-engine 'default)
 #+end_src
@@ -1972,17 +1996,6 @@ start a remote terminal via ssh
 #+RESULTS:
 : t
 
-** scrolling
-
-#+begin_src emacs-lisp
-  (use-package good-scroll
-    :ensure t
-    :config (good-scroll-mode)
-    )
-#+end_src
-
-#+RESULTS:
-: t
 
 * text manipulation
 ** common functions
@@ -2076,7 +2089,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      ;; (?\` . ?\`)
 			      ;; (?\$ . ?\$)
   ))
-  (electric-pair-mode t)
+  (electric-pair-mode nil)
 #+end_src
 
 #+RESULTS:
@@ -2554,23 +2567,26 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 
   
 #+begin_src emacs-lisp
-  (use-package smartparens-config
-    :ensure smartparens
-    :config
-    (progn (show-smartparens-global-mode t))
-    :hook
-    (LaTeX-mode . turn-on-smartparens-mode)
-    )
+    (use-package smartparens-config
+      :ensure smartparens
+      :config
+      (progn
+        (show-smartparens-global-mode t)
+        (electric-pair-mode nil)  ;; disable electric-pair-mode since the two modes sometimes get triggered simultaneously
+        )
+      :hook
+      (LaTeX-mode . turn-on-smartparens-mode)
+      )
 
-  (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
-  ;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
-  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-  ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+    (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+    ;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
+    ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+    ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
-  ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-  ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+    ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+    ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
 
-  ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
+    ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 #+end_src
 
 #+RESULTS:

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: print-variable
+# key: pv
+# --
+std::cout << "$1: " << $1 << "\n";

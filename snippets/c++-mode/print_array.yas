@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: print_array
+# key: pa
+# --
+std::copy($1, $2, std::ostream_iterator<$3>(std::cout, " ")); 
+std::cout << "\n";
