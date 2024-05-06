@@ -640,7 +640,8 @@ adds annotation in minibuffer completions
     (org-download-heading-lvl nil)
     (org-download-timestamp "%Y%m%d-%H%M%S_")
     ;; (org-image-actual-width 500)
-    (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    ;; (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    (org-download-screenshot-method "/opt/homebrew/bin/pngpaste %s")    
     :bind
     ("C-M-y" . org-download-screenshot)
     :config
