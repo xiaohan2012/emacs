@@ -1300,7 +1300,6 @@ tips:
 : my/turn-off-python-profiling
 
 ** TypeScript
-
 #+begin_src emacs-lisp
   (use-package typescript-mode
     :ensure t
@@ -1318,7 +1317,13 @@ tips:
     :after (typescript-mode company flycheck)
     :hook ((typescript-mode . tide-setup)
            (typescript-mode . tide-hl-identifier-mode)
-           (before-save . tide-format-before-save)))
+           ;; (before-save . tide-format-before-save)  % use prettier instead
+           )
+    ;; :init (setq typescript-indent-level
+    ;;             (or (plist-get (tide-tsfmt-options) ':indentSize) 2 ))
+    )
+
+
 
   ;; ;; if you use treesitter based typescript-ts-mode (emacs 29+)
   ;; (use-package tide
@@ -1331,6 +1336,20 @@ tips:
 #+end_src
 
 #+RESULTS:
+| tide-hl-identifier-mode | tide-setup | prettier-js-mode |
+
+** prettier
+
+#+begin_src emacs-lisp
+  (use-package prettier-js
+    :ensure t
+    )
+
+  (add-hook 'typescript-mode-hook 'prettier-js-mode)  
+#+end_src
+
+#+RESULTS:
+| prettier-js-mode | tide-hl-identifier-mode | tide-setup |
 
 ** C++
 *** resource

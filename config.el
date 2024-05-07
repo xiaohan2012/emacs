@@ -320,7 +320,8 @@
   (org-download-heading-lvl nil)
   (org-download-timestamp "%Y%m%d-%H%M%S_")
   ;; (org-image-actual-width 500)
-  (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+  ;; (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+  (org-download-screenshot-method "/opt/homebrew/bin/pngpaste %s")    
   :bind
   ("C-M-y" . org-download-screenshot)
   :config
@@ -687,6 +688,40 @@ Version 2020-10-17"
   (interactive)
   (replace-string "@profile" "# @profile")
   )
+
+(use-package typescript-mode
+  :ensure t
+  )
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+
+;; if you use typescript-mode
+(use-package tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         ;; (before-save . tide-format-before-save)  % use prettier instead
+         )
+  :init (setq typescript-indent-level
+              (or (plist-get (tide-tsfmt-options) ':indentSize) 2 ))
+  )
+
+
+
+;; ;; if you use treesitter based typescript-ts-mode (emacs 29+)
+;; (use-package tide
+;;   :ensure t
+;;   :after (company flycheck)
+;;   :hook ((typescript-ts-mode . tide-setup)
+;;          (tsx-ts-mode . tide-setup)
+;;          (typescript-ts-mode . tide-hl-identifier-mode)
+;;          (before-save . tide-format-before-save)))
+
+(use-package prettier-js
+  :ensure t
+  )
+
+(add-hook 'typescript-mode-hook 'prettier-js-mode)
 
 (with-eval-after-load 'treemacs
   (defun treemacs-ignore-c++-object-files (file _)
