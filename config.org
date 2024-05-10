@@ -1319,8 +1319,8 @@ tips:
            (typescript-mode . tide-hl-identifier-mode)
            ;; (before-save . tide-format-before-save)  % use prettier instead
            )
-    ;; :init (setq typescript-indent-level
-    ;;             (or (plist-get (tide-tsfmt-options) ':indentSize) 2 ))
+    :init (setq typescript-indent-level
+                (or (plist-get (tide-tsfmt-options) ':indentSize) 2 ))
     )
 
 
