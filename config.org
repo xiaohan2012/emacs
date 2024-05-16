@@ -1338,7 +1338,7 @@ tips:
 #+RESULTS:
 | tide-hl-identifier-mode | tide-setup | prettier-js-mode |
 
-** prettier
+*** prettier
 
 #+begin_src emacs-lisp
   (use-package prettier-js
@@ -1350,6 +1350,14 @@ tips:
 
 #+RESULTS:
 | prettier-js-mode | tide-hl-identifier-mode | tide-setup |
+*** company
+
+#+begin_src emacs-lisp
+  (add-hook 'typescript-mode-hook 'company-mode)  
+#+end_src
+
+#+RESULTS:
+| company-mode | tide-hl-identifier-mode | tide-setup | prettier-js-mode |
 
 ** C++
 *** resource
@@ -3070,7 +3078,7 @@ using consult-line instead to enable orderless search
   : swiper-backward
 
 ** [[https://github.com/minad/consult][consult]]
-
+*** key bindings
 Consult provides search and navigation commands
 
 #+begin_src emacs-lisp
@@ -3102,6 +3110,22 @@ other useful functions:
 #+RESULTS:
 : consult-goto-line
 
+*** TODO ignore certain files in git-grep
+
+#+begin_src emacs-lisp
+  (setq consult-git-grep-args "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I")
+
+  ;; tried "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I -- ':!*.tjs'"
+  ;; perhaps need to print the command
+  ;; reference: https://github.com/minad/consult/issues/395
+#+end_src
+
+#+RESULTS:
+: git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I
+
+*** TODO ignore certain files in consult-find
+
+what command is used?
 ** search in the other window
 
 #+begin_src emacs-lisp

@@ -1,0 +1,28 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /Users/hanxiao/.emacs.d/local.org
+
+
+* misc
+:PROPERTIES:
+:ARCHIVE_TIME: 2024-05-10 Fri 15:51
+:ARCHIVE_FILE: ~/.emacs.d/local.org
+:ARCHIVE_CATEGORY: local
+:END:
+** copy auth
+
+#+begin_src emacs-lisp
+  (defun unity/copy-google-auth ()
+    "copy google authentication code"
+    (interactive)
+    (kill-new "from google.colab import auth
+  auth.authenticate_user()
+  print('Authenticated')")
+    )
+
+#+end_src
+
+#+RESULTS:
+: unity/copy-google-auth
+

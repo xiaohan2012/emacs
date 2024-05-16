@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: typescript-snippet
+# key: tss
+# --
+
+#+begin_src typescript
+$1
+#+end_src
