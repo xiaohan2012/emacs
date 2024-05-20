@@ -38,6 +38,10 @@
   :ensure t
   )
 
+(use-package organic-green-theme
+  :ensure t
+  )
+
 (use-package beacon
   :ensure t
   :init
@@ -689,6 +693,8 @@ Version 2020-10-17"
   (replace-string "@profile" "# @profile")
   )
 
+(setq js-indent-level 2)
+
 (use-package typescript-mode
   :ensure t
   )
@@ -722,6 +728,8 @@ Version 2020-10-17"
   )
 
 (add-hook 'typescript-mode-hook 'prettier-js-mode)
+
+(add-hook 'typescript-mode-hook 'company-mode)
 
 (with-eval-after-load 'treemacs
   (defun treemacs-ignore-c++-object-files (file _)
@@ -1824,6 +1832,12 @@ acronyms is a list of (list acronym full-name)
   ("M-g M-g" . 'consult-goto-line)
   ("C-c c e" . 'consult-compile-error)
   )
+
+(setq consult-git-grep-args "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I")
+
+;; tried "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I -- ':!*.tjs'"
+;; perhaps need to print the command
+;; reference: https://github.com/minad/consult/issues/395
 
 (defun consult-line-other-window (prefix)
     "Function to consult-line in other-window."

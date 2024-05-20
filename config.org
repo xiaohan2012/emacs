@@ -121,12 +121,19 @@
 ** theme
 
 #+BEGIN_SRC emacs-lisp
-(use-package monokai-theme
-  :ensure t
-  )
+  (use-package monokai-theme
+    :ensure t
+    )
+
+  (use-package organic-green-theme
+    :ensure t
+    )  
+
 #+END_SRC
 
 #+RESULTS:
+
+
 
 ** cursor
 *** beacon
@@ -1299,6 +1306,15 @@ tips:
 #+RESULTS:
 : my/turn-off-python-profiling
 
+** JavaScript
+
+#+begin_src emacs-lisp
+(setq js-indent-level 2)
+#+end_src
+
+#+RESULTS:
+: 2
+
 ** TypeScript
 #+begin_src emacs-lisp
   (use-package typescript-mode
@@ -1324,6 +1340,8 @@ tips:
     )
 
 
+  (setq typescript-ts-mode-indent-offset 2)
+  (setq typescript-indent-level 2)
 
   ;; ;; if you use treesitter based typescript-ts-mode (emacs 29+)
   ;; (use-package tide
@@ -1336,7 +1354,7 @@ tips:
 #+end_src
 
 #+RESULTS:
-| tide-hl-identifier-mode | tide-setup | prettier-js-mode |
+: 2
 
 *** prettier
 
@@ -1477,6 +1495,17 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 #+RESULTS:
 : t
 
+** SQL
+
+https://www.reddit.com/r/emacs/comments/cyexjy/use_emacs_as_a_database_client/
+
+useful commands:
+
+- sql-postgres
+- or sql-connect (if you have configured sql-connection-alist via customize-variable)
+  
+  
+*** TODO https://github.com/kostafey/ejc-sql  
 ** TODO sublimity
 
 

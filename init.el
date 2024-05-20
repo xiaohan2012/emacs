@@ -30,60 +30,9 @@
 (when (file-exists-p "~/.emacs.d/local.org")
   (org-babel-load-file (expand-file-name "~/.emacs.d/local.org")))
 
+(when (file-exists-p "~/.emacs.d/upright.org")
+  (org-babel-load-file (expand-file-name "~/.emacs.d/upright.org")))
 
-
-
-;; (add-hook 'after-init-hook #'global-flycheck-mode)
-;; (custom-set-variables
-;;  ;; custom-set-variables was added by Custom.
-;;  ;; If you edit it by hand, you could mess it up, so be careful.
-;;  ;; Your init file should contain only one such instance.
-;;  ;; If there is more than one, they won't work right.
-;;  '(package-selected-packages
-;;    (quote
-;;     (matlab-mode rainbow-mode auctex ein cython-mode yaml-mode flycheck-pycheckers jedi-direx jedi "auto-complete" auto-complete elpy use-package flycheck))))
-;; (custom-set-faces
-;;  ;; custom-set-faces was added by Custom.
-;;  ;; If you edit it by hand, you could mess it up, so be careful.
-;;  ;; Your init file should contain only one such instance.
-;;  ;; If there is more than one, they won't work right.
-;;  )
-
-
-
-;; (elpy-enable)
-
-;; (setq python-shell-interpreter "ipython3"
-;;       python-shell-interpreter-args "-i --simple-prompt")
-
-;; ;; (setq elpy-rpc-python-command "python3.6")
-;; ;; (setq elpy-rpc-backend "jedi")
-
-
-;; ;; ;; auto-completion
-;; ;; (add-hook 'python-mode-hook 'jedi:setup)
-;; ;; (setq jedi:setup-keys t)                      ; optional
-;; ;; (setq jedi:complete-on-dot t)                 ; optional
-;; ;; ;; (jedi:install-server)
-
-;; (use-package flycheck
-;;   :ensure t
-;;   :init (global-flycheck-mode))
-
-
-
-;; ;; (add-to-list 'load-path "/scratch/work/xiaoh1/code/matlab-emacs-src")
-;; ;; (load-library "matlab-load")
-
-
-;; (add-to-list 'load-path "/home/xiaoh1/.emacs.d/lisp")
-
-;; (require 'yaml-mode)
-;; (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
-
-
-;; (add-to-list 'load-path "/home/xiaoh1/code/matlab-emacs-src")
-;; (load-library "matlab-load")
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -126,7 +75,12 @@
  '(pdf-view-midnight-colors '("#b2b2b2" . "#262626"))
  '(projectile-globally-ignored-file-suffixes '("pkl" "zip"))
  '(projectile-globally-ignored-files nil)
- '(projectile-indexing-method 'hybrid))
+ '(projectile-indexing-method 'hybrid)
+ '(sql-connection-alist
+   '(("upright"
+      (sql-product 'postgres)
+      (sql-user "hanxiao")
+      (sql-database "localuprightdb")))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

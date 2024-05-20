@@ -1,0 +1,89 @@
+* dev
+** utilities
+
+*** buffer
+
+#+begin_src emacs-lisp
+  (defun get-or-create-named-buffer (name)
+    "return a buffer with 'name', create it if it does not exist "
+    (let ((buffer-or-nil (get-buffer name)))
+      (if buffer-or-nil
+	  buffer-or-nil
+	(generate-new-buffer name)	
+	)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: get-or-create-named-buffer
+
+*** shell 
+#+begin_src emacs-lisp
+  (defun my/async-shell-command (command buffer-name)
+    "execute command async and display the output and error message in a buffer named buffer-name"
+    (let* ((output-buffer (get-or-create-named-buffer buffer-name)))
+      (async-shell-command command output-buffer output-buffer)
+      ))  
+
+  ;; (my/async-shell-command "ls" "*ls-buffer*")
+#+end_src
+
+#+RESULTS:
+: my/async-shell-command
+
+** tunneling
+
+#+begin_src emacs-lisp
+  (defun upright/setup-tunneling ()
+    "tunnel to ES and BERT service"
+    (interactive)
+    (let* ((bert-buffer "*upright/buffer-tunnel*")
+           (es-buffer "*upright/elastic-search-tunnel*"))
+      (when (get-buffer bert-buffer)
+        (kill-buffer bert-buffer))
+      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 3004:localhost:3004 upright@beauty.uprightproject.com -p 22" bert-buffer)
+
+      (when (get-buffer es-buffer)
+        (kill-buffer es-buffer))
+      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 9200:es-core-23:9200 upright@manager.uprightproject.com -p 2222" es-buffer)    
+    )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/setup-tunneling
+
+** run apps locally
+
+#+begin_src emacs-lisp
+  (defun upright/run-app ()
+      "tunnel to ES and BERT service"
+      (interactive)
+      (let* ((upwork-buffer "*upright/upwork-server*")
+             (api-buffer "*upright/api-server*")
+             (web-buffer "*upright/web-server*")
+             (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
+             )
+        (when (get-buffer upwork-buffer)
+          (kill-buffer upwork-buffer))
+        (my/async-shell-command
+         (format "source ~/.zshrc; cd ~/code/upright; %s start-upwork-dev" yarn-path)
+         upwork-buffer)
+
+        ;; (when (get-buffer web-buffer)
+        ;;   (kill-buffer web-buffer))
+        ;; (my/async-shell-command "cd ~/code/upright; " web-buffer)
+
+        ;; (when (get-buffer api-buffer)
+        ;;   (kill-buffer api-buffer))
+        ;; (my/async-shell-command "" api-buffer)
+
+      )
+
+      )
+#+end_src
+
+#+RESULTS:
+: upright/run-app
+

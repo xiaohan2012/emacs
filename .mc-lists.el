@@ -45,4 +45,5 @@
 
 (setq mc/cmds-to-run-once
       '(
+        tide-jump-to-definition
         ))
