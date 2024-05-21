@@ -1335,13 +1335,14 @@ tips:
            (typescript-mode . tide-hl-identifier-mode)
            ;; (before-save . tide-format-before-save)  % use prettier instead
            )
-    :init (setq typescript-indent-level
-                (or (plist-get (tide-tsfmt-options) ':indentSize) 2 ))
+    :config
+    (setq typescript-indent-level 2)
+    (setq typescript-ts-mode-indent-offset 2)
     )
 
 
-  (setq typescript-ts-mode-indent-offset 2)
-  (setq typescript-indent-level 2)
+  ;; (setq typescript-ts-mode-indent-offset 2)
+  ;; (setq typescript-indent-level 2)
 
   ;; ;; if you use treesitter based typescript-ts-mode (emacs 29+)
   ;; (use-package tide
@@ -1354,7 +1355,7 @@ tips:
 #+end_src
 
 #+RESULTS:
-: 2
+| tide-hl-identifier-mode | tide-setup | company-mode | prettier-js-mode |
 
 *** prettier
 
