@@ -92,15 +92,46 @@
     "run typecheck"
     (interactive)
     (let* (;; (lint-buffer "*upright/lint*")
-           (typecheck-buffer "*upright/typecheck*")
+           (buffer "*upright/typecheck*")
            )
 
       ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
-      (upright/run-yarn-in-buffer typecheck-buffer "typecheck")
+      (upright/run-yarn-in-buffer buffer "typecheck")
+      )
+    )
+
+  (defun upright/lint ()
+    "run lint"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/lint*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "lint-changed-since-master")
+      )
+    )  
+#+end_src
+
+#+RESULTS:
+: upright/lint
+** adhoc commands
+#+begin_src emacs-lisp
+
+    (defun upright/csrd-multi-eval ()
+    "run csrd evaluation on multiple statements"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/csrd-multi-statements-evaluation*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "run tsn-main src/scripts/tools/gpt-tools/isc-poc/extraction/run/test-csrd-evalution-for-multiple-statements.ts")
       )
     )
 #+end_src
 
 #+RESULTS:
-: upright/typecheck
+: upright/csrd-multi-eval
+
 
