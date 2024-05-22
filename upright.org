@@ -1,6 +1,5 @@
 * dev
 ** utilities
-
 *** buffer
 
 #+begin_src emacs-lisp
@@ -27,10 +26,20 @@
       ))  
 
   ;; (my/async-shell-command "ls" "*ls-buffer*")
+
+  (defun upright/run-yarn-in-buffer (buffer-name yarn-comand)
+    (let* ((yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn"))
+      (when (get-buffer buffer-name)
+        (kill-buffer buffer-name))
+      (my/async-shell-command
+       (format "source ~/.zshrc; cd ~/code/upright; %s %s" yarn-path yarn-comand)
+       buffer-name)
+      )  
+    )  
 #+end_src
 
 #+RESULTS:
-: my/async-shell-command
+: upright/run-yarn-in-buffer
 
 ** tunneling
 
@@ -38,7 +47,7 @@
   (defun upright/setup-tunneling ()
     "tunnel to ES and BERT service"
     (interactive)
-    (let* ((bert-buffer "*upright/buffer-tunnel*")
+    (let* ((bert-buffer "*upright/bert-tunnel*")
            (es-buffer "*upright/elastic-search-tunnel*"))
       (when (get-buffer bert-buffer)
         (kill-buffer bert-buffer))
@@ -54,36 +63,44 @@
 #+RESULTS:
 : upright/setup-tunneling
 
+** yarn related
 ** run apps locally
 
 #+begin_src emacs-lisp
   (defun upright/run-app ()
-      "tunnel to ES and BERT service"
-      (interactive)
-      (let* ((upwork-buffer "*upright/upwork-server*")
-             (api-buffer "*upright/api-server*")
-             (web-buffer "*upright/web-server*")
-             (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
-             )
-        (when (get-buffer upwork-buffer)
-          (kill-buffer upwork-buffer))
-        (my/async-shell-command
-         (format "source ~/.zshrc; cd ~/code/upright; %s start-upwork-dev" yarn-path)
-         upwork-buffer)
+    "run apps"
+    (interactive)
+    (let* ((upwork-buffer "*upright/upwork-server*")
+           (api-buffer "*upright/api-server*")
+           (web-buffer "*upright/web-server*")
+           (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
+           )
 
-        ;; (when (get-buffer web-buffer)
-        ;;   (kill-buffer web-buffer))
-        ;; (my/async-shell-command "cd ~/code/upright; " web-buffer)
-
-        ;; (when (get-buffer api-buffer)
-        ;;   (kill-buffer api-buffer))
-        ;; (my/async-shell-command "" api-buffer)
-
+      (upright/run-yarn-in-buffer upwork-buffer "start-upwork-dev")
+      (upright/run-yarn-in-buffer api-buffer "start-server")
+      (upright/run-yarn-in-buffer web-buffer "start")
       )
-
-      )
+    )
 #+end_src
 
 #+RESULTS:
 : upright/run-app
+** typecheck & linting
+
+#+begin_src emacs-lisp
+  (defun upright/typecheck ()
+    "run typecheck"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (typecheck-buffer "*upright/typecheck*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer typecheck-buffer "typecheck")
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/typecheck
 

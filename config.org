@@ -1330,9 +1330,10 @@ tips:
   ;; if you use typescript-mode
   (use-package tide
     :ensure t
-    :after (typescript-mode company flycheck)
+    ;; :after (typescript-mode company flycheck)
     :hook ((typescript-mode . tide-setup)
            (typescript-mode . tide-hl-identifier-mode)
+           ;; (typescript-mode . flycheck-mode)
            ;; (before-save . tide-format-before-save)  % use prettier instead
            )
     :config
@@ -1364,19 +1365,39 @@ tips:
     :ensure t
     )
 
-  (add-hook 'typescript-mode-hook 'prettier-js-mode)  
+  (add-hook 'typescript-mode-hook 'prettier-js-mode)
+  (add-hook 'javascript-mode-hook 'prettier-js-mode)  
 #+end_src
 
 #+RESULTS:
-| prettier-js-mode | tide-hl-identifier-mode | tide-setup |
+*** flycheck
+
+#+begin_src emacs-lisp
+  (add-hook 'typescript-mode-hook 'flycheck-mode)
+  (add-hook 'javascript-mode-hook 'flycheck-mode)
+#+end_src
+
+#+RESULTS:
+| flycheck-mode | prettier-js-mode |
+
 *** company
 
 #+begin_src emacs-lisp
-  (add-hook 'typescript-mode-hook 'company-mode)  
+  (add-hook 'typescript-mode-hook 'company-mode)
+  (add-hook 'javascript-mode-hook 'company-mode)  
 #+end_src
 
 #+RESULTS:
-| company-mode | tide-hl-identifier-mode | tide-setup | prettier-js-mode |
+| company-mode | flycheck-mode | prettier-js-mode |
+
+*** flycheck
+
+#+begin_src emacs-lisp
+  ;; (add-hook 'typescript-mode-hook flycheck-mode)  
+#+end_src
+
+#+RESULTS:
+| nil | tide-hl-identifier-mode | tide-setup | company-mode | prettier-js-mode |
 
 ** C++
 *** resource
