@@ -1,5 +1,5 @@
 * dev
-** utilities
+** utility function
 *** buffer
 
 #+begin_src emacs-lisp
@@ -55,7 +55,7 @@
 
       (when (get-buffer es-buffer)
         (kill-buffer es-buffer))
-      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 9200:es-core-23:9200 upright@manager.uprightproject.com -p 2222" es-buffer)    
+      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 9200:es-core-23:9200 upright@manager.uprightproject.com -p 2222" es-buffer)
     )
     )
 #+end_src
@@ -63,7 +63,6 @@
 #+RESULTS:
 : upright/setup-tunneling
 
-** yarn related
 ** run apps locally
 
 #+begin_src emacs-lisp
@@ -85,7 +84,7 @@
 
 #+RESULTS:
 : upright/run-app
-** typecheck & linting
+** yarn utilities: typecheck, linting, etc
 
 #+begin_src emacs-lisp
   (defun upright/typecheck ()
@@ -110,11 +109,43 @@
       ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
       (upright/run-yarn-in-buffer buffer "lint-changed-since-master")
       )
+    )
+
+  (defun upright/prettier-fix ()
+    "run lint"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/prettier-fix*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "prettier-fix-changed-since-master")
+      )
     )  
+
 #+end_src
 
 #+RESULTS:
-: upright/lint
+: upright/prettier-fix
+** logs
+
+#+begin_src emacs-lisp
+
+  (defun upright/setup-log-tunneling ()
+  "tunnel to log-related services"
+  (interactive)
+  (let* ((log-buffer "*upright/log-kibana*"))
+    (when (get-buffer log-buffer)
+      (kill-buffer log-buffer))
+    ;; -o 'ServerAliveInterval 60'
+    (my/async-shell-command "ssh -L 9999:kibana-apm:5601 upright@staging-manager.uprightproject.com -p 2222" log-buffer)
+  )
+  )
+#+end_src
+
+#+RESULTS:
+: upright/setup-log-tunneling
+
 ** adhoc commands
 #+begin_src emacs-lisp
 
@@ -133,5 +164,25 @@
 
 #+RESULTS:
 : upright/csrd-multi-eval
+
+
+#+begin_src emacs-lisp
+
+  (defun upright/start-ghg-jupyter ()
+    "start jupyter notebook for ghg project"
+    (interactive)
+    (let* ( (buffer "*upright/jupyter-ghg*")
+            )
+      (when (get-buffer buffer)
+        (kill-buffer buffer))      
+      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/ghg-estimation/src/predictors/pai-ghg-emissions; source .venv/bin/activate; jupyter-lab" buffer)
+      )
+    )
+
+
+#+end_src
+
+#+RESULTS:
+: upright/start-ghg-jupyter
 
 
