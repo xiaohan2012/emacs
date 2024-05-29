@@ -2339,6 +2339,7 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
            (message (format "copied %s" link))
       )
     )
+  (global-set-key (kbd "C-c w k") 'copy-sexp-as-link-at-point)
 #+end_src
 
 #+RESULTS:
