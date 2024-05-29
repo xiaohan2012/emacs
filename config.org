@@ -1526,7 +1526,16 @@ useful commands:
 - sql-postgres
 - or sql-connect (if you have configured sql-connection-alist via customize-variable)
   
-  
+*** org-babel
+
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)))
+#+end_src
+
+#+RESULTS:
+
 *** TODO https://github.com/kostafey/ejc-sql  
 ** TODO sublimity
 
@@ -1579,10 +1588,12 @@ why not showing in non-GUI Emacs?
     :ensure t
     :config
     (setq yas-snippet-dirs
-	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-	    ))
+          '("~/.emacs.d/snippets"
+            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
+            "~/.emacs.d/elpa/yasnippet-snippets-20240221.1621/snippets"
+
+            ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
     (yas-global-mode 1)
@@ -2108,27 +2119,57 @@ start a remote terminal via ssh
   (defun refrained-backward-word ()
     "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
     (unless (member  ;; check if the previous point is left paren or space, or newline
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n" "-"))
+             (char-to-string (char-after (1- (point))))
+             '("(" " " "\n" "-"))
       (backward-word))
     )
 
   (defun refrained-backward-sexp ()
     "similar to backward-sexp but does not move to the previous sexp if the cursor is at the begining of the sexp"
     (unless (member  ;; check if the previous point is left paren or space, or newline
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n"))
+             (char-to-string (char-after (1- (point))))
+             '("(" " " "\n"))
       (backward-sexp))
     )
 
   (defun search-backward-no-move (str)
     "search backward for a string without moving the cursor, return the position of the first occurrence"
     (save-excursion (search-backward str))
+    )
+
+  (defun sexp-at-point ()
+    "return a sexp at point."
+    (let (beg end)
+      (save-excursion
+        (refrained-backward-sexp)
+        (setq beg (point))
+        (forward-sexp)
+        (setq end (point))
+        (buffer-substring-no-properties beg end)
+        ))
+    )
+
+
+  (defun path-at-point ()
+    "return a path at point."
+    (let (beg end)
+      (save-excursion
+        (skip-chars-backward my/path-delimiters)
+        (setq beg (point))
+        (skip-chars-forward my/path-delimiters)
+        (setq end (point))
+        (buffer-substring-no-properties beg end)
+        ))
+    )
+
+  (defun buffer-file-name-with-line-number ()
+    "get the buffer file name appended with line number of the current cursor"
+    (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))
     )  
 #+end_src
 
 #+RESULTS:
-: search-backward-no-move
+: buffer-file-name-with-line-number
 
 ** move line
 
@@ -2283,6 +2324,26 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 : kill-path-at-point
 ** kill, copy, and yank in Latex
 # C-c w s on $\apxcntcore$ gives $\apxcntcore$, instead of \apxcntcore
+** copy sexp as a link to where it occurs
+
+
+#+begin_src emacs-lisp
+
+  (defun copy-sexp-as-link-at-point ()
+    "copy the current sexp as link pointing to the current file at the cursor position"
+    (interactive)
+    (let* ((content (sexp-at-point))
+           (path (buffer-file-name-with-line-number))
+           (link (format "[[%s][%s]]" path content)))
+           (kill-new link)
+           (message (format "copied %s" link))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: copy-sexp-as-link-at-point
+
 ** copy word, line, sexp
 *** copy word
 #+begin_src emacs-lisp
@@ -2350,10 +2411,10 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
      (defun copy-whole-line ()
        (interactive)
        (save-excursion
-	 (kill-new
-	  (buffer-substring
-	   (point-at-bol)
-	   (point-at-eol))))
+         (kill-new
+          (buffer-substring
+           (point-at-bol)
+           (point-at-eol))))
        (message "a line is copied")
        )
      (global-set-key (kbd "C-c w l") 'copy-whole-line)
@@ -2390,30 +2451,18 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
 
    #+begin_src emacs-lisp
-     (defun path-at-point ()
-       "return a path at point."
-       (let (beg end)
-	 (save-excursion
-	   (skip-chars-backward my/path-delimiters)
-	   (setq beg (point))
-	   (skip-chars-forward my/path-delimiters)
-	   (setq end (point))
-	   (buffer-substring-no-properties beg end)
-	   ))
-       )
+        (defun copy-path-at-point ()
+          "copy a path at point."
+          (interactive)
+          (let ((str (path-at-point)))
+            (with-temp-buffer
+              (insert str)
+              (clipboard-kill-region (point-min) (point-max)))
+            (message (format "copied '%s'" str))
+            )
+          )
 
-     (defun copy-path-at-point ()
-       "copy a path at point."
-       (interactive)
-       (let ((str (path-at-point)))
-	 (with-temp-buffer
-	   (insert str)
-	   (clipboard-kill-region (point-min) (point-max)))
-	 (message (format "copied '%s'" str))
-	 )
-       )
-
-     (global-set-key (kbd "C-c w p") 'copy-path-at-point)
+        (global-set-key (kbd "C-c w p") 'copy-path-at-point)
    #+end_src
 
    #+RESULTS:
@@ -2901,8 +2950,7 @@ useful to kill an expression (including function)
   (defun copy-current-line-position-to-clipboard ()
     "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
     (interactive)
-    (let ((path-with-line-number
-	   (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
+    (let ((path-with-line-number (buffer-file-name-with-line-number)))
       (kill-new path-with-line-number)
       (message (concat path-with-line-number " copied to clipboard"))))
 
@@ -2910,7 +2958,7 @@ useful to kill an expression (including function)
 #+end_src
 
 #+RESULTS:
-: my/surround-by-plus
+: copy-current-line-position-to-clipboard
 
 * avy enhancement
 - what is pop-global-mark? what does it do? (C-x C-SPC)

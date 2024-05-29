@@ -7,6 +7,7 @@
         backward-sexp
         beginning-of-buffer
         comint-delchar-or-maybe-eof
+        cycle-spacing
         electric-pair-delete-pair
         emojify-delete-emoji-backward
         end-of-buffer

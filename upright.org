@@ -134,11 +134,18 @@
   (defun upright/setup-log-tunneling ()
   "tunnel to log-related services"
   (interactive)
-  (let* ((log-buffer "*upright/log-kibana*"))
-    (when (get-buffer log-buffer)
-      (kill-buffer log-buffer))
+  (let* ((staging-buffer "*upright/staging-log*")
+         (prod-buffer "*upright/prod-log*")
+         )
+    (when (get-buffer staging-buffer)
+      (kill-buffer staging-buffer))
     ;; -o 'ServerAliveInterval 60'
-    (my/async-shell-command "ssh -L 9999:kibana-apm:5601 upright@staging-manager.uprightproject.com -p 2222" log-buffer)
+    (my/async-shell-command "ssh -L 4444:kibana-apm:5601 upright@staging-manager.uprightproject.com -p 2222" staging-buffer)
+  
+    (when (get-buffer prod-buffer)
+      (kill-buffer prod-buffer))
+    ;; -o 'ServerAliveInterval 60'
+    (my/async-shell-command "ssh -L 5555:kibana-apm:5601 upright@manager.uprightproject.com -p 2222" prod-buffer)
   )
   )
 #+end_src
