@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pd.DataFrame
+# key: pdd
+# --
+pd.DataFrame
