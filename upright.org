@@ -191,5 +191,22 @@
 
 #+RESULTS:
 : upright/start-ghg-jupyter
+* snippets
 
+#+begin_src emacs-lisp
+    (defun python/copy-common-imports ()
+      (interactive)
+      (kill-new "
+  import numpy as np
+  import pandas as pd
+  import seaborn as sns
+
+  from matplotlib import pyplot as plt
+  from pathlib import Path
+  ")
+      )  
+#+end_src
+
+#+RESULTS:
+: python/copy-common-imports
 

@@ -1,6 +1,7 @@
 * random
 * wish list
 
+- [ ] LLM support: [[https://github.com/s-kostyaev/ellama][ellama]]
 - [ ] [[https://github.com/zerolfx/copilot.el][copilot]]
 - [-] latex
   - [X] use <TAB> to jump into the beginning of the next pair
