@@ -1263,32 +1263,33 @@ tips:
 *** elpy
 
 #+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :ensure t
-    :config
-    (elpy-enable)
-    (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
-	  elpy-rpc-backend "jedi"
-	  ;; elpy-rpc-project-specific 't
-	  ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
-	  )
-    ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
-    :bind
-    ;; remap the keys for some navigation functions
-    ("C-s-n" . 'elpy-nav-forward-block)
-    ("C-s-p" . 'elpy-nav-backward-block)
-    ("C-s-f" . 'elpy-nav-forward-indent)
-    ("C-s-b" . 'elpy-nav-backward-indent)
-    ("C-s-<left>" . 'elpy-nav-indent-shift-left)
-    ("C-s-<right>" . 'elpy-nav-indent-shift-right)
-    ("C-c b" . elpy-black-fix-code)
-    )
+    (use-package elpy
+      :ensure t
+      :config
+      (elpy-enable)
+      (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
+            elpy-rpc-backend "jedi"
+            ;; elpy-rpc-project-specific 't
+            ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
+            ;; elpy-test-python-command "pytest --disable-warnings" ;; does it work?
+            )
+      ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
+      :bind
+      ;; remap the keys for some navigation functions
+      ("C-s-n" . 'elpy-nav-forward-block)
+      ("C-s-p" . 'elpy-nav-backward-block)
+      ("C-s-f" . 'elpy-nav-forward-indent)
+      ("C-s-b" . 'elpy-nav-backward-indent)
+      ("C-s-<left>" . 'elpy-nav-indent-shift-left)
+      ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+      ("C-c b" . elpy-black-fix-code)
+      )
 
-
+  ;; (setq elpy-test-python-command "pytest --disable-warnings")
 #+END_SRC
 
 #+RESULTS:
-: elpy-black-fix-code
+: pytest --disable-warnings
 *** elpy tips
 **** navigation
 

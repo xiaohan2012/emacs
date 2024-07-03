@@ -191,6 +191,60 @@
 
 #+RESULTS:
 : upright/start-ghg-jupyter
+
+#+begin_src emacs-lisp
+  (defun upright/start-llm-jupyter ()
+    "start jupyter notebook for llm report annotation"
+    (interactive)
+    (let* ( (buffer "*upright/jupyter-llm-report-annotation*")
+            )
+      (when (get-buffer buffer)
+        (kill-buffer buffer))      
+      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/llm-based-annotation; source .venv/bin/activate; jupyter lab" buffer)
+      )
+    )
+
+
+#+end_src
+
+#+RESULTS:
+: upright/start-llm-jupyter
+
+** llm-based annotation
+*** report opening
+#+begin_src emacs-lisp
+
+  (defun upright/open-company-report ()
+    "open a report of a given company"
+    (interactive)
+    (let* ((default-directory "~/code/llm-based-annotation/data/report-pages")
+           (all-paths (directory-files default-directory t))
+           ;; use pdf only
+           (candidate-file-paths  (-filter (lambda (str) (string-match-p "pdf" str)) all-paths))
+           ;; extract file names
+           (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) candidate-file-paths))
+           (company-id (completing-read "Enter company id: "
+                                        candidate-file-names)))
+      (find-file (format "%s/%s.pdf" default-directory company-id))))
+
+  (defun upright/open-company-pages ()
+    "open the split pages of a given company"
+    (interactive)
+    (let* (
+           (default-directory "~/code/llm-based-annotation/data/preprocessed-pages-5mb")
+             (all-paths (directory-files default-directory t))
+             ;; extract file names
+             (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
+           (company-id (completing-read "Enter company id: " (-filter (lambda (str) (> (length str) 3)) candidate-file-names))))
+      (find-file (format "%s/%s/page_0.png" default-directory company-id))))  
+#+end_src
+
+#+RESULTS:
+: upright/open-company-pages
+
+
+
+
 * snippets
 
 #+begin_src emacs-lisp
