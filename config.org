@@ -1614,6 +1614,10 @@ why not showing in non-GUI Emacs?
 #+RESULTS:
 : origami-toggle-node
 
+* cloud-related utils
+** s3
+
+
 * yasnippet
 *** preparation
 
