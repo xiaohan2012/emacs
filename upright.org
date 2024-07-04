@@ -217,7 +217,7 @@
   (defun upright/open-company-report ()
     "open a report of a given company"
     (interactive)
-    (let* ((default-directory "~/code/llm-based-annotation/data/report-pages")
+    (let* ((default-directory "~/code/llm-based-annotation/data/ghg1-reports")
            (all-paths (directory-files default-directory t))
            ;; use pdf only
            (candidate-file-paths  (-filter (lambda (str) (string-match-p "pdf" str)) all-paths))
@@ -231,7 +231,7 @@
     "open the split pages of a given company"
     (interactive)
     (let* (
-           (default-directory "~/code/llm-based-annotation/data/preprocessed-pages-5mb")
+           (default-directory "~/code/llm-based-annotation/data/ghg1-pages-dpi300")
              (all-paths (directory-files default-directory t))
              ;; extract file names
              (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
