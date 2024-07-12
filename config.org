@@ -1,6 +1,8 @@
 * random
 * wish list
 
+- [ ] LLM support: [[https://github.com/s-kostyaev/ellama][ellama]]
+- [ ] [[https://github.com/zerolfx/copilot.el][copilot]]
 - [-] latex
   - [X] use <TAB> to jump into the beginning of the next pair
   - [ ] delete enclosing command/macro, e.g., \pr{a + b} -> a + b    
@@ -18,6 +20,7 @@
   - [ ] faster look up the correct import
     - say I want to import dataclass but I'm not sure what is the exact statement I should use
     - a quick workaround: use yasnippet
+  - [ ] copy location of a function (which file, which module, etc)
 - [ ] auto-completion in text mode with past frequency in mind
   - a starting point: https://develop.spacemacs.org/layers/+completion/auto-completion/README.html
   - or https://github.com/doomemacs/doomemacs
@@ -36,7 +39,7 @@
 - [ ] conditional add symbols to electricmode
   - e.g., $ should be added when in Latex, while shouldn't be in for other modes
 - [ ] [[ https://kristofferbalintona.me/posts/202206141852/#citar][citation in org]]
-  
+- [[https://umarahmad.xyz/blog/editing-remote-code-with-emacs/][remote development]]  
 * good blogs on Emacs
 
 - https://emacsrocks.com/
@@ -119,12 +122,19 @@
 ** theme
 
 #+BEGIN_SRC emacs-lisp
-(use-package monokai-theme
-  :ensure t
-  )
+  (use-package monokai-theme
+    :ensure t
+    )
+
+  (use-package organic-green-theme
+    :ensure t
+    )  
+
 #+END_SRC
 
 #+RESULTS:
+
+
 
 ** cursor
 *** beacon
@@ -504,6 +514,38 @@ adds annotation in minibuffer completions
 
 #+END_SRC
 
+** text color
+#+begin_src emacs-lisp
+  ;; (use-package org-colored-text
+  ;;   :ensure t)
+
+  ;; Taken and adapted from org-colored-text
+  (org-add-link-type
+   "color"
+   (lambda (path)
+     "No follow action.")
+   (lambda (color description backend)
+     (cond
+      ((eq backend 'latex)                  ; added by TL
+       (format "{\\color{%s}%s}" color description)) ; added by TL
+      ((eq backend 'html)
+       (let ((rgb (assoc color color-name-rgb-alist))
+             r g b)
+         (if rgb
+             (progn
+               (setq r (* 255 (/ (nth 1 rgb) 65535.0))
+                     g (* 255 (/ (nth 2 rgb) 65535.0))
+                     b (* 255 (/ (nth 3 rgb) 65535.0)))
+               (format "<span style=\"color: rgb(%s,%s,%s)\">%s</span>"
+                       (truncate r) (truncate g) (truncate b)
+                       (or description color)))
+           (format "No Color RGB for %s" color)))))))
+
+#+end_src
+
+#+RESULTS:
+: Created color link.
+
 ** some key bindings
 
    the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
@@ -572,7 +614,7 @@ adds annotation in minibuffer completions
 
 - useful commands to add your own .sty files
 
-  #+begin_src bash
+  #+begin_src shell
     less $(kpsewhich texmf.cnf)  # to see the relevant directories
     kpsewhich -var-value=TEXMFHOME  # print the value of $TEXMFHOME
 
@@ -582,6 +624,8 @@ adds annotation in minibuffer completions
     # make sure Latex can find your .sty file
     kpsewhich {your-script}.sty
   #+end_src
+
+  #+RESULTS:
 
 - reference:
 
@@ -596,7 +640,6 @@ adds annotation in minibuffer completions
 #+end_src
 
 #+RESULTS:
-|   | my-defines | t |
 |   | han-macros | t |
 
 ** remove latex images
@@ -662,7 +705,8 @@ adds annotation in minibuffer completions
     (org-download-heading-lvl nil)
     (org-download-timestamp "%Y%m%d-%H%M%S_")
     ;; (org-image-actual-width 500)
-    (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    ;; (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+    (org-download-screenshot-method "/opt/homebrew/bin/pngpaste %s")    
     :bind
     ("C-M-y" . org-download-screenshot)
     :config
@@ -1137,11 +1181,11 @@ let's not use it for now since it works better for => 2= windows.
     (add-hook 'c++-mode-hook #'lsp))
 
 
-  (use-package lsp-ui
-    :ensure t
-    ;; :commands lsp-ui-mode  ;; disable it for now
-    )
-
+  ;; do not use it, it is slow
+  ;; (use-package lsp-ui
+  ;;   :ensure t
+  ;;   ;; :commands lsp-ui-mode
+  ;;   )
 
   ;; (use-package ccls
   ;;   :ensure t
@@ -1243,32 +1287,33 @@ tips:
 *** elpy
 
 #+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :ensure t
-    :config
-    (elpy-enable)
-    (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
-	  elpy-rpc-backend "jedi"
-	  ;; elpy-rpc-project-specific 't
-	  ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
-	  )
-    ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
-    :bind
-    ;; remap the keys for some navigation functions
-    ("C-s-n" . 'elpy-nav-forward-block)
-    ("C-s-p" . 'elpy-nav-backward-block)
-    ("C-s-f" . 'elpy-nav-forward-indent)
-    ("C-s-b" . 'elpy-nav-backward-indent)
-    ("C-s-<left>" . 'elpy-nav-indent-shift-left)
-    ("C-s-<right>" . 'elpy-nav-indent-shift-right)
-    ("C-c b" . elpy-black-fix-code)
-    )
+    (use-package elpy
+      :ensure t
+      :config
+      (elpy-enable)
+      (setq elpy-test-runner 'elpy-test-pytest-runner ; use pytest
+            elpy-rpc-backend "jedi"
+            ;; elpy-rpc-project-specific 't
+            ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
+            ;; elpy-test-python-command "pytest --disable-warnings" ;; does it work?
+            )
+      ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
+      :bind
+      ;; remap the keys for some navigation functions
+      ("C-s-n" . 'elpy-nav-forward-block)
+      ("C-s-p" . 'elpy-nav-backward-block)
+      ("C-s-f" . 'elpy-nav-forward-indent)
+      ("C-s-b" . 'elpy-nav-backward-indent)
+      ("C-s-<left>" . 'elpy-nav-indent-shift-left)
+      ("C-s-<right>" . 'elpy-nav-indent-shift-right)
+      ("C-c b" . elpy-black-fix-code)
+      )
 
-
+  ;; (setq elpy-test-python-command "pytest --disable-warnings")
 #+END_SRC
 
 #+RESULTS:
-: elpy-black-fix-code
+: pytest --disable-warnings
 *** elpy tips
 **** navigation
 
@@ -1312,6 +1357,99 @@ tips:
 
 #+RESULTS:
 : my/turn-off-python-profiling
+
+** JavaScript
+
+#+begin_src emacs-lisp
+(setq js-indent-level 2)
+#+end_src
+
+#+RESULTS:
+: 2
+
+** TypeScript
+#+begin_src emacs-lisp
+  (use-package typescript-mode
+    :ensure t
+    )
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+#+end_src
+
+#+RESULTS:
+: ((\.ts\' . typescript-mode) (\.tsx?\' . typescript-mode) (^yang\.settings$ . jsonc-mode) (/git-rebase-todo\' . git-rebase-mode) (\.dockerfile\' . dockerfile-mode) ([/\]\(?:Containerfile\|Dockerfile\)\(?:\.[^/\]*\)?\' . dockerfile-mode) (README\.md\' . gfm-mode) (\.yml\' . yaml-mode) (\.\(e?ya?\|ra\)ml\' . yaml-mode) (\.hva\' . LaTeX-mode) (\.pxi\' . cython-mode) (\.pxd\' . cython-mode) (\.pyx\' . cython-mode) (\.ipynb\' . ein:ipynb-mode) (\.\(?:md\|markdown\|mkd\|mdown\|mkdn\|mdwn\)\' . markdown-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Brew\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.cs\' . csharp-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.webp\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.dir-locals\(?:-2\)?\.el\' . lisp-data-mode) (\.eld\' . lisp-data-mode) (eww-bookmarks\' . lisp-data-mode) (tramp\' . lisp-data-mode) (/archive-contents\' . lisp-data-mode) (places\' . lisp-data-mode) (\.emacs-places\' . lisp-data-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|sls\|sld\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-bsdmake-mode) (\.make\' . makefile-bsdmake-mode) (GNUmakefile\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-bsdmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (/PKGBUILD\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|squashfs\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\|SQUASHFS\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . js-json-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) (\.erts\' . erts-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|EPUB\|CBZ\|FB2\|O?XPS\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|epub\|cbz\|fb2\|o?xps\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.mailmap\' . conf-unix-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.heic\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . LaTeX-mode))
+
+#+begin_src emacs-lisp
+  ;; if you use typescript-mode
+  (use-package tide
+    :ensure t
+    ;; :after (typescript-mode company flycheck)
+    :hook ((typescript-mode . tide-setup)
+           (typescript-mode . tide-hl-identifier-mode)
+           ;; (typescript-mode . flycheck-mode)
+           ;; (before-save . tide-format-before-save)  % use prettier instead
+           )
+    :config
+    (setq typescript-indent-level 2)
+    (setq typescript-ts-mode-indent-offset 2)
+    )
+
+
+  ;; (setq typescript-ts-mode-indent-offset 2)
+  ;; (setq typescript-indent-level 2)
+
+  ;; ;; if you use treesitter based typescript-ts-mode (emacs 29+)
+  ;; (use-package tide
+  ;;   :ensure t
+  ;;   :after (company flycheck)
+  ;;   :hook ((typescript-ts-mode . tide-setup)
+  ;;          (tsx-ts-mode . tide-setup)
+  ;;          (typescript-ts-mode . tide-hl-identifier-mode)
+  ;;          (before-save . tide-format-before-save)))
+#+end_src
+
+#+RESULTS:
+| tide-hl-identifier-mode | tide-setup | company-mode | prettier-js-mode |
+
+*** prettier
+
+#+begin_src emacs-lisp
+  (use-package prettier-js
+    :ensure t
+    )
+
+  (add-hook 'typescript-mode-hook 'prettier-js-mode)
+  (add-hook 'javascript-mode-hook 'prettier-js-mode)  
+#+end_src
+
+#+RESULTS:
+*** flycheck
+
+#+begin_src emacs-lisp
+  (add-hook 'typescript-mode-hook 'flycheck-mode)
+  (add-hook 'javascript-mode-hook 'flycheck-mode)
+#+end_src
+
+#+RESULTS:
+| flycheck-mode | prettier-js-mode |
+
+*** company
+
+#+begin_src emacs-lisp
+  (add-hook 'typescript-mode-hook 'company-mode)
+  (add-hook 'javascript-mode-hook 'company-mode)  
+#+end_src
+
+#+RESULTS:
+| company-mode | flycheck-mode | prettier-js-mode |
+
+*** flycheck
+
+#+begin_src emacs-lisp
+  ;; (add-hook 'typescript-mode-hook flycheck-mode)  
+#+end_src
+
+#+RESULTS:
+| nil | tide-hl-identifier-mode | tide-setup | company-mode | prettier-js-mode |
 
 ** C++
 *** resource
@@ -1431,6 +1569,26 @@ tips: install pgformatter first, e.g., =brew install pgformatter=
 #+RESULTS:
 : t
 
+** SQL
+
+https://www.reddit.com/r/emacs/comments/cyexjy/use_emacs_as_a_database_client/
+
+useful commands:
+
+- sql-postgres
+- or sql-connect (if you have configured sql-connection-alist via customize-variable)
+  
+*** org-babel
+
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)))
+#+end_src
+
+#+RESULTS:
+
+*** TODO https://github.com/kostafey/ejc-sql  
 ** TODO sublimity
 
 #+RESULTS:
@@ -1470,11 +1628,15 @@ why not showing in non-GUI Emacs?
     :init (global-origami-mode))
 
     ; (global-set-key (kbd "C-c c t") 'origami-toggle-node)
-    (global-set-key (kbd "C-c g t") 'origami-toggle-node)
+    (global-set-key (kbd "C-c o t") 'origami-toggle-node)
 #+end_src
 
 #+RESULTS:
 : origami-toggle-node
+
+* cloud-related utils
+** s3
+
 
 * yasnippet
 *** preparation
@@ -1484,10 +1646,12 @@ why not showing in non-GUI Emacs?
     :ensure t
     :config
     (setq yas-snippet-dirs
-	  '("~/.emacs.d/snippets"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
-	    "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-	    ))
+          '("~/.emacs.d/snippets"
+            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
+            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
+            "~/.emacs.d/elpa/yasnippet-snippets-20240221.1621/snippets"
+
+            ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
     (yas-global-mode 1)
@@ -1576,6 +1740,7 @@ why not showing in non-GUI Emacs?
   ;; (setq-default TeX-master "sn-article") ; all master files called "sn-article".
   ;; (setq-default TeX-master "cover") ; all master files called "cover".
   ;; (setq-default TeX-master "algs") ; all master files called "main".
+  (setq-default TeX-master "draft") ; all master files called "main".
   ;; (setq-default TeX-master "cv") ; all master files called "main".
   (setq-default TeX-engine 'default)
 #+end_src
@@ -2004,27 +2169,57 @@ start a remote terminal via ssh
   (defun refrained-backward-word ()
     "similar to backward-word but does not move to the previous word if the cursor is at the begining of the word"
     (unless (member  ;; check if the previous point is left paren or space, or newline
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n" "-"))
+             (char-to-string (char-after (1- (point))))
+             '("(" " " "\n" "-"))
       (backward-word))
     )
 
   (defun refrained-backward-sexp ()
     "similar to backward-sexp but does not move to the previous sexp if the cursor is at the begining of the sexp"
     (unless (member  ;; check if the previous point is left paren or space, or newline
-	     (char-to-string (char-after (1- (point))))
-	     '("(" " " "\n"))
+             (char-to-string (char-after (1- (point))))
+             '("(" " " "\n"))
       (backward-sexp))
     )
 
   (defun search-backward-no-move (str)
     "search backward for a string without moving the cursor, return the position of the first occurrence"
     (save-excursion (search-backward str))
+    )
+
+  (defun sexp-at-point ()
+    "return a sexp at point."
+    (let (beg end)
+      (save-excursion
+        (refrained-backward-sexp)
+        (setq beg (point))
+        (forward-sexp)
+        (setq end (point))
+        (buffer-substring-no-properties beg end)
+        ))
+    )
+
+
+  (defun path-at-point ()
+    "return a path at point."
+    (let (beg end)
+      (save-excursion
+        (skip-chars-backward my/path-delimiters)
+        (setq beg (point))
+        (skip-chars-forward my/path-delimiters)
+        (setq end (point))
+        (buffer-substring-no-properties beg end)
+        ))
+    )
+
+  (defun buffer-file-name-with-line-number ()
+    "get the buffer file name appended with line number of the current cursor"
+    (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))
     )  
 #+end_src
 
 #+RESULTS:
-: search-backward-no-move
+: buffer-file-name-with-line-number
 
 ** move line
 
@@ -2179,6 +2374,27 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 : kill-path-at-point
 ** kill, copy, and yank in Latex
 # C-c w s on $\apxcntcore$ gives $\apxcntcore$, instead of \apxcntcore
+** copy sexp as a link to where it occurs
+
+
+#+begin_src emacs-lisp
+
+  (defun copy-sexp-as-link-at-point ()
+    "copy the current sexp as link pointing to the current file at the cursor position"
+    (interactive)
+    (let* ((content (sexp-at-point))
+           (path (buffer-file-name-with-line-number))
+           (link (format "[[%s][%s]]" path content)))
+           (kill-new link)
+           (message (format "copied %s" link))
+      )
+    )
+  (global-set-key (kbd "C-c w k") 'copy-sexp-as-link-at-point)
+#+end_src
+
+#+RESULTS:
+: copy-sexp-as-link-at-point
+
 ** copy word, line, sexp
 *** copy word
 #+begin_src emacs-lisp
@@ -2246,10 +2462,10 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
      (defun copy-whole-line ()
        (interactive)
        (save-excursion
-	 (kill-new
-	  (buffer-substring
-	   (point-at-bol)
-	   (point-at-eol))))
+         (kill-new
+          (buffer-substring
+           (point-at-bol)
+           (point-at-eol))))
        (message "a line is copied")
        )
      (global-set-key (kbd "C-c w l") 'copy-whole-line)
@@ -2286,30 +2502,18 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
    - test example: output_dir: gs://unity-ads-dd-ds-pRd-models/tfrecords/skad_c2ip/
 
    #+begin_src emacs-lisp
-     (defun path-at-point ()
-       "return a path at point."
-       (let (beg end)
-	 (save-excursion
-	   (skip-chars-backward my/path-delimiters)
-	   (setq beg (point))
-	   (skip-chars-forward my/path-delimiters)
-	   (setq end (point))
-	   (buffer-substring-no-properties beg end)
-	   ))
-       )
+        (defun copy-path-at-point ()
+          "copy a path at point."
+          (interactive)
+          (let ((str (path-at-point)))
+            (with-temp-buffer
+              (insert str)
+              (clipboard-kill-region (point-min) (point-max)))
+            (message (format "copied '%s'" str))
+            )
+          )
 
-     (defun copy-path-at-point ()
-       "copy a path at point."
-       (interactive)
-       (let ((str (path-at-point)))
-	 (with-temp-buffer
-	   (insert str)
-	   (clipboard-kill-region (point-min) (point-max)))
-	 (message (format "copied '%s'" str))
-	 )
-       )
-
-     (global-set-key (kbd "C-c w p") 'copy-path-at-point)
+        (global-set-key (kbd "C-c w p") 'copy-path-at-point)
    #+end_src
 
    #+RESULTS:
@@ -2800,8 +3004,7 @@ useful to kill an expression (including function)
   (defun copy-current-line-position-to-clipboard ()
     "Copy current line in file to clipboard as '</path/to/file>:<line-number>'."
     (interactive)
-    (let ((path-with-line-number
-	   (concat (buffer-file-name) "::" (number-to-string (line-number-at-pos)))))
+    (let ((path-with-line-number (buffer-file-name-with-line-number)))
       (kill-new path-with-line-number)
       (message (concat path-with-line-number " copied to clipboard"))))
 
@@ -2809,7 +3012,7 @@ useful to kill an expression (including function)
 #+end_src
 
 #+RESULTS:
-: my/surround-by-plus
+: copy-current-line-position-to-clipboard
 
 * avy enhancement
 - what is pop-global-mark? what does it do? (C-x C-SPC)
@@ -3028,7 +3231,7 @@ using consult-line instead to enable orderless search
   : swiper-backward
 
 ** [[https://github.com/minad/consult][consult]]
-
+*** key bindings
 Consult provides search and navigation commands
 
 #+begin_src emacs-lisp
@@ -3060,6 +3263,22 @@ other useful functions:
 #+RESULTS:
 : consult-goto-line
 
+*** TODO ignore certain files in git-grep
+
+#+begin_src emacs-lisp
+  (setq consult-git-grep-args "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I")
+
+  ;; tried "git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I -- ':!*.tjs'"
+  ;; perhaps need to print the command
+  ;; reference: https://github.com/minad/consult/issues/395
+#+end_src
+
+#+RESULTS:
+: git --no-pager grep   --null --color=never --ignore-case   --extended-regexp --line-number -I
+
+*** TODO ignore certain files in consult-find
+
+what command is used?
 ** search in the other window
 
 #+begin_src emacs-lisp

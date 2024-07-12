@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: upright-sql
+# key: upsql
+# --
+
+#+begin_src sql :engine postgres :database localuprightdb :dbuser hanxiao
+$1
+#+end_src

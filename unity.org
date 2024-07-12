@@ -85,6 +85,17 @@
    #+RESULTS:
    : onboarding-org-visit
 
+** open omega condig file
+#+begin_src emacs-lisp
+  (defun unity/open-omega-config ()
+    (interactive)
+    (find-file "/Users/hanxiao/code/mz-ds-deep-learning/configs/omegaconfig.yaml"))
+  (global-set-key (kbd "C-c o m") 'unity/open-omega-config)
+#+end_src
+
+#+RESULTS:
+: unity/open-omega-config
+
 ** open this org file
 
 
@@ -114,28 +125,33 @@
   (defun replace-in-string (what with in)
     (replace-regexp-in-string (regexp-quote what) with in nil 'literal))
 
-  (defun unity/open-file-in-prd ()
-    "based on the current config file in dev, open the mirroing file in prd"
-    (interactive)
-    (find-file
-     (replace-in-string
-      "/dev/"
-      "/prd/"
-      (buffer-file-name)
-      ))
+  (defun unity/get-mirror-config-file-name (current-file-name)
+    (let* (
+           (is-dev (string-match "/dev/" current-file-name))
+           )
+      (if is-dev
+          (replace-in-string
+           "/dev/"
+           "/prd/"
+           current-file-name
+           )
+        (replace-in-string
+         "/prd/"
+         "/dev/"
+         current-file-name
+         ))      
+      )
     )
-
-(defun unity/open-file-in-dev ()
-  "based on the current config file in prd, open the mirroing file in dev"
-  (interactive)
-  (find-file
-   (replace-in-string
-    "/prd/"
-    "/dev/"
-    (buffer-file-name)
-    ))
-  )  
+  (defun unity/open-mirror-config-file ()
+    "open the dev/prd file of the currently opened prd/dev file"
+    (interactive)
+    (find-file (unity/get-mirror-config-file-name (buffer-file-name)))    
+    )
 #+end_src
+
+#+RESULTS:
+: unity/open-mirror-config-file
+
 
 * diff
 ** diff prd and dev configs in mz-re-ml
@@ -150,6 +166,25 @@
 
    #+RESULTS:
    : diff-prd-dev-configs
+** diff current file with prd or dev
+
+#+begin_src emacs-lisp
+  (defun unity/diff-mirror-config-file ()
+    "based on the current config file in dev/prd, diff the mirroring file in prd/dev"
+    (interactive)
+    (let* (
+           (is-dev (string-match "/dev/" (buffer-file-name)))
+           (mirror-file-name (unity/get-mirror-config-file-name (buffer-file-name)))
+           )
+      (diff
+       (buffer-file-name)
+       mirror-file-name)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/diff-mirror-config-file
 
 ** diff on mz-ds-deep-learning
 
@@ -198,6 +233,7 @@
 
    #+RESULTS:
    : diff-serving-advctx-prd-dev-configs
+
 * git
 ** get and copy branch name
 
@@ -374,6 +410,8 @@
 - open a ssh terminal if not created
 - send a command 
 ** s2c train
+
+
 *** helper functions
 #+begin_src emacs-lisp
   (defvar exp-name "han/exps" "name of experiment")
@@ -385,6 +423,11 @@
     (format
      "python kubeflow/pipelines/conv/%s.py --ds_env %s --experiment_name %s --run_name %s"
      pipeline-name ds-env exp-name run-name))
+
+  (defun unity/get-kubeflow-upload-command (pipeline-name ds-env)
+    "get the command to upload a pipeline"  
+    (format
+     "python kubeflow/pipelines/conv/%s.py --ds_env %s  --do_upload" pipeline-name ds-env))
 
   (defun unity/vm-shell/enter-kubeflow-shell ()
     "enter kubeflow shell in the VM"
@@ -662,6 +705,195 @@
 #+RESULTS:
 : unity/upload-regression-tool-pipeline
 
+** dataproc cluster creation
+
+#+begin_src emacs-lisp
+  (defun unity/create-dataproc-cluster ()
+    "create a data processing cluster"
+    (interactive)
+    (insert "USER=han.xiao python3 kubeflow/cpi_kubeflow/dataproc/conversion/cluster.py  \\
+          --project=unity-ads-dd-ds-dev-prd \\
+          --cluster_name=han-dev \\
+          --n_workers=10 \\
+          --auto_delete_hours=2 \\
+          --label_ds_team=privacy_performance"))  
+#+end_src
+
+#+RESULTS:
+: unity/create-dataproc-cluster
+
+** s2i datagen
+#+begin_src emacs-lisp
+  (defun unity/submit-cpi-datagen-jobs ()
+    "submit one or more CPI datagen jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+         (exp-name (read-string "experiment name: " "han/exps"))
+         (run-name-template (read-string "run name template: " "%s/dg-%s-%s"))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios"))))
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")
+      (unity/vm-shell/enter-kubeflow-shell)
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))
+        ;; (unity/vm-shell/update-git-repository git-branch)
+        ;; (print (format "checking out %s" git-branch))
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((run-name (format run-name-template git-branch traffic-type platform))
+                   (command (unity/get-kubeflow-command (format "cpi_%s_datagen_%s" traffic-type platform) ds-env exp-name run-name)))
+              (unity/vm-shell/send-string "sleep 1")              
+              (unity/vm-shell/send-string (format "%s %s" command "--fetch_enrichment_data"))
+              ;; (print command)
+              )))
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+#+end_src
+
+#+RESULTS:
+: unity/submit-cpi-datagen-jobs
+
+** s2i train
+
+#+begin_src emacs-lisp
+  (defun unity/submit-cpi-train-jobs ()
+    "submit one or more CPI train jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+         (exp-name (read-string "Experiment name: " "han/exps"))
+         (run-name-template (read-string "Run name template: " "%s/tr-%s-%s"))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))         
+         (reps (read-number "Number of repetitions: " 1))
+         )
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")    
+      (unity/vm-shell/enter-kubeflow-shell)  ; enter the shell only once in one session to avoid jobs being dropped
+
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((run-name (format run-name-template  git-branch traffic-type platform))
+                   (command (unity/get-kubeflow-command (format "cpi_%s_train_%s" traffic-type platform) ds-env exp-name run-name)))
+              (if (eq reps 1)
+                  (unity/vm-shell/send-string command)
+                ;; (print command)
+                (dotimes (i reps)
+                  (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
+                  (unity/vm-shell/send-string (format "%s-%d" command i))
+                  ;; (print (format "%s-%d" command i))
+                  )))))
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+
+#+end_src
+
+#+RESULTS:
+: unity/submit-cpi-train-jobs
+
+** s2i serving
+
+#+begin_src emacs-lisp
+  (defun unity/submit-cpi-serving-jobs ()
+    "submit one or more CPI serving jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t dev-ds-env nil dev-ds-env))
+         (run-name-template (read-string "Run name template: " "%s/sv-%s-%s"))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))
+         )
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")    
+      (unity/vm-shell/enter-kubeflow-shell)  ; enter the shell only once in one session to avoid jobs being dropped
+
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((run-name (format run-name-template  git-branch traffic-type platform))
+                   ;; /Users/hanxiao/code/mz-ds-deep-learning/kubeflow/pipelines/conv/cpi_bhv_serving_model_only_ios.py::8
+                   (command (unity/get-kubeflow-command (format "cpi_%s_serving_model_only_%s" traffic-type platform) ds-env exp-name run-name)))
+              (if (eq reps 1)
+                  (unity/vm-shell/send-string command)
+                ;; (print command)
+                (dotimes (i reps)
+                  (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
+                  (unity/vm-shell/send-string (format "%s-%d" command i))
+                  ;; (print (format "%s-%d" command i))
+                  )))))
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+
+#+end_src
+
+#+RESULTS:
+: unity/submit-cpi-serving-jobs
+
+** s2i upload pipelines
+
+
+#+begin_src emacs-lisp
+  (defun unity/upload-cpi-pipelines ()
+    "submit one or more CPI train jobs for some git branch"
+    (interactive)
+    (let*
+        (
+         (git-branches (completing-read-multiple "Git branches: " (magit-list-branch-names)))
+         (ds-env (completing-read "ds_env: " (list dev-ds-env prd-ds-env) nil t prd-ds-env nil prd-ds-env))
+         (traffic-types (completing-read-multiple "Traffic types: " '("advctx" "bhv")))
+         (platforms (completing-read-multiple "Platforms: " '("android" "ios")))
+         )
+      (unity/vm-shell/ensure-ssh-terminal-is-visible)
+      (unity/vm-shell/send-string "git fetch")    
+      (unity/vm-shell/enter-kubeflow-shell)  ; enter the shell only once in one session to avoid jobs being dropped
+
+      (dolist (git-branch git-branches)
+        (unity/vm-shell/send-string (format "git checkout %s" git-branch))
+        (unity/vm-shell/send-string (format "git merge origin/%s" git-branch))      
+        (dolist (traffic-type traffic-types)
+          (dolist (platform platforms)
+            (let* ((datagen-command (unity/get-kubeflow-upload-command (format "cpi_%s_datagen_%s" traffic-type platform) ds-env))
+                   (train-command (unity/get-kubeflow-upload-command (format "cpi_%s_train_%s" traffic-type platform) ds-env))
+                   (serving-command (unity/get-kubeflow-upload-command (format "cpi_%s_serving_model_only_%s" traffic-type platform) ds-env))
+                   )
+              ;; (print command)
+              ;; (unity/vm-shell/send-string "sleep 1") ; to avoid trained models with the same time
+              ;; (print datagen-command)
+              ;; (print train-command)
+              ;; (print serving-command)
+              (unity/vm-shell/send-string datagen-command)
+              (unity/vm-shell/send-string train-command)
+              (unity/vm-shell/send-string serving-command)
+              ;; (print (format "%s-%d" command i))
+              )))
+        ;; remember to upload the trigger_full pipeline
+        (unity/vm-shell/send-string "python kubeflow/pipelines/common/trigger_full.py --ds_env prd  --do_upload")
+        )
+      (unity/vm-shell/exit-kubeflow-shell)
+      ))
+
+#+end_src
+
+#+RESULTS:
+: unity/upload-cpi-pipelines
+
 * hyper-parameter tuning
 #+begin_src emacs-lisp
   (defun unity/git-branch-name-from-hp-configs (base-name hp-configs)
@@ -800,6 +1032,64 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 #+RESULTS:
 : unity/gls-at-point
 
+** DONE gls training data at point
+
+#+begin_src emacs-lisp
+  (defun unity/gls-in-omega-config ()
+    "list the training data in GS  under the model version at cursor"
+    (interactive)
+    (let* (
+           (data-version (path-at-point))
+           (is-datagen
+            (let*
+                (
+                 (conversion-pos
+                  (save-excursion
+                    (search-backward "conversion" nil t)))
+                 (datagen-pos
+                  (save-excursion
+                    (search-backward "cpi_datagen" nil t)))
+                 )
+              (if (not conversion-pos) t
+                (> datagen-pos conversion-pos))
+              )
+            )
+            (is-dev
+             (let*
+                 (
+                  (dev-pos (save-excursion
+                             (search-backward "dev:" nil t)))
+                  (prd-pos (save-excursion
+                             (search-backward "prd:" nil t)))
+                  )
+               ;; (print (format "dev-pos %d" dev-pos))
+               ;; (print (format "prd-pos %d" prd-pos))
+               (> (if dev-pos dev-pos 0) prd-pos)
+               ))
+             (root-uri
+              (if is-datagen
+                  (if is-dev
+                      "unity-ads-dd-ds-dev-prd-training-data/cpi_conversion"
+                    "unity-ads-dd-ds-prd-training-data/cpi_conversion"
+                    )
+                (if is-dev
+                    "unity-ads-dd-ds-dev-prd-trained-models/tf-models/conversion"
+                  "unity-ads-dd-ds-prd-trained-models/tf-models/conversion")
+                )
+              )
+           )
+      ;; (print data-version)
+      ;; (print (format "is-datagen %s" is-datagen))
+      ;; (print (format "is-dev %s" is-dev))
+      ;; (print root-uri)
+      (unity/gls-uri (format "gs://%s/%s" root-uri data-version))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/gls-in-omega-config
+
 ** TODO ls data output dir for a given file
 
 todo:
@@ -886,21 +1176,22 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "return t if the current buffer contains string"
     (save-excursion
       (save-match-data
-	(goto-char (point-min))
-	(search-forward string nil t))))
+        (goto-char (point-min))
+        (search-forward string nil t))))
+
 
   (defun quick-replace (regexp new-text)
-    "replace all occurences of regexp by new-text"
+    "replace all occurences of line matching regexp by new-text"
     (beginning-of-buffer)
     (while (re-search-forward regexp nil t)
-      (replace-match new-text)
+      (kill-whole-line)
+      (insert (format "%s\n" new-text))
       )
+    )
 
-  )
-
-  (defun unity/replace-field-in-buffer (field old new)
+  (defun unity/replace-field-in-buffer (field new)
     "replace a field's value (of old) by new"
-    (quick-replace   (concat field ": " old)   (concat field ": " new))
+    (quick-replace  field  (concat field ": " new))
     )
 #+end_src
 
@@ -910,13 +1201,16 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 *** main functions
 
 #+begin_src emacs-lisp
+  (defun unity/modify-attribute (attribute new-value)
+  
+    )  
   (defun unity/config-train-to-full ()
     "config the training to be full by changing the values of a few fields"
     (interactive)
     (save-excursion
-      (unity/replace-field-in-buffer "n_iterations" "2" "40")
-      (unity/replace-field-in-buffer "val_loss_limit" "0.9" "0.11")
-      (unity/replace-field-in-buffer "limited_data" "true" "false")
+      (unity/replace-field-in-buffer "n_iterations" "40")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.11")
+      (unity/replace-field-in-buffer "  limited_data" "false")
       )
     )
 
@@ -925,9 +1219,9 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     "config the training to be debug by changing the values of a few fields"
     (interactive)
     (save-excursion
-      (unity/replace-field-in-buffer "n_iterations" "40" "2")
-      (unity/replace-field-in-buffer "val_loss_limit" "0.11" "0.9")
-      (unity/replace-field-in-buffer "limited_data" "false" "true")    
+      (unity/replace-field-in-buffer "n_iterations" "2")
+      (unity/replace-field-in-buffer "val_loss_limit" "0.9")
+      (unity/replace-field-in-buffer "  limited_data" "true")    
       )
     )
 
@@ -950,9 +1244,9 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
     (interactive)
     (let ((model-type (completing-read "model type: " unity/model-types)))
       (save-excursion
-	(find-file (unity/get-s2c-train-dev-config-path model-type))
-	(unity/toggle-train-config)
-	)
+        (find-file (unity/get-s2c-train-dev-config-path model-type))
+        (unity/toggle-train-config)
+        )
       )
     )
 #+end_src
@@ -980,6 +1274,110 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 #+RESULTS:
 : activate-cpi-model-virtualenv
 
+** DONE run pytest in docker
+
+#+begin_src elisp
+  (defun unity/datagen-pytest-runner (top file module test)
+    "Test the datagen package in docker image using the py.test test runner "
+    (interactive (elpy-test-at-point))
+    (let* (
+           (test-command-pattern "docker exec -it cpi-datagen-dev-shell env TERM=xterm-256color sh -c 'py.test %s'")
+           (file-in-docker (car (last (split-string file "cpi-datagen/"))))
+           ;; (test-command-pattern "docker exec -it cpi-model-shell env TERM=xterm-256color sh -c 'py.test %s'")
+           ;; (file-in-docker (car (last (split-string file "cpi-model/"))))
+           )
+      (cond
+       (test
+        (let ((test-list (split-string test "\\.")))
+          (funcall
+           elpy-test-compilation-function
+           (format
+            test-command-pattern 
+            (mapconcat #'identity
+                       (cons file-in-docker test-list)
+                       "::")
+            )
+           t  ; use COMINT mode to display the escape characters correctly, however, tab does not work properly
+           )))
+       (module
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern file-in-docker 
+          )
+         t)
+        )
+       (t
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern "./"
+          )
+         t)
+        ))
+      )
+    )
+  ;; (bind-keys*
+  ;;   ("C-c C-t" . unity/datagen-pytest-runner)
+  ;;   )
+  ;; (eval-after-load 'python-mode
+  ;;   '(define-key python-mode-map "\C-t"; [(tab)] 
+  ;;      'unity/datagen-pytest-runner))
+  ;; (global-set-key (kbd "C-c C-t") 'unity/datagen-pytest-runner)
+
+  (defun unity/cpi-model-pytest-runner (top file module test)
+    "Test the cpi-model package in docker image using the py.test test runner "
+    (interactive (elpy-test-at-point))
+    (let* (
+           (test-command-pattern "docker exec -it cpi-model-dev-shell env TERM=xterm-256color sh -c 'py.test -W ignore::DeprecationWarning %s'")
+           (file-in-docker (car (last (split-string file "cpi-model/"))))
+           )
+      (cond
+       (test
+        (let ((test-list (split-string test "\\.")))
+          (funcall
+           elpy-test-compilation-function
+           (format
+            test-command-pattern 
+            (mapconcat #'identity
+                       (cons file-in-docker test-list)
+                       "::")
+            )
+           t  ; use COMINT mode to display the escape characters correctly, however, tab does not work properly
+           )))
+       (module
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern file-in-docker 
+          )
+         t)
+        )
+       (t
+        (funcall
+         elpy-test-compilation-function
+         (format
+          test-command-pattern "./"
+          )
+         t)
+        ))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: unity/cpi-model-pytest-runner
+
+#+begin_src emacs-lisp
+  ;; (define-key python-mode-map "\C-t"; [(tab)] 
+  ;;      'unity/datagen-pytest-runner)
+  (define-key python-mode-map "\C-t"; [(tab)] 
+       'unity/cpi-model-pytest-runner)
+#+end_src
+
+#+RESULTS:
+: unity/cpi-model-pytest-runner
+
 
 * misc
 ** copy my Slack handle
@@ -994,6 +1392,20 @@ gs://unity-ads-dd-ds-prd-models/tfrecords/cpi_conversion/combined_data_s2c_v1e
 
 #+RESULTS:
 : unity/copy-my-slack-handle
+** copy my GCS dev bucket URI
+
+#+begin_src emacs-lisp
+  (defun unity/copy-my-dev-bucket ()
+    "copy GCS dev bucket URI"
+    (interactive)
+    (kill-new "gs://han-xiao-dev")
+    )
+#+end_src
+
+#+RESULTS:
+: unity/copy-my-dev-bucket
+
+
 ** copy KF namespace
 
 #+begin_src emacs-lisp

@@ -42,3 +42,7 @@ unity.el
 .lsp-session-v1
 
 elpy
+
+org-persist
+upright.el
+config.el

@@ -1,0 +1,266 @@
+* dev
+** utility function
+*** buffer
+
+#+begin_src emacs-lisp
+  (defun get-or-create-named-buffer (name)
+    "return a buffer with 'name', create it if it does not exist "
+    (let ((buffer-or-nil (get-buffer name)))
+      (if buffer-or-nil
+	  buffer-or-nil
+	(generate-new-buffer name)	
+	)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: get-or-create-named-buffer
+
+*** shell 
+#+begin_src emacs-lisp
+  (defun my/async-shell-command (command buffer-name)
+    "execute command async and display the output and error message in a buffer named buffer-name"
+    (let* ((output-buffer (get-or-create-named-buffer buffer-name)))
+      (async-shell-command command output-buffer output-buffer)
+      ))  
+
+  ;; (my/async-shell-command "ls" "*ls-buffer*")
+
+  (defun upright/run-yarn-in-buffer (buffer-name yarn-comand)
+    (let* ((yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn"))
+      (when (get-buffer buffer-name)
+        (kill-buffer buffer-name))
+      (my/async-shell-command
+       (format "source ~/.zshrc; cd ~/code/upright; %s %s" yarn-path yarn-comand)
+       buffer-name)
+      )  
+    )  
+#+end_src
+
+#+RESULTS:
+: upright/run-yarn-in-buffer
+
+** tunneling
+
+#+begin_src emacs-lisp
+  (defun upright/setup-tunneling ()
+    "tunnel to ES and BERT service"
+    (interactive)
+    (let* ((bert-buffer "*upright/bert-tunnel*")
+           (es-buffer "*upright/elastic-search-tunnel*"))
+      (when (get-buffer bert-buffer)
+        (kill-buffer bert-buffer))
+      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 3004:localhost:3004 upright@beauty.uprightproject.com -p 22" bert-buffer)
+
+      (when (get-buffer es-buffer)
+        (kill-buffer es-buffer))
+      (my/async-shell-command "ssh -o 'ServerAliveInterval 60' -L 9200:es-core-23:9200 upright@manager.uprightproject.com -p 2222" es-buffer)
+    )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/setup-tunneling
+
+** run apps locally
+
+#+begin_src emacs-lisp
+  (defun upright/run-app ()
+    "run apps"
+    (interactive)
+    (let* ((upwork-buffer "*upright/upwork-server*")
+           (api-buffer "*upright/api-server*")
+           (web-buffer "*upright/web-server*")
+           (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
+           )
+
+      (upright/run-yarn-in-buffer upwork-buffer "start-upwork-dev")
+      (upright/run-yarn-in-buffer api-buffer "start-server")
+      (upright/run-yarn-in-buffer web-buffer "start")
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/run-app
+** yarn utilities: typecheck, linting, etc
+
+#+begin_src emacs-lisp
+  (defun upright/typecheck ()
+    "run typecheck"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/typecheck*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "typecheck")
+      )
+    )
+
+  (defun upright/lint ()
+    "run lint"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/lint*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "lint-changed-since-master")
+      )
+    )
+
+  (defun upright/prettier-fix ()
+    "run lint"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/prettier-fix*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "prettier-fix-changed-since-master")
+      )
+    )  
+
+#+end_src
+
+#+RESULTS:
+: upright/prettier-fix
+** logs
+
+#+begin_src emacs-lisp
+
+  (defun upright/setup-log-tunneling ()
+  "tunnel to log-related services"
+  (interactive)
+  (let* ((staging-buffer "*upright/staging-log*")
+         (prod-buffer "*upright/prod-log*")
+         )
+    (when (get-buffer staging-buffer)
+      (kill-buffer staging-buffer))
+    ;; -o 'ServerAliveInterval 60'
+    (my/async-shell-command "ssh -L 4444:kibana-apm:5601 upright@staging-manager.uprightproject.com -p 2222" staging-buffer)
+  
+    (when (get-buffer prod-buffer)
+      (kill-buffer prod-buffer))
+    ;; -o 'ServerAliveInterval 60'
+    (my/async-shell-command "ssh -L 5555:kibana-apm:5601 upright@manager.uprightproject.com -p 2222" prod-buffer)
+  )
+  )
+#+end_src
+
+#+RESULTS:
+: upright/setup-log-tunneling
+
+** adhoc commands
+#+begin_src emacs-lisp
+
+    (defun upright/csrd-multi-eval ()
+    "run csrd evaluation on multiple statements"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/csrd-multi-statements-evaluation*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "run tsn-main src/scripts/tools/gpt-tools/isc-poc/extraction/run/test-csrd-evalution-for-multiple-statements.ts")
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/csrd-multi-eval
+
+
+#+begin_src emacs-lisp
+
+  (defun upright/start-ghg-jupyter ()
+    "start jupyter notebook for ghg project"
+    (interactive)
+    (let* ( (buffer "*upright/jupyter-ghg*")
+            )
+      (when (get-buffer buffer)
+        (kill-buffer buffer))      
+      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/ghg-estimation/src/predictors/pai-ghg-emissions; source .venv/bin/activate; jupyter-lab" buffer)
+      )
+    )
+
+
+#+end_src
+
+#+RESULTS:
+: upright/start-ghg-jupyter
+
+#+begin_src emacs-lisp
+  (defun upright/start-llm-jupyter ()
+    "start jupyter notebook for llm report annotation"
+    (interactive)
+    (let* ( (buffer "*upright/jupyter-llm-report-annotation*")
+            )
+      (when (get-buffer buffer)
+        (kill-buffer buffer))      
+      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/llm-based-annotation; source .venv/bin/activate; jupyter lab" buffer)
+      )
+    )
+
+
+#+end_src
+
+#+RESULTS:
+: upright/start-llm-jupyter
+
+** llm-based annotation
+*** report opening
+#+begin_src emacs-lisp
+
+  (defun upright/open-company-report ()
+    "open a report of a given company"
+    (interactive)
+    (let* ((default-directory "~/code/llm-based-annotation/data/ghg1-reports")
+           (all-paths (directory-files default-directory t))
+           ;; use pdf only
+           (candidate-file-paths  (-filter (lambda (str) (string-match-p "pdf" str)) all-paths))
+           ;; extract file names
+           (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) candidate-file-paths))
+           (company-id (completing-read "Enter company id: "
+                                        candidate-file-names)))
+      (find-file (format "%s/%s.pdf" default-directory company-id))))
+
+  (defun upright/open-company-pages ()
+    "open the split pages of a given company"
+    (interactive)
+    (let* (
+           (default-directory "~/code/llm-based-annotation/data/ghg1-pages-dpi300")
+             (all-paths (directory-files default-directory t))
+             ;; extract file names
+             (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
+           (company-id (completing-read "Enter company id: " (-filter (lambda (str) (> (length str) 3)) candidate-file-names))))
+      (find-file (format "%s/%s/page_0.png" default-directory company-id))))  
+#+end_src
+
+#+RESULTS:
+: upright/open-company-pages
+
+
+
+
+* snippets
+
+#+begin_src emacs-lisp
+    (defun python/copy-common-imports ()
+      (interactive)
+      (kill-new "
+  import numpy as np
+  import pandas as pd
+  import seaborn as sns
+
+  from matplotlib import pyplot as plt
+  from pathlib import Path
+  ")
+      )  
+#+end_src
+
+#+RESULTS:
+: python/copy-common-imports
+

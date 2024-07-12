@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: beamer-pause
+# key: pause
+# --
+#+BEAMER: \pause

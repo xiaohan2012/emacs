@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pd.Series
+# key: pds
+# --
+pd.Series
