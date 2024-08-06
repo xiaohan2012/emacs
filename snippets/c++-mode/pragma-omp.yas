@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pragma-omp
+# key: pomp
+# --
+#pragma omp

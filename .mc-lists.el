@@ -3,10 +3,19 @@
 
 (setq mc/cmds-to-run-for-all
       '(
-        abbrev-prefix-mark
+        LaTeX-insert-left-brace
         backward-sexp
         beginning-of-buffer
+        c-electric-colon
+        c-electric-delete-forward
+        c-electric-lt-gt
+        c-electric-paren
+        c-electric-star
         comint-delchar-or-maybe-eof
+        comment-dwim
+        compile
+        consult-buffer
+        abbrev-prefix-mark
         cycle-spacing
         electric-pair-delete-pair
         elpy-multiedit-python-symbol-at-point
@@ -47,5 +56,6 @@
 
 (setq mc/cmds-to-run-once
       '(
+        c-electric-semi&comma
         tide-jump-to-definition
         ))

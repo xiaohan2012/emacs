@@ -3,7 +3,7 @@
 # key: pys
 # --
 
-#+begin_src python
+#+begin_src python :results output
 $1
 #+end_src
 

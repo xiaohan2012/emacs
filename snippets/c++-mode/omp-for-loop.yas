@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: omp-for-loop
+# key: ompfor
+# --
+#pragma omp parallel for schedule(static, 1)
