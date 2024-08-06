@@ -1271,7 +1271,7 @@ tips:
             elpy-rpc-backend "jedi"
             ;; elpy-rpc-project-specific 't
             ;; elpy-modules (delq 'elpy-module-flymake elpy-modules)
-            ;; elpy-test-python-command "pytest --disable-warnings" ;; does it work?
+            ;; elpy-test-python-command "pytest --disable-warnings" ;; does it work?;
             )
       ;; (add-hook 'elpy-mode-hook 'flycheck-mode)
       :bind
@@ -1616,7 +1616,6 @@ why not showing in non-GUI Emacs?
 
 * cloud-related utils
 ** s3
-
 
 * yasnippet
 *** preparation
@@ -2149,6 +2148,33 @@ start a remote terminal via ssh
 
 #+RESULTS:
 : t
+
+** horizontal centering
+
+#+begin_src emacs-lisp
+(defun my-horizontal-recenter ()
+  "make the point horizontally centered in the window"
+  (interactive)
+  (let ((mid (/ (window-width) 2))
+        (line-len (save-excursion (end-of-line) (current-column)))
+        (cur (current-column)))
+    (if (< mid cur)
+        (set-window-hscroll (selected-window)
+                            (- cur mid)))))
+(global-set-key (kbd "C-S-l") 'my-horizontal-recenter)
+#+end_src
+
+#+RESULTS:
+: my-horizontal-recenter
+
+** doc-view resolution
+
+#+begin_src emacs-lisp
+  (setq doc-view-resolution 400)
+#+end_src
+
+#+RESULTS:
+: 400
 
 * text manipulation
 ** common functions

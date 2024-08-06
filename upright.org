@@ -231,7 +231,7 @@
     "open the split pages of a given company"
     (interactive)
     (let* (
-           (default-directory "~/code/llm-based-annotation/data/ghg1-pages-dpi300")
+           (default-directory "~/code/llm-based-annotation/data/ghg1-pages-dpi100")
              (all-paths (directory-files default-directory t))
              ;; extract file names
              (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
@@ -241,7 +241,6 @@
 
 #+RESULTS:
 : upright/open-company-pages
-
 
 
 

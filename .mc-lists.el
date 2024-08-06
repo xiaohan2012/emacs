@@ -9,6 +9,7 @@
         comint-delchar-or-maybe-eof
         cycle-spacing
         electric-pair-delete-pair
+        elpy-multiedit-python-symbol-at-point
         emojify-delete-emoji-backward
         end-of-buffer
         forward-sexp
