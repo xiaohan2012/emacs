@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: two-images
+# key: 2img
+# --
+#+BEGIN_center
+#+ATTR_LaTeX: :width 0.42\textwidth :center
+#+ATTR_ORG: :width 300
+\hfill
+#+ATTR_LaTeX: :width 0.48\textwidth :center
+#+ATTR_ORG: :width 300
+#+END_center
