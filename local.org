@@ -1,0 +1,14 @@
+#+begin_src emacs-lisp
+  (defun my/open-dairy ()
+  (interactive)
+  (find-file "~/docs/notes/dairy2024.org"))
+  (global-set-key (kbd "C-c o r") 'my/open-dairy)
+
+  (defun my/open-upright ()
+(interactive)
+(find-file "~/docs/notes/upright.org"))
+(global-set-key (kbd "C-c o u") 'my/open-upright)
+#+end_src
+
+#+RESULTS:
+: my/open-upright

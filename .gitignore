@@ -14,7 +14,7 @@ auto
 elpa
 emojis
 local.el
-local.org
+# local.org
 ltximg
 projectile.cache
 projects
