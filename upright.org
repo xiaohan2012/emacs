@@ -182,7 +182,7 @@
             )
       (when (get-buffer buffer)
         (kill-buffer buffer))      
-      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/ghg-estimation/src/predictors/pai-ghg-emissions; source .venv/bin/activate; jupyter-lab" buffer)
+      (my/async-shell-command "source ~/.zshrc; cd /Users/hanxiao/code/upright-sagemaker-inference-api/src/predictors/pai-ghg-emissions; source .venv/bin/activate; jupyter-lab" buffer)
       )
     )
 

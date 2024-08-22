@@ -1,14 +1,29 @@
+* file opening
 #+begin_src emacs-lisp
   (defun my/open-dairy ()
-  (interactive)
-  (find-file "~/docs/notes/dairy2024.org"))
+    (interactive)
+    (find-file "~/docs/notes/dairy2024.org"))
   (global-set-key (kbd "C-c o r") 'my/open-dairy)
 
   (defun my/open-upright ()
-(interactive)
-(find-file "~/docs/notes/upright.org"))
-(global-set-key (kbd "C-c o u") 'my/open-upright)
+    (interactive)
+    (find-file "~/docs/notes/upright.org"))
+  (global-set-key (kbd "C-c o u") 'my/open-upright)
 #+end_src
 
 #+RESULTS:
 : my/open-upright
+
+* clipboard strings
+
+#+begin_src emacs-lisp
+  (defun my/copy-phone-number ()
+    (interactive)
+    (kill-new "0442483528")
+    (message "copid '0442483528'")
+    )
+#+end_src
+
+#+RESULTS:
+: my/copy-phone-number
+
