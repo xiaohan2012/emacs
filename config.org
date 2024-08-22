@@ -54,14 +54,14 @@
 ** environment variables
 
       #+begin_src emacs-lisp
-        (setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
-        (add-to-list 'exec-path "/usr/local/bin/")
+	(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/local/bin/")
 
-        (setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
-        (add-to-list 'exec-path "/usr/bin/")
+	(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/usr/bin/")
 
-        ;; https://emacs.stackexchange.com/questions/10722/emacs-and-command-line-path-disagreements-on-osx
-        (exec-path-from-shell-initialize)
+	;; https://emacs.stackexchange.com/questions/10722/emacs-and-command-line-path-disagreements-on-osx
+	;; (exec-path-from-shell-initialize)	;
    #+end_src
 
    #+RESULTS:
