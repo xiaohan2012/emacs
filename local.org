@@ -13,11 +13,16 @@
   (defun my/open-org-songs ()
     (interactive)
     (find-file "~/docs/notes/songs.org"))
-  (global-set-key (kbd "C-c o s") 'my/open-org-songs)  
+  (global-set-key (kbd "C-c o s") 'my/open-org-songs)
+
+    (defun my/open-immune-gnn ()
+    (interactive)
+    (find-file "~/docs/notes/immune-gnn.org"))
+  (global-set-key (kbd "C-c o g") 'my/open-immune-gnn)  
 #+end_src
 
 #+RESULTS:
-: my/open-org-songs
+: my/open-immune-gnn
 
 * clipboard strings
 
