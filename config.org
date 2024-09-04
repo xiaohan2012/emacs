@@ -1061,18 +1061,19 @@ let's not use it for now since it works better for => 2= windows.
    : kill-all-buffers
 
 * projectile
-** install
+** install & config
 #+BEGIN_SRC emacs-lisp
-  (use-package projectile
-    :ensure t
-    :config
-    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-    (projectile-mode +1)
-    )
+    (use-package projectile
+      :ensure t
+      :config
+      (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+      (projectile-mode +1)
+      (setq projectile-indexing-method 'alien) ;; using alien for faster search
+      )
 #+END_SRC
 
 #+RESULTS:
-| (lambda nil (diminish 'projectile-mode projt) (diminish 'smartparens-mode) (diminish 'auto-revert-mode) (diminish 'lsp-lens-mode)) | yasnippet-snippets--fixed-indent | elpy-mode | (lambda nil (flycheck-mode -1)) | lsp | (lambda nil (diminish 'projectile-mode projt)) |
+: t
 
 ** set project type to python-pip
 
@@ -1086,6 +1087,27 @@ let's not use it for now since it works better for => 2= windows.
    #+end_src
 
    #+RESULTS:
+
+
+** ❓ ignored directories/files (does not work for alien)
+
+#+begin_src emacs-lisp  
+  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
+  (add-to-list 'projectile-globally-ignored-directories "*packages")
+  (add-to-list 'projectile-globally-ignored-directories "*.idea")
+  (add-to-list 'projectile-globally-ignored-directories "*.yarn")
+  (add-to-list 'projectile-globally-ignored-directories "*dump")
+  ;; (add-to-list 'projectile-globally-ignored-files "*.svg") ;; may need an exact file name match
+
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svg")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svgf")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "json")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "csv")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "xml")
+#+end_src
+
+#+RESULTS:
+| xml | csv | json | svgf | svg | pkl | zip |
 
 * cursor
 ** avy
@@ -1651,10 +1673,7 @@ why not showing in non-GUI Emacs?
     :config
     (setq yas-snippet-dirs
           '("~/.emacs.d/snippets"
-            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
-            ;; "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-            "~/.emacs.d/elpa/yasnippet-snippets-20240221.1621/snippets"
-
+            "~/.emacs.d/elpa/yasnippet-snippets-20240603.757/snippets"
             ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
@@ -2802,26 +2821,27 @@ pairs could be parenthesis, bracket, dollar, quote, double-quote, etc
 
   
 #+begin_src emacs-lisp
-    (use-package smartparens-config
-      :ensure smartparens
-      :config
-      (progn
-        (show-smartparens-global-mode t)
-        (electric-pair-mode nil)  ;; disable electric-pair-mode since the two modes sometimes get triggered simultaneously
-        )
-      :hook
-      (LaTeX-mode . turn-on-smartparens-mode)
+  (use-package smartparens-config
+    :ensure smartparens
+    :config
+    (progn
+      (show-smartparens-global-mode t)
+      (electric-pair-mode nil)  ;; disable electric-pair-mode since the two modes sometimes get triggered simultaneously
       )
+    :hook
+    (LaTeX-mode . turn-on-smartparens-mode)
+    (org-mode . turn-on-smartparens-mode)
+    )
 
-    (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
-    ;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
-    ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-    ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+  ;; (add-hook 'LaTex-mode-hook 'turn-on-smartparens-mode)
+  ;; (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  ;; (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
-    ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
-    ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
+  ;; (global-set-key (kbd "C-M-a") 'sp-beginning-of-sexp)
+  ;; (global-set-key (kbd "C-M-e") 'sp-end-of-sexp)
 
-    ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
+  ;; (global-set-key (kbd "C-down") 'sp-down-sexp)
 #+end_src
 
 #+RESULTS:

@@ -154,6 +154,7 @@
 : upright/setup-log-tunneling
 
 ** adhoc commands
+*** CSRD
 #+begin_src emacs-lisp
 
     (defun upright/csrd-multi-eval ()
@@ -172,7 +173,7 @@
 #+RESULTS:
 : upright/csrd-multi-eval
 
-
+*** notebook
 #+begin_src emacs-lisp
 
   (defun upright/start-ghg-jupyter ()
@@ -209,6 +210,26 @@
 
 #+RESULTS:
 : upright/start-llm-jupyter
+
+*** ghg deployment
+
+#+begin_src emacs-lisp
+
+    (defun upright/compute-company-variant-results ()
+    "run src/scripts/one-off/compute-company-variant-results.ts"
+    (interactive)
+    (let* (;; (lint-buffer "*upright/lint*")
+           (buffer "*upright/compute-company-variant-results*")
+           )
+
+      ;; (upright/run-yarn-in-buffer lint-buffer "lint-changed-since-master")
+      (upright/run-yarn-in-buffer buffer "run tsn-main src/scripts/one-off/compute-company-variant-results.ts")
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: upright/compute-company-variant-results
 
 ** llm-based annotation
 *** report opening
