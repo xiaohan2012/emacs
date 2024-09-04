@@ -9,10 +9,20 @@
     (interactive)
     (find-file "~/docs/notes/upright.org"))
   (global-set-key (kbd "C-c o u") 'my/open-upright)
+
+  (defun my/open-org-songs ()
+    (interactive)
+    (find-file "~/docs/notes/songs.org"))
+  (global-set-key (kbd "C-c o s") 'my/open-org-songs)
+
+    (defun my/open-immune-gnn ()
+    (interactive)
+    (find-file "~/docs/notes/immune-gnn.org"))
+  (global-set-key (kbd "C-c o g") 'my/open-immune-gnn)  
 #+end_src
 
 #+RESULTS:
-: my/open-upright
+: my/open-immune-gnn
 
 * clipboard strings
 
