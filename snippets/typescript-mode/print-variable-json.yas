@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: print-json-variable
+# key: pvj
+# --
+console.log(JSON.stringify($1, null, 2));

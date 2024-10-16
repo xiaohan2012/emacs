@@ -1,3 +1,17 @@
+* copy&paste
+
+#+begin_src emacs-lisp
+  (defun upright/copy-amazon-id ()
+    (interactive)
+    (kill-new "347938125022")
+    (message "copid '347938125022'")
+    )
+  
+#+end_src
+
+#+RESULTS:
+: upright/copy-amazon-id
+
 * dev
 ** utility function
 *** buffer
@@ -27,12 +41,13 @@
 
   ;; (my/async-shell-command "ls" "*ls-buffer*")
 
-  (defun upright/run-yarn-in-buffer (buffer-name yarn-comand)
-    (let* ((yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn"))
+  (defun upright/run-yarn-in-buffer (buffer-name yarn-comand &optional env)
+    (let* ((env (or env ""))
+           (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn"))
       (when (get-buffer buffer-name)
         (kill-buffer buffer-name))
       (my/async-shell-command
-       (format "source ~/.zshrc; cd ~/code/upright; %s %s" yarn-path yarn-comand)
+       (format "source ~/.zshrc; cd ~/code/upright; %s %s %s" env yarn-path yarn-comand)
        buffer-name)
       )  
     )  
@@ -42,9 +57,9 @@
 : upright/run-yarn-in-buffer
 
 ** tunneling
-
+*** ES tunneling
 #+begin_src emacs-lisp
-  (defun upright/setup-tunneling ()
+  (defun upright/setup-ES-BERT-tunneling ()
     "tunnel to ES and BERT service"
     (interactive)
     (let* ((bert-buffer "*upright/bert-tunnel*")
@@ -61,7 +76,44 @@
 #+end_src
 
 #+RESULTS:
-: upright/setup-tunneling
+: upright/setup-ES-BERT-tunneling
+
+*** db tunning
+
+#+begin_src emacs-lisp
+  (defun upright/setup-valdb-tunneling ()
+    "tunnel into validation server DB"
+    (interactive)
+  (let* ((val-db-buffer "*upright/val-db-tunneling*")
+         )
+    (when (get-buffer val-db-buffer)
+      (kill-buffer val-db-buffer))
+    (my/async-shell-command "ssh -N -p 2222 upright@validation-manager.uprightproject.com -L 127.0.0.1:5222:192.168.10.1:5432" val-db-buffer)
+    )
+  )
+#+end_src
+
+#+RESULTS:
+: upright/setup-valdb-tunneling
+
+*** swarmpit tunneling
+
+#+begin_src emacs-lisp
+  (defun upright/setup-val-swarmpit-tunneling ()
+    "tunnel into swarmpit app"
+    (interactive)
+  (let* ((buffer "*upright/val-swarmpit-tunneling*")
+         )
+    (when (get-buffer buffer)
+      (kill-buffer buffer))
+    (my/async-shell-command "ssh -N -p 2222 upright@validation-manager.uprightproject.com -L 127.0.0.1:8085:swarmpit-app:8080" buffer)
+    )
+  )
+#+end_src
+
+#+RESULTS:
+: upright/setup-val-swarmpit-tunneling
+
 
 ** run apps locally
 
@@ -69,13 +121,15 @@
   (defun upright/run-app ()
     "run apps"
     (interactive)
-    (let* ((upwork-buffer "*upright/upwork-server*")
+    (let* ((upwork-buffer-master "*upright/upwork-server-master*")
+           (upwork-buffer-slave "*upright/upwork-server-slave*")
            (api-buffer "*upright/api-server*")
            (web-buffer "*upright/web-server*")
            (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
            )
 
-      (upright/run-yarn-in-buffer upwork-buffer "start-upwork-dev")
+      (upright/run-yarn-in-buffer upwork-buffer-master "start-upwork-dev" "UPWORK_MODE=master")
+      (upright/run-yarn-in-buffer upwork-buffer-slave "start-upwork-dev" "UPWORK_MODE=slave")
       (upright/run-yarn-in-buffer api-buffer "start-server")
       (upright/run-yarn-in-buffer web-buffer "start")
       )

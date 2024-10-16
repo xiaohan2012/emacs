@@ -1060,55 +1060,6 @@ let's not use it for now since it works better for => 2= windows.
    #+RESULTS:
    : kill-all-buffers
 
-* projectile
-** install & config
-#+BEGIN_SRC emacs-lisp
-    (use-package projectile
-      :ensure t
-      :config
-      (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-      (projectile-mode +1)
-      (setq projectile-indexing-method 'alien) ;; using alien for faster search
-      )
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** set project type to python-pip
-
-   #+begin_src emacs-lisp
-     (defun projectile-project-type-to-python-pip ()
-       (interactive)
-       (setq projectile-project-type 'python-pip)
-       )
-     (global-set-key (kbd "C-c t p p") 'projectile-project-type-to-python-pip)
-
-   #+end_src
-
-   #+RESULTS:
-
-
-** ❓ ignored directories/files (does not work for alien)
-
-#+begin_src emacs-lisp  
-  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
-  (add-to-list 'projectile-globally-ignored-directories "*packages")
-  (add-to-list 'projectile-globally-ignored-directories "*.idea")
-  (add-to-list 'projectile-globally-ignored-directories "*.yarn")
-  (add-to-list 'projectile-globally-ignored-directories "*dump")
-  ;; (add-to-list 'projectile-globally-ignored-files "*.svg") ;; may need an exact file name match
-
-  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svg")
-  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svgf")
-  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "json")
-  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "csv")
-  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "xml")
-#+end_src
-
-#+RESULTS:
-| xml | csv | json | svgf | svg | pkl | zip |
-
 * cursor
 ** avy
 
@@ -3361,6 +3312,56 @@ what command is used?
 #+RESULTS:
 : consult-line-other-window
 
+* projectile
+** install & config
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t
+    :config
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+    (projectile-mode +1)
+    )
+  (setq projectile-indexing-method 'alien) ;; using alien for faster search
+  (setq projectile-create-missing-test-files nil)
+#+END_SRC
+
+#+RESULTS:
+
+** set project type to python-pip
+
+   #+begin_src emacs-lisp
+     (defun projectile-project-type-to-python-pip ()
+       (interactive)
+       (setq projectile-project-type 'python-pip)
+       )
+     (global-set-key (kbd "C-c t p p") 'projectile-project-type-to-python-pip)
+
+   #+end_src
+
+   #+RESULTS:
+   : projectile-project-type-to-python-pip
+
+
+** ❓ ignored directories/files (does not work for alien)
+
+#+begin_src emacs-lisp  
+  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
+  (add-to-list 'projectile-globally-ignored-directories "*packages")
+  (add-to-list 'projectile-globally-ignored-directories "*.idea")
+  (add-to-list 'projectile-globally-ignored-directories "*.yarn")
+  (add-to-list 'projectile-globally-ignored-directories "*dump")
+  ;; (add-to-list 'projectile-globally-ignored-files "*.svg") ;; may need an exact file name match
+
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svg")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "svgf")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "json")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "csv")
+  ;; (add-to-list 'projectile-globally-ignored-file-suffixes "xml")
+#+end_src
+
+#+RESULTS:
+| xml | csv | json | svgf | svg | pkl | zip |
+
 * magit (version control)
 
    #+begin_src emacs-lisp
@@ -3448,3 +3449,4 @@ git config --global core.excludesfile ~/.gitignore
 
 #+RESULTS:
 : consult-buffer
+;
