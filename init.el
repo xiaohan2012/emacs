@@ -19,6 +19,22 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
+;; install straight.el
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
 ;; (load "~/.emacs.d/config.el")
 
@@ -71,7 +87,7 @@
  '(org-fontify-done-headline nil)
  '(org-fontify-todo-headline nil)
  '(package-selected-packages
-   '(s3ed org-colored-text minimap pyimpsort pyim pyimport good-scroll goto-chg c++-mode lsp-treemacs ccls lsp-ui lsp-mode oc-bibtex multiple-cursors consult marginalia orderless vertico citar-embark citar embark helpful tab-jump-out exec-path-from-shell valign multi-term org-download simple-mpc yasnippet-classic-snippets org-journal corfu-terminal popon quelpa corfu bookmark-view dockerfile-mode smartparens neotree dired-filter dired-subtree dired-hacks emojify magit markdown-mode afternoon-theme moe-theme zenburn-theme monokai-theme swiper sublimity-scroll sublimity symon dmenu diminish spaceline dashboard hungry-delete rainbow avy switch-window rainbow-delimiters org-bullets beacon spacemacs-theme which-key material-theme projectile ido-vertical-mode smex yasnippet-snippets yassnippet matlab-mode rainbow-mode auctex ein cython-mode yaml-mode flycheck-pycheckers jedi-direx jedi elpy use-package flycheck))
+   '(edit-indirect s3ed org-colored-text minimap pyimpsort pyim pyimport good-scroll goto-chg c++-mode lsp-treemacs ccls lsp-ui lsp-mode oc-bibtex multiple-cursors consult marginalia orderless vertico citar-embark citar embark helpful tab-jump-out exec-path-from-shell valign multi-term org-download simple-mpc yasnippet-classic-snippets org-journal corfu-terminal popon quelpa corfu bookmark-view dockerfile-mode smartparens neotree dired-filter dired-subtree dired-hacks emojify magit markdown-mode afternoon-theme moe-theme zenburn-theme monokai-theme swiper sublimity-scroll sublimity symon dmenu diminish spaceline dashboard hungry-delete rainbow avy switch-window rainbow-delimiters org-bullets beacon spacemacs-theme which-key material-theme projectile ido-vertical-mode smex yasnippet-snippets yassnippet matlab-mode rainbow-mode auctex ein cython-mode yaml-mode flycheck-pycheckers jedi-direx jedi elpy use-package flycheck))
  '(pdf-view-midnight-colors '("#b2b2b2" . "#262626"))
  '(projectile-globally-ignored-file-suffixes '("pkl" "zip"))
  '(projectile-globally-ignored-files nil)
