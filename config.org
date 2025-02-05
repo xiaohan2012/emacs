@@ -3464,7 +3464,7 @@ git config --global core.excludesfile ~/.gitignore
 (setq
  gptel-model 'gemini-pro
  gptel-backend (gptel-make-gemini "Gemini"
-                 :key "AIzaSyBswyrGA0pnO-dXHjdn9wM0CI2SDlQLYpY"
+                 :key ""
                  :stream t))
 #+end_src
 
