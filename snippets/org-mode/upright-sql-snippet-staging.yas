@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: upright-sql-staging
+# key: upsqlstg
+# --
+
+#+begin_src sql :engine postgres :database staginguprightdb :dbuser upright :dbhost localhost :dbport 5433 :dbpassword KXUud68edNkhrthgU6d62CKRJ4zuWPpG
+$1
+#+end_src

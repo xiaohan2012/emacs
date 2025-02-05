@@ -4,6 +4,7 @@
 (setq mc/cmds-to-run-for-all
       '(
         LaTeX-insert-left-brace
+        abbrev-prefix-mark
         backward-sexp
         beginning-of-buffer
         c-electric-colon
@@ -15,9 +16,9 @@
         comment-dwim
         compile
         consult-buffer
-        abbrev-prefix-mark
         cycle-spacing
         electric-pair-delete-pair
+        electric-pair-mode
         elpy-multiedit-python-symbol-at-point
         emojify-delete-emoji-backward
         end-of-buffer
