@@ -1262,6 +1262,14 @@ tips:
 #+RESULTS:
 : ein:worksheet-kill-cell
 
+*** jupyter
+
+#+begin_src emacs-lisp
+  ;; (straight-use-package 'jupyter)
+#+end_src
+
+#+RESULTS:
+
 *** elpy
 
 #+BEGIN_SRC emacs-lisp
