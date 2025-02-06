@@ -263,6 +263,7 @@
 
 
 #+begin_src emacs-lisp
+  (pixel-scroll-precision-mode t)
   (use-package good-scroll
     :ensure t
     :config (good-scroll-mode)
@@ -769,6 +770,18 @@ enable executing shell scripts in code blocks
 #+begin_src emacs-lisp
   ;; (use-package oc-bibtex
   ;;   :ensure t)
+#+end_src
+
+#+RESULTS:
+: t
+
+** dot
+
+#+begin_src emacs-lisp
+(use-package graphviz-dot-mode
+  :ensure t
+  :config
+  (setq graphviz-dot-indent-width 4))
 #+end_src
 
 #+RESULTS:
@@ -1569,7 +1582,7 @@ useful commands:
 #+begin_src emacs-lisp
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((sql . t)))
+ '((sql . t) (dot . t)))
 #+end_src
 
 #+RESULTS:
@@ -2407,6 +2420,50 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : copy-sexp-as-link-at-point
 
+** copy the current file as a link
+
+#+begin_src emacs-lisp
+  (defun copy-current-file-path-as-link ()
+    "Copy current line in file as a link in clipboard as."
+    (interactive)
+    (let ((path-with-line-number (buffer-file-name-with-line-number)))
+      (kill-new (format "[[%s][link]]" path-with-line-number))
+      (message (concat path-with-line-number " copied as a link to clipboard"))))
+
+  (global-set-key (kbd "C-c w f") 'copy-current-file-path-as-link)
+#+end_src
+
+#+RESULTS:
+: copy-current-file-path-as-link
+
+** copy the current file path
+
+#+begin_src emacs-lisp
+  (defun copy-current-absolute-path ()
+    (interactive)
+    (let ((file-path (buffer-file-name)))
+      (kill-new file-path)
+      (message (concat file-path " copied"))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: copy-current-file-path
+
+#+begin_src emacs-lisp
+  (defun copy-current-relative-path ()
+    (interactive)
+    (let ((rel-file-path (concat "./" (file-relative-name (buffer-file-name) (projectile-project-root)))))
+      (kill-new rel-file-path)
+      (message (concat rel-file-path " copied"))
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: copy-current-relative-path
+
 ** copy word, line, sexp
 *** copy word
 #+begin_src emacs-lisp
@@ -3021,7 +3078,7 @@ useful to kill an expression (including function)
       (kill-new path-with-line-number)
       (message (concat path-with-line-number " copied to clipboard"))))
 
-  (global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
+  ;; (global-set-key (kbd "C-c w f") 'copy-current-line-position-to-clipboard)
 #+end_src
 
 #+RESULTS:
@@ -3415,7 +3472,7 @@ git config --global core.excludesfile ~/.gitignore
 (setq
  gptel-model 'gemini-pro
  gptel-backend (gptel-make-gemini "Gemini"
-                 :key "AIzaSyBswyrGA0pnO-dXHjdn9wM0CI2SDlQLYpY"
+                 :key ""
                  :stream t))
 #+end_src
 

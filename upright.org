@@ -81,7 +81,7 @@
 *** db tunning
 
 #+begin_src emacs-lisp
-  (defun upright/setup-valdb-tunneling ()
+  (defun upright/setup-val-db-tunneling ()
     "tunnel into validation server DB"
     (interactive)
   (let* ((val-db-buffer "*upright/val-db-tunneling*")
@@ -91,10 +91,32 @@
     (my/async-shell-command "ssh -N -p 2222 upright@validation-manager.uprightproject.com -L 127.0.0.1:5222:192.168.10.1:5432" val-db-buffer)
     )
   )
+
+  (defun upright/setup-stg-db-tunneling ()
+    "tunnel into staging server DB"
+    (interactive)
+  (let* ((buffer "*upright/stg-db-tunneling*")
+         )
+    (when (get-buffer buffer)
+      (kill-buffer buffer))
+    (my/async-shell-command "ssh -L 5433:pgbouncer-work:5432 upright@staging-manager.uprightproject.com -p 2222" buffer)
+    )
+  )
+
+    (defun upright/setup-prd-db-tunneling ()
+      "tunnel into production server DB"
+      (interactive)
+    (let* ((buffer "*upright/prd-db-tunneling*")
+           )
+      (when (get-buffer buffer)
+        (kill-buffer buffer))
+      (my/async-shell-command "ssh -L 5434:pgbouncer-work:5432 upright@manager.uprightproject.com -p 2222" buffer)
+      )
+    )  
 #+end_src
 
 #+RESULTS:
-: upright/setup-valdb-tunneling
+: upright/setup-prd-db-tunneling
 
 *** swarmpit tunneling
 
@@ -113,7 +135,6 @@
 
 #+RESULTS:
 : upright/setup-val-swarmpit-tunneling
-
 
 ** run apps locally
 
@@ -207,6 +228,29 @@
 #+RESULTS:
 : upright/setup-log-tunneling
 
+** pai
+
+#+begin_src emacs-lisp
+  (defun upright/ghg-datagen ()
+  "data generation for GHG algo "
+  (interactive)
+  (let* (;; (lint-buffer "*upright/lint*")
+         (trainig-data-buffer "*upright/ghg-datagen-training*")
+         (product-market-size-buffer "*upright/ghg-datagen-market-size*")
+         (mixin-base-buffer "*upright/ghg-datagen-minxin-base*")
+         (hierarchy-buffer "*upright/ghg-datagen-product-hierarchy*")
+         )
+    (upright/run-yarn-in-buffer trainig-data-buffer "run tsn-main  --max-old-space-size=16000 src/scripts/tools/pai/create-training-data.ts")
+    (upright/run-yarn-in-buffer product-market-size-buffer "run tsn-main src/scripts/tools/pai/export-product-market-share.ts")
+    (upright/run-yarn-in-buffer mixin-base-buffer "run tsn-main src/scripts/tools/pai/extract-base-products-for-mixin.ts")
+    (upright/run-yarn-in-buffer hierarchy-buffer "run tsn-main src/scripts/tools/product-taxonomy/export-hierarchy.ts")
+    )
+  )
+#+end_src
+
+#+RESULTS:
+: upright/ghg-datagen
+
 ** adhoc commands
 *** CSRD
 #+begin_src emacs-lisp
@@ -292,7 +336,7 @@
   (defun upright/open-company-report ()
     "open a report of a given company"
     (interactive)
-    (let* ((default-directory "~/code/llm-based-annotation/data/ghg1-reports")
+    (let* ((default-directory "~/code/llm-report-annotation/data/ghg1-reports")
            (all-paths (directory-files default-directory t))
            ;; use pdf only
            (candidate-file-paths  (-filter (lambda (str) (string-match-p "pdf" str)) all-paths))
@@ -306,18 +350,38 @@
     "open the split pages of a given company"
     (interactive)
     (let* (
-           (default-directory "~/code/llm-based-annotation/data/ghg1-pages-dpi100")
+           (default-directory "~/code/llm-report-annotation/data/ghg1-pages-dpi100")
              (all-paths (directory-files default-directory t))
              ;; extract file names
              (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
            (company-id (completing-read "Enter company id: " (-filter (lambda (str) (> (length str) 3)) candidate-file-names))))
-      (find-file (format "%s/%s/page_0.png" default-directory company-id))))  
+      (find-file (format "%s/%s/page_0.png" default-directory company-id))))
+
+  (defun upright/open-company-relevant-page ()
+    "open the relevant page of a given company"
+    (interactive)
+    (let* (
+           (default-directory "~/code/llm-report-annotation/data/ghg1-relevant-page-only-dpi500/")
+             (all-paths (directory-files default-directory t))
+             ;; extract file names
+             (candidate-file-names  (mapcar (lambda (path) (file-name-sans-extension (file-name-nondirectory path))) all-paths))
+           (company-id (completing-read "Enter company id: " (-filter (lambda (str) (> (length str) 3)) candidate-file-names))))
+      (find-file (format "%s/%s/page_0.png" default-directory company-id))))    
 #+end_src
 
 #+RESULTS:
-: upright/open-company-pages
+: upright/open-company-relevant-page
 
 
+
+* AWS
+
+#+begin_src emacs-lisp
+  (setenv "AWS_PROFILE" "upright")
+#+end_src
+
+#+RESULTS:
+: upright
 
 * snippets
 
