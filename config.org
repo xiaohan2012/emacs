@@ -787,6 +787,17 @@ enable executing shell scripts in code blocks
 #+RESULTS:
 : t
 
+** source code display in latex export
+
+#+begin_src emacs-lisp
+  ;; (use-package engraved-faces
+  ;;   :ensure t)
+  (setq org-latex-src-block-backend 'engraved)
+#+end_src
+
+#+RESULTS:
+: engraved
+
 * file
 ** save last edit place
 #+begin_src emacs-lisp
