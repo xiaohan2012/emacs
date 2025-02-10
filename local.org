@@ -2,7 +2,7 @@
 #+begin_src emacs-lisp
   (defun my/open-dairy ()
     (interactive)
-    (find-file "~/docs/notes/dairy2024.org"))
+    (find-file "~/docs/notes/dairy2025.org"))
   (global-set-key (kbd "C-c o r") 'my/open-dairy)
 
   (defun my/open-upright ()
