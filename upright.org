@@ -1,16 +1,22 @@
 * copy&paste
 
 #+begin_src emacs-lisp
-  (defun upright/copy-amazon-id ()
+  (defun upright/copy-aws-id ()
     (interactive)
     (kill-new "347938125022")
     (message "copid '347938125022'")
     )
-  
+
+  (defun upright/copy-aws-name ()
+    (interactive)
+    (kill-new "admin_role")
+    (message "copid 'admin_role'")
+    )  
+
 #+end_src
 
 #+RESULTS:
-: upright/copy-amazon-id
+: upright/copy-aws-name
 
 * dev
 ** utility function
@@ -146,7 +152,7 @@
            (upwork-buffer-slave "*upright/upwork-server-slave*")
            (api-buffer "*upright/api-server*")
            (web-buffer "*upright/web-server*")
-           (yarn-path "/Users/hanxiao/.nvm/versions/node/v18.16.1/bin/yarn")
+           (yarn-path "yarn")
            )
 
       (upright/run-yarn-in-buffer upwork-buffer-master "start-upwork-dev" "UPWORK_MODE=master")
@@ -374,14 +380,15 @@
 
 
 
-* AWS
+* Environment variables
 
 #+begin_src emacs-lisp
   (setenv "AWS_PROFILE" "upright")
+  (setenv "UPRIGHT_TOKEN" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDAxMjU5NDQsImV4cCI6NDg2NDMyODM0NH0.sWbzhvWHHKXZglC6G9mzVKNEG2A3n48eW9queu7Dzos")
 #+end_src
 
 #+RESULTS:
-: upright
+: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDAxMjU5NDQsImV4cCI6NDg2NDMyODM0NH0.sWbzhvWHHKXZglC6G9mzVKNEG2A3n48eW9queu7Dzos
 
 * snippets
 
