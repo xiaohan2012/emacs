@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: math
-# key: $$
+# key: math
 # --
 ```math
 $1

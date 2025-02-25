@@ -2198,47 +2198,6 @@ start a remote terminal via ssh
 #+RESULTS:
 : 400
 
-** save image from clipboard
-
-#+begin_src emacs-lisp
-  ;; (defun my-save-image-from-clipboard (dest-file-path)
-  ;;   "This saves any image that might be in the macOS clipboard to the file at DEST-FILE-PATH."
-  ;;   (let ((cmd-str (concat "pngpaste " dest-file-path)))
-  ;;     (shell-command cmd-str)))  
-
-
-  (defun my-save-image-from-clipboard ()
-    "Save an image from the macOS clipboard to DEST-FILE-PATH.
-  If DEST-FILE-PATH is not provided, it defaults to a filename based on the current date and time in the format 'YYYY-MM-DD_HH-MM-SS.png' and saves it in the 'images' subdirectory.
-  The saved file path is copied to the kill ring."
-    (interactive)
-    (let* ((images-dir (expand-file-name "images/" default-directory)) ; Define the 'images' subdirectory
-           (default-filename (format-time-string "%Y-%m-%d_%H-%M-%S.png"))) ; Default filename
-      ;; Create the 'images' directory if it doesn't exist
-      (unless (file-exists-p images-dir)
-        (make-directory images-dir t))
-      ;; Set the file path if not provided
-      (setq dest-file-path (file-name-concat
-                            images-dir
-                            (read-file-name "Save image to: " images-dir default-filename nil default-filename)))
-      (print dest-file-path)
-      ;; Save the image using pngpaste
-      (let* (
-             (cmd-str (concat "pngpaste " (shell-quote-argument dest-file-path)))
-             (rel-file-path (file-relative-name dest-file-path))
-             )
-        (print cmd-str)
-        (shell-command cmd-str)
-        ;; Copy the saved file path to the kill ring
-        (kill-new rel-file-path)
-        (message "Image saved to %s (path copied to kill ring)" rel-file-path)
-        )))
-#+end_src
-
-
-#+RESULTS:
-: my-save-image-from-clipboard
-
 * text manipulation
 ** common functions
 
