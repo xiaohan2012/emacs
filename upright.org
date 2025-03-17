@@ -383,14 +383,85 @@
 * Environment variables
 
 #+begin_src emacs-lisp
-  (setenv "AWS_PROFILE" "upright")
-  (setenv "UPRIGHT_TOKEN" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDAxMjU5NDQsImV4cCI6NDg2NDMyODM0NH0.sWbzhvWHHKXZglC6G9mzVKNEG2A3n48eW9queu7Dzos")
-  (setenv "UPRIGHT_STG_TOKEN" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDA0NzYwNDMsImV4cCI6NDg2NDY3ODQ0M30.ZEMr3QyRcfpj3V_63hCGmI9Y6s3BI6x48vk5DtVi7Xg")  
-  
+    (setenv "AWS_PROFILE" "upright")
+    (setenv "UPRIGHT_TOKEN" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDAxMjU5NDQsImV4cCI6NDg2NDMyODM0NH0.sWbzhvWHHKXZglC6G9mzVKNEG2A3n48eW9queu7Dzos")
+    (setenv "UPRIGHT_STG_TOKEN" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDA0NzYwNDMsImV4cCI6NDg2NDY3ODQ0M30.ZEMr3QyRcfpj3V_63hCGmI9Y6s3BI6x48vk5DtVi7Xg")  
 #+end_src
 
 #+RESULTS:
 : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTg1MSwic2NvcGUiOiJBUEkiLCJpYXQiOjE3NDAxMjU5NDQsImV4cCI6NDg2NDMyODM0NH0.sWbzhvWHHKXZglC6G9mzVKNEG2A3n48eW9queu7Dzos
+** bitwarden
+
+#+begin_src emacs-lisp
+(defun upright/bw-unlock-and-set-env ()
+  "Unlock Bitwarden and save the session key as an environment variable."
+  (interactive)
+  (let* ((user-input (read-string "Enter your Bitwarden master password: "))
+         (command (format "bw unlock '%s' --raw" user-input))
+         (output (shell-command-to-string command)))
+    (if (string-empty-p output)
+        (message "Failed to unlock Bitwarden or no output received.")
+      (setenv "BW_SESSION" output)
+      (message "Bitwarden unlocked! BW_SESSION environment variable set."))))
+#+end_src
+
+#+RESULTS:
+: upright/bw-unlock-and-set-env
+
+** upright database passwords
+
+#+begin_src emacs-lisp
+  (defun upright/setup-db-pwd ()
+    (interactive)
+    (unless (getenv "BW_SESSION")
+      (bw-unlock-and-set-env))
+    (let ((bw-session (getenv "BW_SESSION")))
+      (unless bw-session
+        (error "Failed to set BW_SESSION. Please unlock Bitwarden manually."))
+      (let* (
+             (prd-command (format "bw get notes 'production postgres'  --session %s | grep upright | cut -d ' ' -f 2  | sed 's/\"//g'" bw-session))
+             (stg-command (format "bw get notes 'staging postgres'  --session %s | grep upright | cut -d ' ' -f 2  | sed 's/\"//g'" bw-session))
+             )
+        (setenv "UPRIGHT_PRD_DB_PWD" (string-trim (shell-command-to-string prd-command)))
+        (setenv "UPRIGHT_STG_DB_PWD" (string-trim (shell-command-to-string stg-command)))
+        )
+
+      (message "Upright passwords populated successfully!")))
+#+end_src
+
+#+RESULTS:
+: upright/setup-db-pwd
+
+
+
+** upclose credentials
+
+#+begin_src emacs-lisp
+(defun upright/setup-upclose-envs ()
+  "Set UpClose environment variables using Bitwarden CLI.
+If BW_SESSION is not set, prompt the user to unlock Bitwarden."
+  (interactive)
+  (unless (getenv "BW_SESSION")
+    (bw-unlock-and-set-env))
+  (let ((bw-session (getenv "BW_SESSION")))
+    (unless bw-session
+      (error "Failed to set BW_SESSION. Please unlock Bitwarden manually."))
+    (setenv "GEMINI_API_KEY" (shell-command-to-string (format "bw get password 'Google Gemini API key 2' --session %s" bw-session)))
+    (setenv "PERPLEXITY_API_KEY" (shell-command-to-string (format "bw get password 'Perplexity API key' --session %s" bw-session)))
+    (setenv "SCRAPINGBEE_API_KEY" (shell-command-to-string (format "bw get password 'ScrapingBee API key' --session %s" bw-session)))
+    (setenv "DOCUPANDA_API_KEY" (shell-command-to-string (format "bw get password 'DocuPanda API key' --session %s" bw-session)))
+    (setenv "UPCLOSE_PYTHON_CMD" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/python")
+    (setenv "UPCLOSE_PLD_PATH" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/pld")
+    (setenv "UPCLOSE_TEMP_DIR" "/tmp/upclose")
+    (setenv "DEBUG_LOGGERS" "all")
+    (setenv "UPCLOSE_WORKER_ID" "1")
+    (setenv "UPCLOSE_DB_PASSWORD" (shell-command-to-string (format "bw get password 'UPCLOSE' --session %s" bw-session)))
+    (message "UpClose environment variables set successfully!")))
+#+end_src
+
+#+RESULTS:
+: upright/setup-upclose-envs
+
 
 * snippets
 
