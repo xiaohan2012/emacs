@@ -3,6 +3,6 @@
 # key: upsqlval
 # --
 
-#+begin_src sql :engine postgres :database validationuprightdb :dbuser upright :dbhost localhost :dbport 5222 :dbpassword 9VsdvjGraakpSTYs5dmJ5BkKhX8Rbg
+#+begin_src sql :engine postgres :database validationuprightdb :dbuser upright :dbhost localhost :dbport 5222 :dbpassword (getenv "UPRIGHT_VAL_DB_PWD")
 $1
 #+end_src

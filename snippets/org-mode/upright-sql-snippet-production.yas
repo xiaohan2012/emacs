@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
-# name: upright-sql-snippet-production
+# name: upright-sql-production
 # key: upsqlprd
 # --
 
-#+begin_src sql :engine postgres :database uprightdb :dbuser upright :dbhost localhost :dbport 5434 :dbpassword zA3oqbRKxtJmdWwK324igbfcRYPYepxQ
+#+begin_src sql :engine postgres :database uprightdb :dbuser upright :dbhost localhost :dbport 5434 :dbpassword (getenv "UPRIGHT_PRD_DB_PWD")
 $1
 #+end_src

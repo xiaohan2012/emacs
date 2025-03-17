@@ -421,9 +421,11 @@
       (let* (
              (prd-command (format "bw get notes 'production postgres'  --session %s | grep upright | cut -d ' ' -f 2  | sed 's/\"//g'" bw-session))
              (stg-command (format "bw get notes 'staging postgres'  --session %s | grep upright | cut -d ' ' -f 2  | sed 's/\"//g'" bw-session))
+             (val-command (format "bw get notes 'validation postgres'  --session %s | grep upright | cut -d ' ' -f 2  | sed 's/\"//g'" bw-session))
              )
         (setenv "UPRIGHT_PRD_DB_PWD" (string-trim (shell-command-to-string prd-command)))
         (setenv "UPRIGHT_STG_DB_PWD" (string-trim (shell-command-to-string stg-command)))
+        (setenv "UPRIGHT_VAL_DB_PWD" (string-trim (shell-command-to-string val-command)))
         )
 
       (message "Upright passwords populated successfully!")))
