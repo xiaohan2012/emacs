@@ -37,9 +37,19 @@
     (interactive)
     (kill-new "Gummeruksenkatu 3 B 22, 40100 Jyväskylä")
     (message "copied 'Gummeruksenkatu 3 B 22, 40100 Jyväskylä'")
+    )
+
+
+  (defun my/copy-finnair-plus-number ()
+    (interactive)
+    (kill-new "693396855")
+    (message "copied '693396855'")
     )  
+  
 #+end_src
 
+
+
 #+RESULTS:
-: my/copy-address
+: my/copy-finnair-plus-number
 
