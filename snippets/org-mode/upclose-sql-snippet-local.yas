@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: upclose-sql-local
+# key: upclosesql
+# --
+
+#+begin_src sql :engine postgres :database localupclosedb :dbuser postgres :dbhost localhost :dbport 5432
+$1
+#+end_src
