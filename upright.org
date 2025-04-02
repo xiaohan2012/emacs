@@ -439,26 +439,26 @@
 ** upclose credentials
 
 #+begin_src emacs-lisp
-(defun upright/setup-upclose-envs ()
-  "Set UpClose environment variables using Bitwarden CLI.
-If BW_SESSION is not set, prompt the user to unlock Bitwarden."
-  (interactive)
-  (unless (getenv "BW_SESSION")
-    (bw-unlock-and-set-env))
-  (let ((bw-session (getenv "BW_SESSION")))
-    (unless bw-session
-      (error "Failed to set BW_SESSION. Please unlock Bitwarden manually."))
-    (setenv "GEMINI_API_KEY" (shell-command-to-string (format "bw get password 'Google Gemini API key 2' --session %s" bw-session)))
-    (setenv "PERPLEXITY_API_KEY" (shell-command-to-string (format "bw get password 'Perplexity API key' --session %s" bw-session)))
-    (setenv "SCRAPINGBEE_API_KEY" (shell-command-to-string (format "bw get password 'ScrapingBee API key' --session %s" bw-session)))
-    (setenv "DOCUPANDA_API_KEY" (shell-command-to-string (format "bw get password 'DocuPanda API key' --session %s" bw-session)))
-    (setenv "UPCLOSE_PYTHON_CMD" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/python")
-    (setenv "UPCLOSE_PLD_PATH" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/pld")
-    (setenv "UPCLOSE_TEMP_DIR" "/tmp/upclose")
-    (setenv "DEBUG_LOGGERS" "all")
-    (setenv "UPCLOSE_WORKER_ID" "1")
-    (setenv "UPCLOSE_DB_PASSWORD" (shell-command-to-string (format "bw get password 'UPCLOSE' --session %s" bw-session)))
-    (message "UpClose environment variables set successfully!")))
+  (defun upright/setup-upclose-envs ()
+    "Set UpClose environment variables using Bitwarden CLI.
+  If BW_SESSION is not set, prompt the user to unlock Bitwarden."
+    (interactive)
+    (unless (getenv "BW_SESSION")
+      (bw-unlock-and-set-env))
+    (let ((bw-session (getenv "BW_SESSION")))
+      (unless bw-session
+        (error "Failed to set BW_SESSION. Please unlock Bitwarden manually."))
+      (setenv "GEMINI_API_KEY" (shell-command-to-string (format "bw get password 'Google Gemini API key 2' --session %s" bw-session)))
+      (setenv "PERPLEXITY_API_KEY" (shell-command-to-string (format "bw get password 'Perplexity API key' --session %s" bw-session)))
+      (setenv "SCRAPINGBEE_API_KEY" (shell-command-to-string (format "bw get password 'ScrapingBee API key' --session %s" bw-session)))
+      (setenv "DOCUPANDA_API_KEY" (shell-command-to-string (format "bw get password 'DocuPanda API key' --session %s" bw-session)))
+      (setenv "UPCLOSE_PYTHON_CMD" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/python")
+      (setenv "UPCLOSE_PLD_PATH" "/Users/hanxiao/code/upright/src/services/upclose/.venv/bin/pld")
+      (setenv "UPCLOSE_TEMP_DIR" "/tmp/upclose")
+      (setenv "DEBUG_LOGGERS" "all")
+      (setenv "UPCLOSE_WORKER_ID" "1")
+      (setenv "UPCLOSE_PRD_DB_PASSWORD" (shell-command-to-string (format "bw get password 'UPCLOSE' --session %s" bw-session)))
+      (message "UpClose environment variables set successfully!")))
 #+end_src
 
 #+RESULTS:
