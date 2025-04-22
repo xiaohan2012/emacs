@@ -3,6 +3,6 @@
 # key: upclosesqlprd
 # --
 
-#+begin_src sql :engine postgres :database upclosedb :dbuser upright :dbhost upclosedb.ctq2lzvr0w4b.eu-central-1.rds.amazonaws.com :dbport 5432 :dbpassword (getenv "UPCLOSE_PRD_DB_PWD")
+#+begin_src sql :engine postgres :database upclosedb :dbuser upright :dbhost upclosedb.ctq2lzvr0w4b.eu-central-1.rds.amazonaws.com :dbport 5432 :dbpassword (getenv "UPCLOSE_PRD_DB_PASSWORD")
 $1
 #+end_src
