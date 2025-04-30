@@ -45,11 +45,17 @@
     (kill-new "693396855")
     (message "copied '693396855'")
     )  
-  
+
+  (defun my/copy-fudan-ssh-pwd ()
+    (interactive)
+    (kill-new "Qty062015")
+    (message "copied 'Qty062015'")
+    )  
+    
 #+end_src
 
 
 
 #+RESULTS:
-: my/copy-finnair-plus-number
+: my/copy-fudan-ssh-pwd
 

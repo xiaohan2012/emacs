@@ -1658,8 +1658,8 @@ why not showing in non-GUI Emacs?
           '("~/.emacs.d/snippets"
             ;; "~/.emacs.d/elpa/yasnippet-snippets-20230220.1659/snippets/"
             ;; "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
-            "~/.emacs.d/elpa/yasnippet-snippets-20240221.1621/snippets"
-            "~/.emacs.d/elpa/yasnippet-snippets-20240603.757/snippets"
+            "~/.emacs.d/elpa/yasnippet-20250112.1504/snippets"
+            "~/.emacs.d/elpa/yasnippet-snippets-20250225.950/snippets"
             ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
