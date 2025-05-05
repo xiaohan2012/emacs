@@ -1,0 +1,13 @@
+* strings in clipboard
+
+#+begin_src emacs-lisp
+
+  (defun cambri/aws-account-number ()
+    (interactive)
+    (kill-new "503935936293")
+    (message "copid '503935936293'")
+    )
+#+end_src
+
+#+RESULTS:
+: cambri/aws-account-number

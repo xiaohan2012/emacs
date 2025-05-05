@@ -46,8 +46,8 @@
 (when (file-exists-p "~/.emacs.d/local.org")
   (org-babel-load-file (expand-file-name "~/.emacs.d/local.org")))
 
-(when (file-exists-p "~/.emacs.d/upright.org")
-  (org-babel-load-file (expand-file-name "~/.emacs.d/upright.org")))
+(when (file-exists-p "~/.emacs.d/cambri.org")
+  (org-babel-load-file (expand-file-name "~/.emacs.d/cambri.org")))
 
 
 (custom-set-variables
