@@ -1224,23 +1224,46 @@ tips:
 *** activate virtualenv
 
    #+begin_src emacs-lisp
-     (defun activate-virtualenv ()
+     (defun activate-virtualenv-under-current-dir ()
        "pyenv-activate the current directory + '.venv'
-	 in the future, the name of virtualenv should be specified as input
-	 "
+         in the future, the name of virtualenv should be specified as input
+         "
        (interactive)
        (message "activating virtualenv")
        (pyvenv-activate
-	(expand-file-name
-	 ".venv" default-directory))
+        (expand-file-name
+         ".venv" default-directory))
        (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
        )
 
-     (global-set-key (kbd "C-c a v") 'activate-virtualenv)
+     ;; (global-set-key (kbd "C-c a v") 'activate-virtualenv-under-current-dir)
    #+end_src
 
    #+RESULTS:
    : activate-virtualenv
+
+   #+begin_src emacs-lisp
+     (defun activate-pyenv-virtualenv ()
+       "activate a given pyenv environment"
+       (interactive)
+       (let* (
+              (env-root "~/.pyenv/versions/")
+              (env-to-exclude '("." ".." "activate"))
+              (valid-env-list (cl-remove-if (lambda (x) (member x env-to-exclude) ) (directory-files env-root)))
+              (env (completing-read "environment: " valid-env-list))
+              )
+         (pyvenv-activate
+          (expand-file-name
+           env env-root))
+         (setq elpy-rpc-virtualenv-path 'current)  ; set path to Python interpreter correctly
+         (message (format "activated envrinoment '%s'" env))
+         )
+       )
+     (global-set-key (kbd "C-c a v") 'activate-pyenv-virtualenv)
+   #+end_src
+
+   #+RESULTS:
+   : activate-pyenv-virtualenv
 
 *** lsp-mode
 
