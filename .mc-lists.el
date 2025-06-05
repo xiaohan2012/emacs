@@ -16,6 +16,7 @@
         comment-dwim
         compile
         consult-buffer
+        consult-yank-from-kill-ring
         cycle-spacing
         electric-pair-delete-pair
         electric-pair-mode
@@ -28,6 +29,7 @@
         lsp-signature-stop
         lsp-ui-doc--handle-mouse-movement
         mark-defun
+        mark-sexp
         markdown-outdent-or-delete
         mc/mark-next-lines
         multiple-cursors-mode

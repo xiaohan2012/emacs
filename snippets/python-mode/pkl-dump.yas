@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: pickle-dump
+# key: pkld
+# --
+import pickle as pkl
+
+stuff = ...
+with open("/tmp/dump.pkl", "wb") as f:
+     pickle.dump(stuff, f)

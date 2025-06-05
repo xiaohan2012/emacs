@@ -48,3 +48,4 @@ upright.el
 config.el
 straight/
 cambri.el
+**/.claude/settings.local.json
