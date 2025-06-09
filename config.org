@@ -3431,7 +3431,7 @@ Consult provides search and navigation commands
     :bind
     ("C-c f" . 'consult-find)  ;; find file
     ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
-					  ; consult-imenu-multi for multiple buffers
+        				  ; consult-imenu-multi for multiple buffers
     ("C-s" . 'consult-line)  ;; line search in current buffer
     ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
     ("C-c y" . 'consult-yank-from-kill-ring)
@@ -3440,7 +3440,7 @@ Consult provides search and navigation commands
     ("C-c r l" . 'consult-register)
     ("C-c m" . 'consult-mark)
     ("M-g M-g" . 'consult-goto-line)
-    ("C-c c e" . 'consult-compile-error)
+    ;; ("C-c c e" . 'consult-compile-error)
     )
 #+end_src
 
