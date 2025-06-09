@@ -2547,8 +2547,10 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (defun copy-current-file-path-as-link ()
     "Copy current line in file as a link in clipboard as."
     (interactive)
-    (let ((path-with-line-number (buffer-file-name-with-line-number)))
-      (kill-new (format "[[%s][link]]" path-with-line-number))
+    (let* (
+           (path-with-line-number (buffer-file-name-with-line-number))
+           )
+      (kill-new (format "[[%s][%s]]" path-with-line-number (file-name-nondirectory (buffer-file-name))))
       (message (concat path-with-line-number " copied as a link to clipboard"))))
 
   (global-set-key (kbd "C-c w f") 'copy-current-file-path-as-link)
