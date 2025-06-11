@@ -2385,7 +2385,6 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 			      ;; (?\` . ?\`)
 			      ;; (?\$ . ?\$)
   ))
-  (electric-pair-mode nil)
 #+end_src
 
 #+RESULTS:
@@ -3554,6 +3553,17 @@ git config --global core.excludesfile ~/.gitignore
 
 #+RESULTS:
 : #s(gptel-gemini "Gemini" "generativelanguage.googleapis.com" nil "https" t "/v1beta/models" "AIzaSyBswyrGA0pnO-dXHjdn9wM0CI2SDlQLYpY" (gemini-1.5-pro-latest gemini-2.0-flash-exp gemini-1.5-flash gemini-1.5-flash-8b gemini-exp-1206 gemini-pro) #[0 "\303\203 \203 \306\202 \307\310\311\301\302\300\312 &\207" ["/v1beta/models" "https" "generativelanguage.googleapis.com" t gptel-stream gptel-model "streamGenerateContent" "generateContent" format "%s://%s%s/%s:%s?key=%s" gptel--get-api-key] 9] nil nil)
+
+* final
+** turn off electric-pair-mode
+
+since it is in conflict with smartparen mode
+#+begin_src emacs-lisp
+  (electric-pair-mode nil)
+#+end_src
+
+#+RESULTS:
+: t
 
 * archive
 ** +IDO+
