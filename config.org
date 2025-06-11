@@ -798,6 +798,15 @@ enable executing shell scripts in code blocks
 #+RESULTS:
 : engraved
 
+** ob-dsq
+
+#+begin_src emacs-lisp
+(use-package ob-dsq
+  :ensure)
+#+end_src
+
+#+RESULTS:
+
 * file
 ** save last edit place
 #+begin_src emacs-lisp
@@ -952,16 +961,6 @@ enable executing shell scripts in code blocks
 
 - C-x r l: list bookmarks
 - C-x r b: jump to bookmark
-
-** bookmark-view
-
-   #+begin_src emacs-lisp
-     (use-package bookmark-view
-       :ensure t
-       )
-   #+end_src
-
-   #+RESULTS:
 
 * window
 ** +switch-window+
@@ -1274,19 +1273,30 @@ tips:
 - elpy or lsp? seems like both have their benefits ([[https://www.reddit.com/r/emacs/comments/10nctt8/comment/j68npq5/][ref]])
 - more info: https://www.mattduck.com/lsp-python-getting-started.html  
 
-*** flycheck
+*** +flycheck+
 
    #+begin_src emacs-lisp
-     (use-package flycheck
-       :ensure t
-       :hook
-       (lsp-mode . (lambda () (flycheck-mode nil))) ;; turn it off in lsp-mode
-       )
+     ;; (use-package flycheck
+     ;;   :ensure t
+     ;;   :hook
+     ;;   (lsp-mode . (lambda () (flycheck-mode nil))) ;; turn it off in lsp-mode
+     ;;   )
 
    #+end_src
 
    #+RESULTS:
    | (lambda nil (flycheck-mode nil)) | (lambda nil (flycheck-mode -1)) | lsp-enable-which-key-integration | (lambda nil (diminish 'lsp-lens-mode) (diminish 'lsp-mode LSP)) |
+
+*** flycheck-ruff
+
+#+begin_src emacs-lisp
+(use-package flymake-ruff
+  :ensure t
+  :hook (python-mode . flymake-ruff-load))
+#+end_src
+
+#+RESULTS:
+| flymake-ruff-load | ruff-format-on-save-mode | elpy-mode | #[nil ((lsp-mode 1) (flycheck-mode nil)) nil] |
 
 *** ein
 
@@ -1390,6 +1400,23 @@ tips:
 
 #+RESULTS:
 : my/turn-off-python-profiling
+
+*** ruff formatting (on file save)
+
+#+begin_src emacs-lisp
+  (use-package reformatter
+    :ensure t    
+    :hook 
+    (python-mode . ruff-format-on-save-mode)
+    (python-ts-mode . ruff-format-on-save-mode)
+    :config
+    (reformatter-define ruff-format
+      :program "ruff"
+      :args `("format" "--config" "~/code/service-launch-ai/code/pyproject.toml" "--stdin-filename" ,buffer-file-name "-")))
+#+end_src
+
+#+RESULTS:
+| ruff-format-on-save-mode |
 
 ** JavaScript
 
@@ -1666,6 +1693,24 @@ why not showing in non-GUI Emacs?
 
 #+RESULTS:
 : origami-toggle-node
+
+* AI coding
+** claude code
+
+#+begin_src emacs-lisp
+(use-package claude-code
+  :straight (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main"
+                   :files ("*.el" (:exclude "demo.gif")))
+  :bind-keymap
+  ("C-c c" . claude-code-command-map)
+  :hook ((claude-code--start . sm-setup-claude-faces))
+  :config
+  (claude-code-mode))
+
+#+end_src
+
+#+RESULTS:
+: #[nil ((use-package-autoload-keymap 'claude-code-command-map 'claude-code nil)) nil nil nil nil]
 
 * cloud-related utils
 ** s3
@@ -2501,8 +2546,10 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
   (defun copy-current-file-path-as-link ()
     "Copy current line in file as a link in clipboard as."
     (interactive)
-    (let ((path-with-line-number (buffer-file-name-with-line-number)))
-      (kill-new (format "[[%s][link]]" path-with-line-number))
+    (let* (
+           (path-with-line-number (buffer-file-name-with-line-number))
+           )
+      (kill-new (format "[[%s][%s]]" path-with-line-number (file-name-nondirectory (buffer-file-name))))
       (message (concat path-with-line-number " copied as a link to clipboard"))))
 
   (global-set-key (kbd "C-c w f") 'copy-current-file-path-as-link)
@@ -3385,7 +3432,7 @@ Consult provides search and navigation commands
     :bind
     ("C-c f" . 'consult-find)  ;; find file
     ("C-c i" . 'consult-imenu) ;;  find functions, classes, etc in Python script, or headings in org
-					  ; consult-imenu-multi for multiple buffers
+        				  ; consult-imenu-multi for multiple buffers
     ("C-s" . 'consult-line)  ;; line search in current buffer
     ("C-c s g" . 'consult-git-grep) ;; search in git-tracked files
     ("C-c y" . 'consult-yank-from-kill-ring)
@@ -3394,7 +3441,7 @@ Consult provides search and navigation commands
     ("C-c r l" . 'consult-register)
     ("C-c m" . 'consult-mark)
     ("M-g M-g" . 'consult-goto-line)
-    ("C-c c e" . 'consult-compile-error)
+    ;; ("C-c c e" . 'consult-compile-error)
     )
 #+end_src
 
