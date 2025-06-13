@@ -6,4 +6,4 @@ import pickle as pkl
 
 stuff = ...
 with open("/tmp/dump.pkl", "wb") as f:
-     pickle.dump(stuff, f)
+     pkl.dump(stuff, f)

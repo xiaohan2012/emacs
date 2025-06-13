@@ -2559,6 +2559,21 @@ when pressing =M-f= or =M-b= in camel-case strings, e.g., ThisIsAWord, move /sub
 #+RESULTS:
 : copy-current-file-path-as-link
 
+** copy the current file name
+
+#+begin_src emacs-lisp
+  (defun copy-current-file-name ()
+    "Copy current file name."
+    (interactive)
+    (let* ((cur-file-name (file-name-nondirectory (buffer-file-name))))
+      (kill-new cur-file-name)
+      (print cur-file-name)
+      (message (concat cur-file-name " copied as a link to clipboard"))))
+#+end_src
+
+#+RESULTS:
+: copy-current-file-name
+
 ** copy the current file path
 
 #+begin_src emacs-lisp

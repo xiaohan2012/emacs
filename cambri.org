@@ -11,3 +11,41 @@
 
 #+RESULTS:
 : cambri/aws-account-number
+* dbt
+
+#+begin_src emacs-lisp
+  (defvar cambri/dbt/modes (list "itself" "ancestors" "descendents") "the list of model types by traffic")
+
+  (defun cambri/dbt-run-model ()
+    "Run a dbt model."
+    (interactive)  
+    (let* ((buffer-name "*DBT execution")
+           (sql-files (seq-filter
+                       (lambda (filename) (string-suffix-p ".sql" filename))
+                       (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")))
+           (raw-model-name (completing-read "DBT model: " (mapcar (lambda (filename) (s-chop-suffix ".sql" filename)) sql-files)))
+           (mode (completing-read "Mode: " cambri/dbt/modes nil nil "itself"))
+           (model-name (cond
+                        ((string= mode "itself") raw-model-name)
+                        ((string= mode "ancestors") (concat "+" raw-model-name))
+                        ((string= mode "descendents") (concat raw-model-name "+"))
+                        (t nil)))
+           )
+      (shell buffer-name)
+      (end-of-buffer)
+      (insert "pyenv deactivate\n")
+      (comint-send-input)    
+      (insert "pyenv activate dbt\n")
+      (comint-send-input)
+      (insert "cd /Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt\n")
+      (comint-send-input)
+      (insert (format "dbt run --profiles-dir profile --vars '{execution_date: 2023/09/26}' --select %s" model-name))
+      (comint-send-input) ;; Send the input to the shell process  
+      (display-buffer buffer-name)
+      )
+    )
+#+end_src
+
+#+RESULTS:
+: cambri/dbt-run-model
+
