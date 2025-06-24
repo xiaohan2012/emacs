@@ -22,7 +22,10 @@
     (let* ((buffer-name "*DBT execution")
            (sql-files (seq-filter
                        (lambda (filename) (string-suffix-p ".sql" filename))
-                       (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")))
+                       (append
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")
+                        )))
            (raw-model-name (completing-read "DBT model: " (mapcar (lambda (filename) (s-chop-suffix ".sql" filename)) sql-files)))
            (mode (completing-read "Mode: " cambri/dbt/modes nil nil "itself"))
            (model-name (cond
@@ -48,4 +51,20 @@
 
 #+RESULTS:
 : cambri/dbt-run-model
+* git related
+
+#+begin_src emacs-lisp
+    
+  (defun cambri/git-submodule-update ()
+    "Open the project shell and run 'git submodule update --init --recursive'."
+    (interactive)
+    (project-shell)
+    (insert "git submodule update --init --recursive\n")
+    (comint-send-input)    
+  )
+
+#+end_src
+
+#+RESULTS:
+: cambri/git-submodule-update
 
