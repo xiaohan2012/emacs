@@ -51,6 +51,21 @@
 
 #+RESULTS:
 : cambri/dbt-run-model
+* launchai-v2
+
+#+begin_src emacs-lisp
+  (defun cambri/laiv2-train ()
+    "Open the project shell and trigger the pipeline."
+    (interactive)
+    (project-shell)
+    (insert "caffeinate -i python modules/metaflow_pipeline.py run\n")
+    (comint-send-input)    
+  )
+#+end_src
+
+#+RESULTS:
+: cambri/laiv2-train
+
 * git related
 
 #+begin_src emacs-lisp
