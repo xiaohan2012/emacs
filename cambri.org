@@ -24,7 +24,8 @@
                        (lambda (filename) (string-suffix-p ".sql" filename))
                        (append
                         (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")
-                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")                        
+                        ;; (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/top2box_kpi/")
                         )))
            (raw-model-name (completing-read "DBT model: " (mapcar (lambda (filename) (s-chop-suffix ".sql" filename)) sql-files)))
            (mode (completing-read "Mode: " cambri/dbt/modes nil nil "itself"))
