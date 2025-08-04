@@ -1706,11 +1706,9 @@ why not showing in non-GUI Emacs?
   ;;   :hook ((claude-code--start . sm-setup-claude-faces))
   ;;   :config
   ;;   (claude-code-mode))
-
 #+end_src
 
 #+RESULTS:
-: #[nil ((use-package-autoload-keymap 'claude-code-command-map 'claude-code nil)) nil nil nil nil]
 
 * cloud-related utils
 ** s3
