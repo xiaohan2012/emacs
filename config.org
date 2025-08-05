@@ -742,14 +742,13 @@ enable executing shell scripts in code blocks
 ** dot
 
 #+begin_src emacs-lisp
-(use-package graphviz-dot-mode
-  :ensure t
-  :config
-  (setq graphviz-dot-indent-width 4))
+  ;; (use-package graphviz-dot-mode
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq graphviz-dot-indent-width 4))
 #+end_src
 
 #+RESULTS:
-: t
 
 ** source code display in latex export
 
