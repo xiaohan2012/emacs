@@ -3688,4 +3688,4 @@ since it is in conflict with smartparen mode
 
 #+RESULTS:
 : consult-buffer
-;
+
