@@ -551,13 +551,6 @@ adds annotation in minibuffer completions
 #+RESULTS:
 : Created color link.
 
-** some key bindings
-
-   the default =C-c C-,= does not work for iTerm because it cannot send =C-,= to Emacs
-
-   #+begin_src emacs-lisp
-     ;; (define-key org-mode-map (kbd "C-c s") 'org-insert-structure-template)
-   #+end_src
 ** hide sublevels
 
     #+begin_src emacs-lisp
@@ -679,24 +672,6 @@ adds annotation in minibuffer completions
    #+RESULTS:
    : t
 
-** org-journal for dairy keeping
-
-#+begin_src emacs-lisp
-  (use-package org-journal
-    :ensure t
-    :defer t
-    :init
-    ;; Change default prefix key; needs to be set before loading org-journal
-    (setq org-journal-prefix-key "C-c j ")
-    :config
-    (setq org-journal-dir "~/org/journal/"
-	  org-journal-date-format "%A, %d %B %Y"
-	  org-journal-time-format "日记"))
-#+end_src
-
-#+RESULTS:
-: t
-
 ** org-download
 
 #+begin_src emacs-lisp
@@ -763,16 +738,6 @@ enable executing shell scripts in code blocks
 #+end_src
 
 #+RESULTS:
-
-** +citation+
-
-#+begin_src emacs-lisp
-  ;; (use-package oc-bibtex
-  ;;   :ensure t)
-#+end_src
-
-#+RESULTS:
-: t
 
 ** dot
 
@@ -858,19 +823,7 @@ enable executing shell scripts in code blocks
 #+end_src
 
 
-
-** neotree
-
-   #+begin_src emacs-lisp
-     (use-package neotree
-       :ensure t
-       :init
-       (setq neo-window-width 30)
-       )
-   #+end_src
-
-   #+RESULTS:
-
+** +neotree+
 ** open file at cursor
 
    #+begin_src emacs-lisp
@@ -963,38 +916,6 @@ enable executing shell scripts in code blocks
 
 * window
 ** +switch-window+
-
-let's not use it for now since it works better for => 2= windows.
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package switch-window
-
-  ;;   :ensure t
-  ;;   :init
-  ;;   (global-set-key (kbd "C-x o") 'switch-window)
-  ;;   (global-set-key (kbd "C-x 1") 'switch-window-then-maximize)
-  ;;   (global-set-key (kbd "C-x 2") 'switch-window-then-split-below)
-  ;;   (global-set-key (kbd "C-x 3") 'switch-window-then-split-right)
-  ;;   (global-set-key (kbd "C-x 0") 'switch-window-then-delete)
-
-  ;;   (global-set-key (kbd "C-x 4 d") 'switch-window-then-dired)
-  ;;   (global-set-key (kbd "C-x 4 f") 'switch-window-then-find-file)
-  ;;   (global-set-key (kbd "C-x 4 m") 'switch-window-then-compose-mail)
-  ;;   (global-set-key (kbd "C-x 4 r") 'switch-window-then-find-file-read-only)
-
-  ;;   (global-set-key (kbd "C-x 4 C-f") 'switch-window-then-find-file)
-  ;;   (global-set-key (kbd "C-x 4 C-o") 'switch-window-then-display-buffer)
-
-  ;;   (global-set-key (kbd "C-x 4 0") 'switch-window-then-kill-buffer))
-
-  ;;   (setq switch-window-threshold 2)
-  ;;   (setq switch-window-input-style 'minibuffer)
-  ;;   (setq switch-window-shortcut-style 'qwerty)
-#+END_SRC
-
-#+RESULTS:
-: qwerty
-
 ** ace-window
 
 #+begin_src emacs-lisp
@@ -1044,7 +965,6 @@ let's not use it for now since it works better for => 2= windows.
 ** consult-buffer
 
 #+BEGIN_SRC emacs-lisp
-  ;; (global-set-key (kbd "C-x b") 'ido-switch-buffer)
   (global-set-key (kbd "C-x b") 'consult-buffer)
 #+END_SRC
 ** expert mode
@@ -1648,37 +1568,6 @@ useful commands:
 #+RESULTS:
 
 *** TODO https://github.com/kostafey/ejc-sql  
-** TODO sublimity
-
-#+RESULTS:
-: sublimity
-
-#+begin_src emacs-lisp
-	  ;; (use-package sublimity
-	  ;;   :ensure t
-	  ;;   :config
-	  ;;   (sublimity-mode 1))
-
-	  ;; (use-package sublimity-scroll
-	  ;;   :ensure t
-	  ;;   :config
-	  ;;   (sublimity-mode 1))
-  ;; (require 'sublimity)
-  ;; (require 'sublimity-scroll)
-  ;; (sublimity-mode 1)
-	;; (require 'sublimity-scroll)
-
-
-#+end_src
-
-#+RESULTS:
-: t
-
-why not showing in non-GUI Emacs?
-
-#+RESULTS:
-: t
-
 ** code folding using origami
 
 #+begin_src emacs-lisp
@@ -1708,9 +1597,6 @@ why not showing in non-GUI Emacs?
 #+end_src
 
 #+RESULTS:
-
-* cloud-related utils
-** s3
 
 * yasnippet
 *** preparation
@@ -1987,28 +1873,6 @@ why not showing in non-GUI Emacs?
    #+end_src
 
 * terminals
-** +multi-term+
-
-#+begin_src emacs-lisp
-  ;; (use-package multi-term
-  ;;   :ensure t
-  ;;   :config (setq multi-term-program "/bin/zsh")
-  ;;   :bind ("C-c m t" . 'multi-term)
-  ;;   )
-#+end_src
-
-#+RESULTS:
-: multi-term
-
-how to avoid re-opening a new terminal?
-
-#+RESULTS:
-: multi-term
-
-#+begin_src emacs-lisp
-
-#+end_src
-
 ** shell-mode
 
 #+begin_src emacs-lisp
@@ -2018,7 +1882,7 @@ how to avoid re-opening a new terminal?
 #+RESULTS:
 : shell
 
-** zsh
+** +zsh+
 #+BEGIN_SRC emacs-lisp
   (defvar my-term-shell "/bin/zsh")
   (defadvice ansi-term (before force-bash)
@@ -2028,24 +1892,6 @@ how to avoid re-opening a new terminal?
 
 #+RESULTS:
 : ansi-term
-
-** +corfu-terminal (with auto-completion)+
-
-#+begin_src emacs-lisp
-
-
-  ;; (quelpa '(popon
-  ;; 	  :fetcher git
-  ;; 	  :url "https://codeberg.org/akib/emacs-popon.git"))
-
-
-
-  ;; (quelpa '(corfu-terminal
-  ;; 	  :fetcher git
-  ;; 	  :url "https://codeberg.org/akib/emacs-corfu-terminal.git"))
-#+end_src
-
-#+RESULTS:
 
 ** ssh
 
@@ -3419,21 +3265,6 @@ Kill from point up to PT.
 
 - Jumping to locations to delete single words
 * searching
-** +swiper+
-
-using consult-line instead to enable orderless search
-  #+begin_src  emacs-lisp
-    ;; (use-package swiper
-    ;;   :ensure t
-    ;;   :bind
-    ;;   ("C-s" . swiper)
-    ;;   ("C-r" . swiper-backward)
-    ;;   )
-  #+end_src
-
-  #+RESULTS:
-  : swiper-backward
-
 ** [[https://github.com/minad/consult][consult]]
 *** key bindings
 Consult provides search and navigation commands
@@ -3590,29 +3421,6 @@ git config --global core.excludesfile ~/.gitignore
 #+end_src
 
 #+RESULTS:
-* LLM
-** gptel
-
-#+begin_src emacs-lisp
-(straight-use-package 'gptel)
-#+end_src
-
-#+RESULTS:
-: t
-** set Gemini as the default
-
-#+begin_src emacs-lisp
-;; OPTIONAL configuration
-(setq
- gptel-model 'gemini-pro
- gptel-backend (gptel-make-gemini "Gemini"
-                 :key ""
-                 :stream t))
-#+end_src
-
-#+RESULTS:
-: #s(gptel-gemini "Gemini" "generativelanguage.googleapis.com" nil "https" t "/v1beta/models" "AIzaSyBswyrGA0pnO-dXHjdn9wM0CI2SDlQLYpY" (gemini-1.5-pro-latest gemini-2.0-flash-exp gemini-1.5-flash gemini-1.5-flash-8b gemini-exp-1206 gemini-pro) #[0 "\303\203 \203 \306\202 \307\310\311\301\302\300\312 &\207" ["/v1beta/models" "https" "generativelanguage.googleapis.com" t gptel-stream gptel-model "streamGenerateContent" "generateContent" format "%s://%s%s/%s:%s?key=%s" gptel--get-api-key] 9] nil nil)
-
 * final
 ** turn off electric-pair-mode
 
@@ -3624,64 +3432,3 @@ since it is in conflict with smartparen mode
 #+RESULTS:
 : t
 
-* archive
-** +IDO+
-** +preparation and ignore files+
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package ido
-  ;;   :ensure t
-  ;;   :config
-  ;;   (setq ido-enable-flex-matching nil
-  ;; 	ido-create-new-buffer 'always
-  ;; 	ido-everywhere t)
-  ;;   (add-to-list 'ido-ignore-files "\.bak")
-  ;;   (add-to-list 'ido-ignore-files "\.log")
-  ;;   (add-to-list 'ido-ignore-files ".venv")
-  ;;   (add-to-list 'ido-ignore-files "__pycache__")
-  ;;   (add-to-list 'ido-ignore-files "\.pytest_cache")
-  ;;   (add-to-list 'ido-ignore-files "\.pkl")
-  ;;   ;; data files
-  ;;   (add-to-list 'ido-ignore-files "\.hdf5")
-  ;;   ;; latex-related
-  ;;   (add-to-list 'ido-ignore-files "\.nav")
-  ;;   (add-to-list 'ido-ignore-files "\.out")
-  ;;   (add-to-list 'ido-ignore-files "\.pdf")
-  ;;   (add-to-list 'ido-ignore-files "\.snm")
-  ;;   (add-to-list 'ido-ignore-files "\.synctex.gz")
-  ;;   ;; org
-  ;;   (add-to-list 'ido-ignore-files "\.org_archive")
-  ;;   (ido-mode 1)
-  ;;   )
-#+END_SRC
-
-#+RESULTS:
-: t
-** +vertical IDO+
-
-   #+BEGIN_SRC  emacs-lisp
-     ;; (use-package ido-vertical-mode
-     ;;   :ensure t
-     ;;   :requires ido
-     ;;   :config
-     ;;   (ido-vertical-mode 1)
-     ;;   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-     ;;   )
-   #+END_SRC
-
-   #+RESULTS:
-   : t
-
-** +smex+
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package smex
-  ;;   :ensure t
-  ;;   :init (smex-initialize)
-  ;;   :bind
-  ;;   ("M-x" . smex))
-#+END_SRC
-
-
-#+RESULTS:
-: consult-buffer
