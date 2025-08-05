@@ -312,7 +312,6 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 
 
-#+RESULTS
 ** +corfu+
 
 it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
@@ -1706,11 +1705,9 @@ why not showing in non-GUI Emacs?
   ;;   :hook ((claude-code--start . sm-setup-claude-faces))
   ;;   :config
   ;;   (claude-code-mode))
-
 #+end_src
 
 #+RESULTS:
-: #[nil ((use-package-autoload-keymap 'claude-code-command-map 'claude-code nil)) nil nil nil nil]
 
 * cloud-related utils
 ** s3
@@ -3688,4 +3685,3 @@ since it is in conflict with smartparen mode
 
 #+RESULTS:
 : consult-buffer
-
