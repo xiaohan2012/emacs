@@ -312,7 +312,6 @@ should we use =auto-complete-mode=? the recommendation seems to be quite limited
 
 
 
-#+RESULTS
 ** +corfu+
 
 it is a wrapper, which provides the UI of auto completion. the actual completion engine is determined by the mode
