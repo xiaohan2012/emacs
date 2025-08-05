@@ -84,3 +84,33 @@
 #+RESULTS:
 : cambri/git-submodule-update
 
+* ruff
+
+*** flycheck-ruff
+
+#+begin_src emacs-lisp
+(use-package flymake-ruff
+  :ensure t
+  :hook (python-mode . flymake-ruff-load))
+#+end_src
+
+#+RESULTS:
+| flymake-ruff-load | ruff-format-on-save-mode | elpy-mode | #[nil ((lsp-mode 1) (flycheck-mode nil)) nil] |
+
+
+*** ruff formatting (on file save)
+
+#+begin_src emacs-lisp
+  (use-package reformatter
+    :ensure t    
+    :hook 
+    (python-mode . ruff-format-on-save-mode)
+    (python-ts-mode . ruff-format-on-save-mode)
+    :config
+    (reformatter-define ruff-format
+      :program "ruff"
+      :args `("format" "--config" "~/code/service-launch-ai/code/pyproject.toml" "--stdin-filename" ,buffer-file-name "-")))
+#+end_src
+
+#+RESULTS:
+| ruff-format-on-save-mode |
