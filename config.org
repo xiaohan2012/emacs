@@ -1555,7 +1555,7 @@ useful commands:
 : origami-toggle-node
 
 * AI coding
-** claude code
+** +claude code+
 
 #+begin_src emacs-lisp
   ;; (use-package claude-code
@@ -1569,6 +1569,15 @@ useful commands:
 #+end_src
 
 #+RESULTS:
+** claudeemacs
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(claudemacs :type git :host github :repo "cpoile/claudemacs"))
+#+end_src
+
+#+RESULTS:
+: t
 
 * yasnippet
 *** preparation
@@ -1875,6 +1884,24 @@ start a remote terminal via ssh
 #+end_src
 
 #+RESULTS:
+
+** eat (emulate a terminal)
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(eat :type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+               "*.ti" ("terminfo/e" "terminfo/e/*")
+               ("terminfo/65" "terminfo/65/*")
+               ("integration" "integration/*")
+               (:exclude ".dir-locals.el" "*-tests.el"))))
+#+end_src
+
+#+RESULTS:
+: t
+
 
 * miscellaneous
 ** config reload/edit
