@@ -1569,11 +1569,11 @@ useful commands:
 #+end_src
 
 #+RESULTS:
-** claudeemacs
+** +claudeemacs+
 
 #+begin_src emacs-lisp
-(straight-use-package
- '(claudemacs :type git :host github :repo "cpoile/claudemacs"))
+  ;; (straight-use-package
+  ;;  '(claudemacs :type git :host github :repo "cpoile/claudemacs"))
 #+end_src
 
 #+RESULTS:
