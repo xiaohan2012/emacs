@@ -24,7 +24,12 @@
                        (lambda (filename) (string-suffix-p ".sql" filename))
                        (append
                         (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")
-                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")                        
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/scale_kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/launch_ai/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/launch_ai/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/tests/curated/launch_ai_v2/")
                         ;; (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/top2box_kpi/")
                         )))
            (raw-model-name (completing-read "DBT model: " (mapcar (lambda (filename) (s-chop-suffix ".sql" filename)) sql-files)))
@@ -83,6 +88,18 @@
 
 #+RESULTS:
 : cambri/git-submodule-update
+
+* claude-code
+
+#+begin_src emacs-lisp
+  (setenv "CLAUDE_CODE_USE_BEDROCK" "1")
+  (setenv "ANTHROPIC_MODEL" "eu.anthropic.claude-sonnet-4-20250514-v1:0")
+  (setenv "AWS_DEFAULT_REGION" "eu-west-1")
+  (setenv "AWS_PROFILE" "DSDEV")
+#+end_src
+
+#+RESULTS:
+: DSDEV
 
 * ruff
 
