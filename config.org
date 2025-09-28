@@ -1571,6 +1571,7 @@ useful commands:
 #+end_src
 
 #+RESULTS:
+: claude-code-cycle-mode
 ** +claudeemacs+
 
 #+begin_src emacs-lisp
@@ -1904,6 +1905,15 @@ start a remote terminal via ssh
 #+RESULTS:
 : t
 
+* messaging
+** Slack
+
+#+begin_src emacs-lisp
+  ;; (use-package emacs-slack
+  ;;   )
+#+end_src
+
+#+RESULTS:
 
 * miscellaneous
 ** config reload/edit
