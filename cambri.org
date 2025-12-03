@@ -154,28 +154,25 @@
 - https://claude.ai/chat/acb68c2c-5b9f-481d-aa3a-2283e46076a6
 
 #+begin_src emacs-lisp
-(defun filter-osc-9-4-compile ()
-  "Filter out OSC 9;4 escape sequences in compile buffer."
-  (save-excursion
-    (goto-char compilation-filter-start)
-    ;; Remove OSC 9;4 sequences with surrounding characters
-    (while (re-search-forward "[^\n]*\\]9;4;[0-9];[0-9]*\\\\[^\n]*" nil t)
-      (replace-match ""))
-    ;; Clean up standalone backslashes at start of lines
-    (goto-char compilation-filter-start) 
-    (while (re-search-forward "^\\\\=" nil t)
-      (replace-match "="))
-    ;; Clean up backslashes around dots (test progress indicators)
-    (goto-char compilation-filter-start)
-    (while (re-search-forward "\\\\\\." nil t)
-      (replace-match "."))
-    ;; Clean up trailing backslashes after percentages
-    (goto-char compilation-filter-start)
-    (while (re-search-forward "\\]\\\\$" nil t)
-      (replace-match "]"))))
+  (defun filter-osc-9-4-compile ()
+    "Filter out OSC 9;4 escape sequences and all stray backslashes."
+    (save-excursion
+      ;; First pass: remove OSC sequences
+      (goto-char compilation-filter-start)
+      (while (search-forward "]9;4;" nil t)
+        (let ((start (- (point) 6)))
+          (when (re-search-forward "[^\\]*\\\\" nil t)
+            (delete-region start (point)))))
+      ;; Second pass: remove any remaining backslashes that shouldn't be there
+      ;; This handles \=, \., and trailing backslashes
+      (goto-char compilation-filter-start)
+      (while (re-search-forward "\\\\\\([.=:\n]\\|$\\)" nil t)
+        (replace-match "\\1"))))
 
-(add-hook 'compilation-filter-hook 'filter-osc-9-4-compile)
+  (remove-hook 'compilation-filter-hook 'filter-osc-9-4-compile)
+  (add-hook 'compilation-filter-hook 'filter-osc-9-4-compile)
 #+end_src
 
 #+RESULTS:
-| debug-filter-osc-9-4-compile | filter-osc-9-4-compile | filter-compile-buffer-escape-sequences | #[nil ((save-excursion (goto-char compilation-filter-start) (while (re-search-forward \]9;[0-9;]+\\ nil t) (replace-match )))) nil] |
+| filter-osc-9-4-compile |
+
