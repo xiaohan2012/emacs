@@ -1594,7 +1594,9 @@ useful commands:
             ;; "~/.emacs.d/elpa/yasnippet-snippets-20230227.1504/snippets"
             "~/.emacs.d/elpa/yasnippet-20250112.1504/snippets"            
             "~/.emacs.d/elpa/yasnippet-snippets-20250225.950/snippets"
-            "/.emacs.d/elpa/yasnippet-20250403.1926/"
+            "~/.emacs.d/elpa/yasnippet-20250403.1926/snippets"
+            "~/.emacs.d/elpa/yasnippet-20250602.1342/snippets"
+            "~/.emacs.d/elpa/yasnippet-snippets-20250507.2002/snippets"
             ))
     ;; "~/.emacs.d/elpa/elpy-20220220.2059/"  ; might need to change
     ;; "~/.emacs.d/elpa/yasnippet-snippets-20220221.1234/snippets"  ; might need to change
