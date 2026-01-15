@@ -24,7 +24,12 @@
                        (lambda (filename) (string-suffix-p ".sql" filename))
                        (append
                         (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/survey_results_kpi/")
-                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")                        
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/survey_results/kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/scale_kpi/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/launch_ai/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/curated/launch_ai/")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app")
+                        (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/tests/curated/launch_ai_v2/")
                         ;; (directory-files "/Users/hanxiao/code/monolith/analytics/datalake/ecs/dbt/models/intermediate/app/top2box_kpi/")
                         )))
            (raw-model-name (completing-read "DBT model: " (mapcar (lambda (filename) (s-chop-suffix ".sql" filename)) sql-files)))
@@ -53,7 +58,7 @@
 #+RESULTS:
 : cambri/dbt-run-model
 * launchai-v2
-
+** train locally
 #+begin_src emacs-lisp
   (defun cambri/laiv2-train ()
     "Open the project shell and trigger the pipeline."
@@ -66,6 +71,22 @@
 
 #+RESULTS:
 : cambri/laiv2-train
+
+** submit job to claude
+
+#+begin_src emacs-lisp
+  (defun cambri/laiv2-submit-to-cloud ()
+    "Open the project shell and trigger the pipeline on the cloud."
+    (interactive)
+    (project-shell)
+    (insert "python modules/metaflow_pipeline.py step-functions create\n")
+    (insert "python modules/metaflow_pipeline.py step-functions trigger\n")
+    (comint-send-input)    
+  )
+#+end_src
+
+#+RESULTS:
+: cambri/laiv2-submit-to-cloud
 
 * git related
 
@@ -83,6 +104,18 @@
 
 #+RESULTS:
 : cambri/git-submodule-update
+
+* claude-code
+
+#+begin_src emacs-lisp
+  ;; (setenv "CLAUDE_CODE_USE_BEDROCK" "1")
+  ;; (setenv "ANTHROPIC_MODEL" "eu.anthropic.claude-sonnet-4-20250514-v1:0")
+  (setenv "AWS_DEFAULT_REGION" "eu-west-1")
+  (setenv "AWS_PROFILE" "DSDEV")
+#+end_src
+
+#+RESULTS:
+: DSDEV
 
 * ruff
 
@@ -114,3 +147,32 @@
 
 #+RESULTS:
 | ruff-format-on-save-mode |
+
+* escape character filtering
+
+- related to pytest output in terminal
+- https://claude.ai/chat/acb68c2c-5b9f-481d-aa3a-2283e46076a6
+
+#+begin_src emacs-lisp
+  (defun filter-osc-9-4-compile ()
+    "Filter out OSC 9;4 escape sequences and all stray backslashes."
+    (save-excursion
+      ;; First pass: remove OSC sequences
+      (goto-char compilation-filter-start)
+      (while (search-forward "]9;4;" nil t)
+        (let ((start (- (point) 6)))
+          (when (re-search-forward "[^\\]*\\\\" nil t)
+            (delete-region start (point)))))
+      ;; Second pass: remove any remaining backslashes that shouldn't be there
+      ;; This handles \=, \., and trailing backslashes
+      (goto-char compilation-filter-start)
+      (while (re-search-forward "\\\\\\([.=:\n]\\|$\\)" nil t)
+        (replace-match "\\1"))))
+
+  (remove-hook 'compilation-filter-hook 'filter-osc-9-4-compile)
+  (add-hook 'compilation-filter-hook 'filter-osc-9-4-compile)
+#+end_src
+
+#+RESULTS:
+| filter-osc-9-4-compile |
+
