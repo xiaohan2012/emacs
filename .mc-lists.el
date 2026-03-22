@@ -31,6 +31,7 @@
         mark-defun
         mark-sexp
         markdown-outdent-or-delete
+        mc--insert-number-and-increase
         mc/mark-next-lines
         multiple-cursors-mode
         org-beginning-of-line
@@ -61,5 +62,6 @@
       '(
         c-electric-semi&comma
         pixel-scroll-precision
+        mc--insert-letter-and-increase
         tide-jump-to-definition
         ))
