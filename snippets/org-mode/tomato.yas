@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tomato
+# key: tm
+# --
+
+🍅 x ${1:1}

@@ -60,5 +60,6 @@
 (setq mc/cmds-to-run-once
       '(
         c-electric-semi&comma
+        pixel-scroll-precision
         tide-jump-to-definition
         ))
