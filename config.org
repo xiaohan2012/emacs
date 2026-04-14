@@ -54,18 +54,21 @@
 ** environment variables
 
       #+begin_src emacs-lisp
-	(setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
-	(add-to-list 'exec-path "/usr/local/bin/")
+        (setenv "PATH" (concat ":/usr/local/bin/" (getenv "PATH")))
+        (add-to-list 'exec-path "/usr/local/bin/")
 
-	(setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
-	(add-to-list 'exec-path "/usr/bin/")
+        (setenv "PATH" (concat ":/usr/bin/" (getenv "PATH")))
+        (add-to-list 'exec-path "/usr/bin/")
 
-	;; https://emacs.stackexchange.com/questions/10722/emacs-and-command-line-path-disagreements-on-osx
-	;; (exec-path-from-shell-initialize)	;
+	(setenv "PATH" (concat ":/Users/hanxiao/.local/bin/" (getenv "PATH")))
+	(add-to-list 'exec-path "/Users/hanxiao/.local/bin/")
+
+        ;; https://emacs.stackexchange.com/questions/10722/emacs-and-command-line-path-disagreements-on-osx
+        ;; (exec-path-from-shell-initialize)	;
    #+end_src
 
    #+RESULTS:
-   : ((MANPATH . /Users/hanxiao/.nvm/versions/node/v18.16.1/share/man::/usr/share/man:/usr/local/share/man:) (PATH . /opt/homebrew/opt/postgresql@13/bin:/Users/hanxiao/.nvm/versions/node/v18.16.1/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/bin/:/usr/local/bin//Users/hanxiao/code/upright-sagemaker-inference-api/src/predictors/pai-ghg-emissions/.venv/bin:/usr/local/bin/:/Library/TeX/texbin/:/Library/TeX/texbin//opt/homebrew/opt/postgresql@13/bin:/Users/hanxiao/.nvm/versions/node/v18.16.1/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin//opt/homebrew/bin:/Applications/Emacs.app/Contents/MacOS/bin-arm64-11:/Applications/Emacs.app/Contents/MacOS/libexec-arm64-11:/Users/hanxiao/.local/bin:/Users/hanxiao/.local/bin))
+   | /Library/TeX/texbin/ | /Users/hanxiao/.local/bin/ | /opt/homebrew/Cellar/pyenv-virtualenv/1.2.6/shims/ | /Users/hanxiao/.pyenv/shims/ | /Users/hanxiao/.nvm/versions/node/v24.14.0/bin/ | /opt/homebrew/bin/ | /opt/homebrew/sbin/ | /usr/local/bin/ | /System/Cryptexes/App/usr/bin/ | /usr/bin/ | /bin/ | /usr/sbin/ | /sbin/ | /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/ | /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/ | /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/ | ~/.local/bin/ | /usr/bin/ | /usr/local/bin//opt/homebrew/bin/ | /Applications/Emacs.app/Contents/MacOS/bin-arm64-11/ | /Applications/Emacs.app/Contents/MacOS/libexec-arm64-11/ | /Applications/Emacs.app/Contents/MacOS/libexec/ |
 
 ** exec-path-from-shell
 
@@ -797,7 +800,16 @@ enable executing shell scripts in code blocks
 
   #+RESULTS:
   : my-put-file-name-on-clipboard
-** dired-subtree
+** dire
+
+#+begin_src emacs-lisp
+(setq dired-listing-switches "-alh") ; show file sizes in human-readable form
+#+end_src
+
+#+RESULTS:
+: -alh
+
+*** dired-subtree
 
    #+begin_src emacs-lisp
      (use-package dired-subtree
@@ -806,7 +818,7 @@ enable executing shell scripts in code blocks
 
    #+RESULTS:
 
-** dired-filter
+*** dired-filter
 
    #+begin_src emacs-lisp
      (use-package dired-filter
@@ -814,7 +826,7 @@ enable executing shell scripts in code blocks
    #+end_src
 
    #+RESULTS:
-** dired: omit certain file types
+*** dired: omit certain file types
 
 #+begin_src emacs-lisp
   (setq dired-omit-files
@@ -1893,15 +1905,15 @@ start a remote terminal via ssh
 ** eat (emulate a terminal)
 
 #+begin_src emacs-lisp
-(straight-use-package
- '(eat :type git
-       :host codeberg
-       :repo "akib/emacs-eat"
-       :files ("*.el" ("term" "term/*.el") "*.texi"
-               "*.ti" ("terminfo/e" "terminfo/e/*")
-               ("terminfo/65" "terminfo/65/*")
-               ("integration" "integration/*")
-               (:exclude ".dir-locals.el" "*-tests.el"))))
+  ;; (straight-use-package
+  ;;  '(eat :type git
+  ;;        :host codeberg
+  ;;        :repo "akib/emacs-eat"
+  ;;        :files ("*.el" ("term" "term/*.el") "*.texi"
+  ;;                "*.ti" ("terminfo/e" "terminfo/e/*")
+  ;;                ("terminfo/65" "terminfo/65/*")
+  ;;                ("integration" "integration/*")
+  ;;                (:exclude ".dir-locals.el" "*-tests.el"))))
 #+end_src
 
 #+RESULTS:
