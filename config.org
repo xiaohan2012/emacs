@@ -3442,7 +3442,8 @@ git config --global core.excludesfile ~/.gitignore
 
 #+begin_src emacs-lisp
   (use-package simple-mpc
-    :ensure t)
+    :ensure t
+    :bind ("<f8>" . simple-mpc-toggle))
 #+end_src
 
 #+RESULTS:
