@@ -27,53 +27,78 @@
 * clipboard strings
 
 #+begin_src emacs-lisp
-    (defun my/copy-phone-number ()
+      (defun my/copy-phone-number ()
+        (interactive)
+        (kill-new "0442483528")
+        (message "copid '0442483528'")
+        )
+
+      (defun my/copy-qing-phone-number ()
+        (interactive)
+        (kill-new "0452050250")
+        (message "copid '0452050250'")
+        )
+
+      (defun my/copy-nordea-bank-account ()
+        (interactive)
+        (kill-new "FI66 1470 3500 7401 16")
+        (message "copid 'FI66 1470 3500 7401 16'")
+        )
+
+      (defun my/copy-research-fund-account ()
+        (interactive)
+        (kill-new "FI34 1960 3206 7595 40")
+        (message "copid 'FI34 1960 3206 7595 40'")
+        )
+  
+      (defun my/copy-address ()
+        (interactive)
+        (kill-new "Gummeruksenkatu 3 B 22, 40100 Jyväskylä")
+        (message "copied 'Gummeruksenkatu 3 B 22, 40100 Jyväskylä'")
+        )
+
+
+      (defun my/copy-finnair-plus-number ()
+        (interactive)
+        (kill-new "693396855")
+        (message "copied '693396855'")
+        )  
+
+      (defun my/copy-fudan-ssh-pwd ()
+        (interactive)
+        (kill-new "Qty062015")
+        (message "copied 'Qty062015'")
+        )  
+
+      (defun my/copy-linkedin-url ()
+        (interactive)
+        (kill-new "https://www.linkedin.com/in/han-xiao-7499a840/")
+        (message "copied 'https://www.linkedin.com/in/han-xiao-7499a840/'")
+        )  
+
+    (defun my/copy-github-url ()
       (interactive)
-      (kill-new "0442483528")
-      (message "copid '0442483528'")
+      (kill-new "https://github.com/xiaohan2012")
+      (message "copied 'https://github.com/xiaohan2012'")
       )
 
-    (defun my/copy-nordea-bank-account ()
+    (defun my/copy-google-scholar-url ()
       (interactive)
-      (kill-new "FI66 1470 3500 7401 16")
-      (message "copid 'FI66 1470 3500 7401 16'")
-      )
-
-    (defun my/copy-address ()
-      (interactive)
-      (kill-new "Gummeruksenkatu 3 B 22, 40100 Jyväskylä")
-      (message "copied 'Gummeruksenkatu 3 B 22, 40100 Jyväskylä'")
-      )
-
-
-    (defun my/copy-finnair-plus-number ()
-      (interactive)
-      (kill-new "693396855")
-      (message "copied '693396855'")
+      (kill-new "https://scholar.google.com/citations?user=lUh4VVUAAAAJ&hl=en")
+      (message "copied 'https://scholar.google.com/citations?user=lUh4VVUAAAAJ&hl=en'")
       )  
 
-    (defun my/copy-fudan-ssh-pwd ()
-      (interactive)
-      (kill-new "Qty062015")
-      (message "copied 'Qty062015'")
-      )  
 
-    (defun my/copy-linkedin-url ()
-      (interactive)
-      (kill-new "https://www.linkedin.com/in/han-xiao-7499a840/")
-      (message "copied 'https://www.linkedin.com/in/han-xiao-7499a840/'")
-      )  
-
-  (defun my/copy-github-url ()
+  (defun my/copy-business-id ()
     (interactive)
-    (kill-new "https://github.com/xiaohan2012")
-    (message "copied 'https://github.com/xiaohan2012'")
-    )    
+    (kill-new "3525872-2")
+    (message "copied '3525872-2'")
+    )      
 
 #+end_src
 
 
 
 #+RESULTS:
-: my/copy-github-url
+: my/copy-business-id
 
