@@ -5,6 +5,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 *Keys (panel):*
 - =g= reload
 - =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
+- =s= pick lyrics: edit the search, choose a version (title - singers - length - source)
 - =R= drop cache, fetch again
 - =+= / =-= show lyrics 0.5s later / earlier; saved as =[offset:]= in the =.lrc=
 - =q= close (also stops the mpc watcher)
@@ -16,7 +17,9 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - else online, then cached next to the song (offline afterwards)
   - synced → =.lrc=, plain → =.txt=
 - *NetEase* first, *QQ Music* second: both strong on Chinese songs, each backs up the other
-- QQ also has Jay Chou's catalogue and some Finnish songs NetEase lacks
+- QQ also has Jay Chou's catalogue and some Finnish songs NetEase lacks, but its API often answers error 2001
+- cached files are tagged =[ti:]= =[ar:]= =[re:]= with the version used; the panel shows it under the title
+  - warning face when the singers don't include the song's artist → likely a different song, press =s=
 
 *Synced scrolling (=.lrc= only):*
 - current line highlighted and kept centered
@@ -71,6 +74,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   ;; Bind outside the defvar so re-loading this file updates the keys of a running Emacs.
   (define-key my/lyrics-mode-map "g" #'my/lyrics-refresh)
   (define-key my/lyrics-mode-map "e" #'my/lyrics-edit)
+  (define-key my/lyrics-mode-map "s" #'my/lyrics-pick)
   (define-key my/lyrics-mode-map "R" #'my/lyrics-refetch)
   (define-key my/lyrics-mode-map "+" #'my/lyrics-delay)
   (define-key my/lyrics-mode-map "=" #'my/lyrics-delay)
@@ -144,6 +148,21 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
                   (push (cons last text) entries))))))))
       (cons offset (and timed (seq-sort-by #'car #'< (nreverse entries))))))
 
+  (defun my/lyrics--source-line (text)
+    "Describe the lyrics version in TEXT from the tags `my/lyrics--save-cache' writes, or nil if untagged."
+    (let ((tag (lambda (name)
+                 (when (string-match (format "^\\[%s:\\([^]\n]*\\)\\]" name) text)
+                   (match-string 1 text)))))
+      (let ((source (funcall tag "re")))
+        (when (member source '("netease" "qq"))
+          (let* ((singers (or (funcall tag "ar") ""))
+                 (mismatch (not (member (nth 1 my/lyrics--current-song) (split-string singers "/")))))
+            (propertize (format "来源：%s · %s - %s%s"
+                                (if (equal source "qq") "QQ音乐" "网易云")
+                                singers (or (funcall tag "ti") "")
+                                (if mismatch "（歌手不一致，按 s 换一个）" ""))
+                        'face (if mismatch 'warning 'shadow)))))))
+
   (defun my/lyrics--render (header lyrics)
     "Show HEADER and LYRICS, raw LRC or plain text; synced LRC sets up `my/lyrics--lines'."
     (with-current-buffer (get-buffer-create my/lyrics-buffer)
@@ -154,7 +173,9 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
         (erase-buffer)
         (when (overlayp my/lyrics--overlay) (delete-overlay my/lyrics--overlay))
         (insert (propertize header 'face 'bold) "\n"
-                (propertize "g 刷新  e 编辑  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
+                (let ((source (my/lyrics--source-line (or lyrics ""))))
+                  (if source (concat source "\n") ""))
+                (propertize "g 刷新  e 编辑  s 选歌词  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
         (cond ((cdr parsed)
                (dolist (entry (cdr parsed))
                  (push (cons (car entry) (point)) lines)
@@ -218,80 +239,95 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
            (if (equal norm want) 2 0)
            (if (string-match-p "live" (downcase name)) 0 1)))))
 
-  (defun my/lyrics--try-best (hits artist title fetch-lyric callback)
-    "Try FETCH-LYRIC on matching HITS best first; call CALLBACK with the first lyrics found.
-  Each hit is (NAME SINGERS ID); FETCH-LYRIC takes an ID and a continuation."
-    (let* ((scored (delq nil (mapcar (lambda (hit)
-                                       (let ((score (my/lyrics--score (nth 0 hit) (nth 1 hit) artist title)))
-                                         (when score (cons score (nth 2 hit)))))
-                                     hits)))
-           (ids (mapcar #'cdr (seq-sort-by #'car #'> scored))))
-      (my/lyrics--first (mapcar (lambda (id) (lambda (k) (funcall fetch-lyric id k))) ids)
-                        callback)))
+  (defun my/lyrics--netease-search (query callback)
+    "Search NetEase Cloud Music for QUERY; call CALLBACK with a list of hits.
+  A hit is a plist (:source :id :title :singers :duration), :duration in seconds."
+    (my/lyrics--get-json
+     (concat "https://music.163.com/api/search/get?"
+             (url-build-query-string `((s ,query) (type 1) (limit 10))))
+     (lambda (json)
+       (funcall callback
+                (mapcar (lambda (song)
+                          (list :source 'netease
+                                :id (alist-get 'id song)
+                                :title (alist-get 'name song)
+                                :singers (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'artists song))
+                                :duration (/ (or (alist-get 'duration song) 0) 1000)))
+                        (alist-get 'songs (alist-get 'result json)))))))
 
-  (defun my/lyrics--as-result (lrc)
-    "Wrap LRC text as (SYNCED . PLAIN), or nil when it is blank."
-    (when (and lrc (not (string-blank-p lrc)))
-      (if (string-match-p "^\\[[0-9]" lrc) (cons lrc nil) (cons nil lrc))))
+  (defun my/lyrics--qq-search (query callback)
+    "Search QQ Music for QUERY; call CALLBACK with a list of hits, see `my/lyrics--netease-search'."
+    (my/lyrics--get-json
+     "https://u.y.qq.com/cgi-bin/musicu.fcg"
+     (lambda (json)
+       (funcall callback
+                (mapcar (lambda (song)
+                          (list :source 'qq
+                                :id (alist-get 'mid song)
+                                :title (alist-get 'name song)
+                                :singers (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'singer song))
+                                :duration (or (alist-get 'interval song) 0)))
+                        (let-alist json .req.data.body.song.list))))
+     `((req . ((module . "music.search.SearchCgiService")
+               (method . "DoSearchForQQMusicDesktop")
+               (param . ((query . ,query) (num_per_page . 10) (page_num . 1) (search_type . 0))))))))
 
-  (defun my/lyrics--netease (query artist title)
-    "Return a fetcher searching NetEase Cloud Music for QUERY."
+  (defun my/lyrics--fetch-lyric (hit callback)
+    "Call CALLBACK with HIT's lyrics as a result plist (HIT plus :lrc), or nil when it has none."
+    (let ((done (lambda (lrc)
+                  (funcall callback (when (and lrc (not (string-blank-p lrc)))
+                                      (append (list :lrc lrc) hit))))))
+      (pcase (plist-get hit :source)
+        ('netease
+         (my/lyrics--get-json
+          (format "https://music.163.com/api/song/lyric?id=%s&lv=1" (plist-get hit :id))
+          (lambda (json) (funcall done (alist-get 'lyric (alist-get 'lrc json))))))
+        ('qq
+         (my/lyrics--get-json
+          (concat "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?"
+                  (url-build-query-string `((songmid ,(plist-get hit :id)) (format "json") (nobase64 1))))
+          (lambda (json) (funcall done (alist-get 'lyric json))))))))
+
+  (defun my/lyrics--auto (search query artist title)
+    "Return a fetcher running SEARCH for QUERY and trying hits that match TITLE, best first."
     (lambda (callback)
-      (my/lyrics--get-json
-       (concat "https://music.163.com/api/search/get?"
-               (url-build-query-string `((s ,query) (type 1) (limit 10))))
-       (lambda (json)
-         (my/lyrics--try-best
-          (mapcar (lambda (song)
-                    (list (alist-get 'name song)
-                          (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'artists song))
-                          (alist-get 'id song)))
-                  (alist-get 'songs (alist-get 'result json)))
-          artist title
-          (lambda (id k)
-            (my/lyrics--get-json
-             (format "https://music.163.com/api/song/lyric?id=%s&lv=1" id)
-             (lambda (json) (funcall k (my/lyrics--as-result (alist-get 'lyric (alist-get 'lrc json)))))))
-          callback)))))
-
-  (defun my/lyrics--qq (query artist title)
-    "Return a fetcher searching QQ Music for QUERY."
-    (lambda (callback)
-      (my/lyrics--get-json
-       "https://u.y.qq.com/cgi-bin/musicu.fcg"
-       (lambda (json)
-         (my/lyrics--try-best
-          (mapcar (lambda (song)
-                    (list (alist-get 'name song)
-                          (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'singer song))
-                          (alist-get 'mid song)))
-                  (let-alist json .req.data.body.song.list))
-          artist title
-          (lambda (mid k)
-            (my/lyrics--get-json
-             (concat "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?"
-                     (url-build-query-string `((songmid ,mid) (format "json") (nobase64 1))))
-             (lambda (json) (funcall k (my/lyrics--as-result (alist-get 'lyric json))))))
-          callback))
-       `((req . ((module . "music.search.SearchCgiService")
-                 (method . "DoSearchForQQMusicDesktop")
-                 (param . ((query . ,query) (num_per_page . 10) (page_num . 1) (search_type . 0)))))))))
+      (funcall search query
+               (lambda (hits)
+                 (let ((scored (delq nil (mapcar (lambda (hit)
+                                                   (let ((score (my/lyrics--score (plist-get hit :title)
+                                                                                  (plist-get hit :singers)
+                                                                                  artist title)))
+                                                     (when score (cons score hit))))
+                                                 hits))))
+                   (my/lyrics--first
+                    (mapcar (lambda (scored-hit) (lambda (k) (my/lyrics--fetch-lyric (cdr scored-hit) k)))
+                            (seq-sort-by #'car #'> scored))
+                    callback))))))
 
   (defun my/lyrics--fetch-online (artist title callback)
-    "Call CALLBACK with (SYNCED . PLAIN) lyrics for ARTIST and TITLE, or nil if no source has them."
+    "Call CALLBACK with a result plist for ARTIST and TITLE, or nil if no source has lyrics."
     (my/lyrics--first
-     (list (my/lyrics--netease (format "%s %s" title artist) artist title)
-           (my/lyrics--netease title artist title)
-           (my/lyrics--qq (format "%s %s" title artist) artist title)
-           (my/lyrics--qq title artist title))
+     (list (my/lyrics--auto #'my/lyrics--netease-search (format "%s %s" title artist) artist title)
+           (my/lyrics--auto #'my/lyrics--netease-search title artist title)
+           (my/lyrics--auto #'my/lyrics--qq-search (format "%s %s" title artist) artist title)
+           (my/lyrics--auto #'my/lyrics--qq-search title artist title))
      callback))
 
   (defun my/lyrics--save-cache (file result)
-    "Write RESULT, a (SYNCED . PLAIN) pair, next to song FILE and return the written path."
-    (let* ((synced (car result))
-           (path (concat (my/lyrics--song-base file) (if synced ".lrc" ".txt"))))
+    "Write RESULT's lyrics next to song FILE, tagged with where they came from; return the path.
+  Synced lyrics go to .lrc, plain ones to .txt; any other cached file of the song is removed."
+    (let* ((lrc (plist-get result :lrc))
+           (synced (string-match-p "^\\[[0-9]" lrc))
+           (base (my/lyrics--song-base file))
+           (path (concat base (if synced ".lrc" ".txt"))))
+      (dolist (ext '(".lrc" ".txt"))
+        (when (file-exists-p (concat base ext)) (delete-file (concat base ext))))
       (with-temp-file path
-        (insert (or synced (cdr result))))
+        (insert (format "[ti:%s]\n[ar:%s]\n[re:%s]\n"
+                        (plist-get result :title)
+                        (string-join (plist-get result :singers) "/")
+                        (plist-get result :source))
+                lrc))
       path))
 
   (defun my/lyrics--show (song &optional skip-local)
@@ -311,6 +347,49 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
              (if result
                  (my/lyrics--render header (my/lyrics--read-local (my/lyrics--save-cache file result)))
                (my/lyrics--render header nil))))))))
+
+  (defun my/lyrics--wait (fn)
+    "Call async FN with a continuation and block until it delivers, at most 10s; return the value."
+    (let ((done nil) (value nil) (deadline (+ (float-time) 10)))
+      (funcall fn (lambda (v) (setq value v done t)))
+      (while (and (not done) (< (float-time) deadline))
+        (accept-process-output nil 0.05))
+      value))
+
+  (defun my/lyrics--mmss (seconds)
+    (format "%d:%02d" (/ seconds 60) (% seconds 60)))
+
+  (defun my/lyrics-pick ()
+    "Search lyrics with an editable query and choose which version to cache for the shown song."
+    (interactive)
+    (pcase-let ((`(,file ,artist ,title) my/lyrics--current-song))
+      (unless file (user-error "No song is playing"))
+      (let* ((query (read-string "搜索歌词: " (format "%s %s" title artist)))
+             (hits (append (my/lyrics--wait (lambda (k) (my/lyrics--netease-search query k)))
+                           (my/lyrics--wait (lambda (k) (my/lyrics--qq-search query k)))))
+             (duration (round (string-to-number (or (cdr (assoc "duration" (my/lyrics--mpd-status))) "0"))))
+             (choices (seq-map-indexed
+                       (lambda (hit i)
+                         (cons (format "%2d. %s - %s  %s  [%s]" (1+ i)
+                                       (plist-get hit :title)
+                                       (string-join (plist-get hit :singers) "/")
+                                       (my/lyrics--mmss (plist-get hit :duration))
+                                       (if (eq (plist-get hit :source) 'qq) "QQ音乐" "网易云"))
+                               hit))
+                       hits)))
+        (unless hits (user-error "没有搜到，换个关键词试试"))
+        (let* ((label (completing-read
+                       (format "选择歌词（这首歌 %s）: " (my/lyrics--mmss duration))
+                       ;; Keep the search order instead of letting the completion UI sort.
+                       (lambda (string pred action)
+                         (if (eq action 'metadata)
+                             '(metadata (display-sort-function . identity))
+                           (complete-with-action action choices string pred)))
+                       nil t))
+               (result (my/lyrics--wait (lambda (k) (my/lyrics--fetch-lyric (cdr (assoc label choices)) k)))))
+          (unless result (user-error "这个版本没有歌词，换一个"))
+          (my/lyrics--save-cache file result)
+          (my/lyrics--show my/lyrics--current-song)))))
 
   (defun my/lyrics-refresh (&optional force)
     "Show lyrics of the playing song; skip when the song is unchanged unless FORCE."
