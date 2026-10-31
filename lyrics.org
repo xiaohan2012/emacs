@@ -12,7 +12,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - =?= list keys
 - hints also shown at panel top; =L= listed in simple-mpc's main screen
 
-*Font:* =my/lyrics-font-family= (Songti SC) at =my/lyrics-font-scale= (1.5×), panel only.
+*Font:* =my/lyrics-font-family= (LXGW WenKai, a Kaiti close to handwriting; =brew install --cask font-lxgw-wenkai=) at =my/lyrics-font-scale= (1.5×), panel only.
 
 *Lyrics source:*
 - local =.lrc= / =.txt= next to the song first
@@ -69,7 +69,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defvar my/lyrics-follow-pause 5
     "Seconds auto-scroll stays paused after the user scrolls or moves point in the panel.")
 
-  (defvar my/lyrics-font-family "Songti SC"
+  (defvar my/lyrics-font-family "LXGW WenKai"
     "Font family of the lyrics panel; nil keeps the default face's.")
   (defvar my/lyrics-font-scale 1.5
     "Text size of the lyrics panel relative to the default face.")
