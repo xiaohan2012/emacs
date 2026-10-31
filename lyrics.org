@@ -6,6 +6,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - =g= reload
 - =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
 - =R= drop cache, fetch again
+- =+= / =-= show lyrics 0.5s later / earlier; saved as =[offset:]= in the =.lrc=
 - =q= close (also stops the mpc watcher)
 - =?= list keys
 - hints also shown at panel top; =L= listed in simple-mpc's main screen
@@ -13,9 +14,14 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 *Lyrics source:*
 - local =.lrc= / =.txt= next to the song first
 - else online, then cached next to the song (offline afterwards)
-  - synced → =.lrc= (timestamps kept for a future synced view), plain → =.txt=
+  - synced → =.lrc=, plain → =.txt=
 - *NetEase* first, *QQ Music* second: both strong on Chinese songs, each backs up the other
 - QQ also has Jay Chou's catalogue and some Finnish songs NetEase lacks
+
+*Synced scrolling (=.lrc= only):*
+- current line highlighted and kept centered
+- position read from MPD's =status= (ms precision) on each player event, extrapolated between events
+- you scroll or move point in the panel → auto-scroll pauses 5s
 
 *Matching:*
 - no tags on org-songs files → artist = parent dir, title = file name
@@ -34,12 +40,37 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defvar my/lyrics--current-song nil
     "(FILE ARTIST TITLE) of the song shown in the panel.")
   (defvar my/lyrics--idle-proc nil)
+  (defvar my/lyrics--timer nil
+    "Repeating timer that moves the highlight while the panel is open.")
+  (defvar my/lyrics--lines nil
+    "Vector of (TIME . POS) for synced lyrics, TIME in seconds, POS the line start; nil for plain lyrics.")
+  (defvar my/lyrics--offset 0
+    "Seconds to show lyrics earlier, from the .lrc [offset:] tag (LRC convention: positive = earlier).")
+  (defvar my/lyrics--clock nil
+    "Playback clock: (play . ANCHOR) with elapsed = now - ANCHOR, or (pause . ELAPSED).")
+  (defvar my/lyrics--index nil
+    "Index into `my/lyrics--lines' of the highlighted line, or nil before the first line.")
+  (defvar my/lyrics--overlay nil)
+  (defvar my/lyrics--auto-view nil
+    "(WINDOW-START . WINDOW-POINT) as last set by auto-scroll, to detect the user scrolling.")
+  (defvar my/lyrics--need-scroll nil
+    "Non-nil when the panel should re-center on the current line once auto-scroll is not paused.")
+  (defvar my/lyrics--follow-paused-until 0
+    "`float-time' until which auto-scroll is paused after the user scrolled.")
+  (defvar my/lyrics-follow-pause 5
+    "Seconds auto-scroll stays paused after the user scrolls or moves point in the panel.")
+
+  (defface my/lyrics-current-line '((t :inherit font-lock-keyword-face :weight bold))
+    "Face of the lyrics line being sung.")
 
   (defvar my/lyrics-mode-map (make-sparse-keymap))
   ;; Bind outside the defvar so re-loading this file updates the keys of a running Emacs.
   (define-key my/lyrics-mode-map "g" #'my/lyrics-refresh)
   (define-key my/lyrics-mode-map "e" #'my/lyrics-edit)
   (define-key my/lyrics-mode-map "R" #'my/lyrics-refetch)
+  (define-key my/lyrics-mode-map "+" #'my/lyrics-delay)
+  (define-key my/lyrics-mode-map "=" #'my/lyrics-delay)
+  (define-key my/lyrics-mode-map "-" #'my/lyrics-advance)
   ;; Close through the toggle so the mpc watcher stops too, unlike `quit-window'.
   (define-key my/lyrics-mode-map "q" #'my/lyrics-toggle)
 
@@ -78,19 +109,59 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
      (replace-regexp-in-string "^\\[[a-z]+:[^]\n]*\\]\n" "" text)))
 
   (defun my/lyrics--read-local (path)
-    (my/lyrics--strip-timestamps
-     (with-temp-buffer
-       (insert-file-contents path)
-       (buffer-string))))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (buffer-string)))
+
+  (defun my/lyrics--parse-lrc (text)
+    "Parse LRC TEXT into (OFFSET . ENTRIES).
+  OFFSET is the [offset:] tag in seconds; ENTRIES is a time-sorted list of (TIME . LINE), nil when TEXT has no timestamps.
+  A line with several timestamps yields one entry per timestamp; an untimed line inherits the previous time."
+    (let ((offset 0) (last 0) (timed nil) (entries nil))
+      (dolist (line (split-string text "\n"))
+        (cond
+         ((string-match "\\`\\[offset:[ \t]*\\([-+]?[0-9]+\\)\\]" line)
+          (setq offset (/ (string-to-number (match-string 1 line)) 1000.0)))
+         ((string-match-p "\\`\\[[a-z]+:" line))
+         (t
+          (let ((pos 0) (times nil))
+            (while (and (string-match "\\[\\([0-9]+\\):\\([0-9.]+\\)\\]" line pos)
+                        (= (match-beginning 0) pos))
+              (push (+ (* 60 (string-to-number (match-string 1 line)))
+                       (string-to-number (match-string 2 line)))
+                    times)
+              (setq pos (match-end 0)))
+            (let ((text (substring line pos)))
+              (if times
+                  (progn
+                    (dolist (time times) (push (cons time text) entries))
+                    (setq timed t last (apply #'max times)))
+                (unless (string-blank-p text)
+                  (push (cons last text) entries))))))))
+      (cons offset (and timed (seq-sort-by #'car #'< (nreverse entries))))))
 
   (defun my/lyrics--render (header lyrics)
+    "Show HEADER and LYRICS, raw LRC or plain text; synced LRC sets up `my/lyrics--lines'."
     (with-current-buffer (get-buffer-create my/lyrics-buffer)
       (unless (derived-mode-p 'my/lyrics-mode) (my/lyrics-mode))
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (parsed (my/lyrics--parse-lrc (or lyrics "")))
+            (lines nil))
         (erase-buffer)
+        (when (overlayp my/lyrics--overlay) (delete-overlay my/lyrics--overlay))
         (insert (propertize header 'face 'bold) "\n"
-                (propertize "g 刷新  e 编辑  R 重新获取  q 关闭  ? 帮助" 'face 'shadow) "\n\n"
-                (or lyrics "(未找到歌词，按 e 手动添加)"))
+                (propertize "g 刷新  e 编辑  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
+        (cond ((cdr parsed)
+               (dolist (entry (cdr parsed))
+                 (push (cons (car entry) (point)) lines)
+                 (insert (cdr entry) "\n")))
+              (lyrics (insert (my/lyrics--strip-timestamps lyrics)))
+              (t (insert "(未找到歌词，按 e 手动添加)")))
+        (setq my/lyrics--lines (and lines (vconcat (nreverse lines)))
+              my/lyrics--offset (car parsed)
+              my/lyrics--index nil
+              my/lyrics--auto-view nil
+              my/lyrics--need-scroll t)
         (goto-char (point-min)))))
 
   (defun my/lyrics--get-json (url callback &optional body)
@@ -267,18 +338,131 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
       (when local (delete-file local))
       (my/lyrics--show song t)))
 
+  (defun my/lyrics--mpd-status ()
+    "Return MPD's status as an alist of (FIELD . VALUE) strings, or nil when MPD is unreachable.
+  Talks to MPD directly because `mpc status' rounds the elapsed time to whole seconds."
+    (ignore-errors
+      (with-temp-buffer
+        (let ((proc (open-network-stream "mpd-status" (current-buffer)
+                                         (or (getenv "MPD_HOST") "localhost")
+                                         (string-to-number (or (getenv "MPD_PORT") "6600"))))
+              (deadline (+ (float-time) 1))
+              (fields nil))
+          (set-process-query-on-exit-flag proc nil)
+          (process-send-string proc "status\nclose\n")
+          (while (and (process-live-p proc) (< (float-time) deadline))
+            (accept-process-output proc 0.05))
+          (delete-process proc)
+          (goto-char (point-min))
+          (while (re-search-forward "^\\([a-z]+\\): \\(.*\\)$" nil t)
+            (push (cons (match-string 1) (match-string 2)) fields))
+          fields))))
+
+  (defun my/lyrics--sync-clock ()
+    "Re-anchor the playback clock to MPD's elapsed time and state."
+    (let* ((status (my/lyrics--mpd-status))
+           (elapsed (string-to-number (or (cdr (assoc "elapsed" status)) "0"))))
+      (setq my/lyrics--clock (if (equal (cdr (assoc "state" status)) "play")
+                                 (cons 'play (- (float-time) elapsed))
+                               (cons 'pause elapsed))
+            my/lyrics--need-scroll t)
+      (my/lyrics--tick)))
+
+  (defun my/lyrics--elapsed ()
+    (pcase my/lyrics--clock
+      (`(play . ,anchor) (- (float-time) anchor))
+      (`(pause . ,elapsed) elapsed)
+      (_ 0)))
+
+  (defun my/lyrics--line-index (time)
+    "Index of the last line in `my/lyrics--lines' starting at or before TIME, or nil."
+    (let ((index nil))
+      (seq-do-indexed (lambda (line i) (when (<= (car line) time) (setq index i)))
+                      my/lyrics--lines)
+      index))
+
+  (defun my/lyrics--tick ()
+    "Highlight the line being sung and keep it centered unless the user recently scrolled."
+    (let ((win (get-buffer-window my/lyrics-buffer)))
+      (when (and win my/lyrics--lines)
+        (with-current-buffer my/lyrics-buffer
+          (let ((now (float-time))
+                (index (my/lyrics--line-index (+ (my/lyrics--elapsed) my/lyrics--offset)))
+                (view (cons (window-start win) (window-point win))))
+            (when (and my/lyrics--auto-view (not (equal view my/lyrics--auto-view)))
+              (setq my/lyrics--follow-paused-until (+ now my/lyrics-follow-pause)
+                    my/lyrics--auto-view view
+                    my/lyrics--need-scroll t))
+            (unless (eql index my/lyrics--index)
+              (setq my/lyrics--index index
+                    my/lyrics--need-scroll t)
+              (unless (overlayp my/lyrics--overlay)
+                (setq my/lyrics--overlay (make-overlay 1 1))
+                (overlay-put my/lyrics--overlay 'face 'my/lyrics-current-line))
+              (if index
+                  (let ((start (cdr (aref my/lyrics--lines index))))
+                    (move-overlay my/lyrics--overlay start
+                                  (save-excursion (goto-char start) (line-end-position))
+                                  (current-buffer)))
+                (delete-overlay my/lyrics--overlay)))
+            (when (and my/lyrics--need-scroll (>= now my/lyrics--follow-paused-until))
+              (let ((target (cdr (aref my/lyrics--lines (or index 0)))))
+                (set-window-point win target)
+                ;; Set the start explicitly rather than `recenter', which only applies at redisplay
+                ;; and would make the recorded view differ from the real one.
+                (set-window-start win (save-excursion
+                                        (goto-char target)
+                                        (forward-line (- (/ (window-body-height win) 2)))
+                                        (point)))
+                (setq my/lyrics--auto-view (cons (window-start win) (window-point win))
+                      my/lyrics--need-scroll nil))))))))
+
+  (defun my/lyrics--shift (delta)
+    "Show lyrics DELTA seconds earlier and save the total as the .lrc [offset:] tag."
+    (let ((path (and my/lyrics--current-song (my/lyrics--local-file (car my/lyrics--current-song)))))
+      (unless (and my/lyrics--lines path (string-suffix-p ".lrc" path))
+        (user-error "No synced lyrics to shift"))
+      (setq my/lyrics--offset (+ my/lyrics--offset delta))
+      (let ((ms (round (* 1000 my/lyrics--offset))))
+        (with-temp-file path
+          (insert-file-contents path)
+          (goto-char (point-min))
+          (if (re-search-forward "^\\[offset:[^]\n]*\\]" nil t)
+              (replace-match (format "[offset:%d]" ms) t t)
+            (insert (format "[offset:%d]\n" ms))))
+        (my/lyrics--tick)
+        (message (if (= ms 0) "歌词时间已复原"
+                   (format "歌词%s %.1fs" (if (> ms 0) "提前" "推迟") (abs (/ ms 1000.0))))))))
+
+  (defun my/lyrics-delay ()
+    "Show synced lyrics 0.5s later."
+    (interactive)
+    (my/lyrics--shift -0.5))
+
+  (defun my/lyrics-advance ()
+    "Show synced lyrics 0.5s earlier."
+    (interactive)
+    (my/lyrics--shift 0.5))
+
   (defun my/lyrics--start-watch ()
-    "Refresh lyrics whenever MPD's player state changes."
+    "Refresh lyrics and the playback clock whenever MPD's player state changes."
     (unless (process-live-p my/lyrics--idle-proc)
       (setq my/lyrics--idle-proc
             (make-process :name "mpc-idle"
                           :command '("mpc" "idleloop" "player")
                           :noquery t
-                          :filter (lambda (_proc _out) (my/lyrics-refresh))))))
+                          :filter (lambda (_proc _out)
+                                    (my/lyrics-refresh)
+                                    (my/lyrics--sync-clock)))))
+    (unless (timerp my/lyrics--timer)
+      (setq my/lyrics--timer (run-at-time 0 0.2 #'my/lyrics--tick))))
 
   (defun my/lyrics--stop-watch ()
     (when (process-live-p my/lyrics--idle-proc)
-      (delete-process my/lyrics--idle-proc)))
+      (delete-process my/lyrics--idle-proc))
+    (when (timerp my/lyrics--timer)
+      (cancel-timer my/lyrics--timer)
+      (setq my/lyrics--timer nil)))
 
   (defun my/lyrics-toggle ()
     "Toggle the lyrics panel on the right half of the frame."
@@ -289,6 +473,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
         (my/lyrics-refresh t)
         (display-buffer (get-buffer-create my/lyrics-buffer)
                         '(display-buffer-in-side-window (side . right) (window-width . 0.5)))
+        (my/lyrics--sync-clock)
         (my/lyrics--start-watch))))
 
   (with-eval-after-load 'simple-mpc-mode
