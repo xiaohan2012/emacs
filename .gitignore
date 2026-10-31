@@ -49,4 +49,5 @@ config.el
 straight/
 cambri.el
 lyrics.el
+add-song.el
 **/.claude/settings.local.json

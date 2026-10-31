@@ -52,6 +52,9 @@
 (when (file-exists-p "~/.emacs.d/lyrics.org")
   (org-babel-load-file (expand-file-name "~/.emacs.d/lyrics.org")))
 
+(when (file-exists-p "~/.emacs.d/add-song.org")
+  (org-babel-load-file (expand-file-name "~/.emacs.d/add-song.org")))
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
