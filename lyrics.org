@@ -48,6 +48,10 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
     "Seconds to show lyrics earlier, from the .lrc [offset:] tag (LRC convention: positive = earlier).")
   (defvar my/lyrics--clock nil
     "Playback clock: (play . ANCHOR) with elapsed = now - ANCHOR, or (pause . ELAPSED).")
+  (defvar my/lyrics--clock-synced-at 0
+    "`float-time' of the last clock sync with MPD.")
+  (defvar my/lyrics-resync-interval 2
+    "Seconds between clock syncs with MPD, so a missed player event or drift corrects itself.")
   (defvar my/lyrics--index nil
     "Index into `my/lyrics--lines' of the highlighted line, or nil before the first line.")
   (defvar my/lyrics--overlay nil)
@@ -365,7 +369,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
       (setq my/lyrics--clock (if (equal (cdr (assoc "state" status)) "play")
                                  (cons 'play (- (float-time) elapsed))
                                (cons 'pause elapsed))
-            my/lyrics--need-scroll t)
+            my/lyrics--clock-synced-at (float-time))
       (my/lyrics--tick)))
 
   (defun my/lyrics--elapsed ()
@@ -384,6 +388,10 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defun my/lyrics--tick ()
     "Highlight the line being sung and keep it centered unless the user recently scrolled."
     (let ((win (get-buffer-window my/lyrics-buffer)))
+      (when (and win my/lyrics--lines
+                 (> (- (float-time) my/lyrics--clock-synced-at) my/lyrics-resync-interval))
+        ;; Calls back into this function with a fresh clock.
+        (my/lyrics--sync-clock))
       (when (and win my/lyrics--lines)
         (with-current-buffer my/lyrics-buffer
           (let ((now (float-time))
@@ -490,4 +498,9 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
           (goto-char (point-min))))))
 
   (advice-add 'simple-mpc :after #'my/lyrics--add-to-main-screen)
+
+  ;; Re-loading this file must not leave a watcher or timer running old closures.
+  (when (or (process-live-p my/lyrics--idle-proc) (timerp my/lyrics--timer))
+    (my/lyrics--stop-watch)
+    (my/lyrics--start-watch))
 #+end_src
