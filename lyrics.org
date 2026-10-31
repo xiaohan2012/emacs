@@ -12,6 +12,8 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - =?= list keys
 - hints also shown at panel top; =L= listed in simple-mpc's main screen
 
+*Font:* =my/lyrics-font-family= (Songti SC) at =my/lyrics-font-scale= (1.5×), panel only.
+
 *Lyrics source:*
 - local =.lrc= / =.txt= next to the song first
 - else online, then cached next to the song (offline afterwards)
@@ -67,6 +69,11 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defvar my/lyrics-follow-pause 5
     "Seconds auto-scroll stays paused after the user scrolls or moves point in the panel.")
 
+  (defvar my/lyrics-font-family "Songti SC"
+    "Font family of the lyrics panel; nil keeps the default face's.")
+  (defvar my/lyrics-font-scale 1.5
+    "Text size of the lyrics panel relative to the default face.")
+
   (defface my/lyrics-current-line '((t :inherit font-lock-keyword-face :weight bold))
     "Face of the lyrics line being sung.")
 
@@ -82,10 +89,18 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   ;; Close through the toggle so the mpc watcher stops too, unlike `quit-window'.
   (define-key my/lyrics-mode-map "q" #'my/lyrics-toggle)
 
+  (defun my/lyrics--apply-font ()
+    "Remap the panel's default face to `my/lyrics-font-family' at `my/lyrics-font-scale'."
+    (setq-local face-remapping-alist nil)
+    (face-remap-add-relative 'default
+                             :height my/lyrics-font-scale
+                             :family (or my/lyrics-font-family (face-attribute 'default :family))))
+
   (define-derived-mode my/lyrics-mode special-mode "Lyrics"
     "Major mode for the simple-mpc lyrics panel.
 
-  \\{my/lyrics-mode-map}")
+  \\{my/lyrics-mode-map}"
+    (my/lyrics--apply-font))
 
   (defun my/lyrics--playing-song ()
     "Return (FILE ARTIST TITLE) of the playing song, or nil if nothing plays."
@@ -499,7 +514,10 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
                 ;; and would make the recorded view differ from the real one.
                 (set-window-start win (save-excursion
                                         (goto-char target)
-                                        (forward-line (- (/ (window-body-height win) 2)))
+                                        ;; Count lines in the panel's scaled font, not the frame's default.
+                                        (forward-line (- (/ (window-body-height win t)
+                                                            (with-selected-window win (default-line-height))
+                                                            2)))
                                         (point)))
                 (setq my/lyrics--auto-view (cons (window-start win) (window-point win))
                       my/lyrics--need-scroll nil))))))))
@@ -577,6 +595,10 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
           (goto-char (point-min))))))
 
   (advice-add 'simple-mpc :after #'my/lyrics--add-to-main-screen)
+
+  ;; Re-loading this file applies font changes to an open panel.
+  (when (get-buffer my/lyrics-buffer)
+    (with-current-buffer my/lyrics-buffer (my/lyrics--apply-font)))
 
   ;; Re-loading this file must not leave a watcher or timer running old closures.
   (when (or (process-live-p my/lyrics--idle-proc) (timerp my/lyrics--timer))
