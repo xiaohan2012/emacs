@@ -49,6 +49,9 @@
 (when (file-exists-p "~/.emacs.d/cambri.org")
   (org-babel-load-file (expand-file-name "~/.emacs.d/cambri.org")))
 
+(when (file-exists-p "~/.emacs.d/lyrics.org")
+  (org-babel-load-file (expand-file-name "~/.emacs.d/lyrics.org")))
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.

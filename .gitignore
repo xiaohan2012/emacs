@@ -48,4 +48,5 @@ upright.el
 config.el
 straight/
 cambri.el
+lyrics.el
 **/.claude/settings.local.json
