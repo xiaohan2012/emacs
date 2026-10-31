@@ -1,0 +1,189 @@
+* lyrics panel for simple-mpc
+
+Show lyrics of the playing song in a side window on the right half of the frame.
+Press =L= in simple-mpc to toggle the panel.
+
+Lyrics are read from a =.lrc= or =.txt= file next to the song.
+When there is none, they are fetched from https://lrclib.net and cached next to the song, so later plays work offline.
+Synced lyrics are cached as =.lrc= (timestamps kept for a future synced view), plain lyrics as =.txt=.
+
+Keys in the lyrics panel:
+- =g= reload the current song's lyrics
+- =e= edit the cached file, e.g. to fix wrong lyrics or misaligned timestamps; the panel reloads on save
+- =R= discard the cache and fetch again from lrclib
+
+Songs downloaded by org-songs carry no tags, so the artist falls back to the parent directory and the title to the file name.
+
+#+begin_src emacs-lisp
+  (require 'json)
+  (require 'url)
+  (require 'seq)
+
+  (defvar my/lyrics-buffer "*simple-mpc-lyrics*")
+  (defvar my/lyrics-music-dir (expand-file-name "~/code/org-songs/downloads/")
+    "MPD music_directory; mpc reports song paths relative to it.")
+  (defvar my/lyrics--current-song nil
+    "(FILE ARTIST TITLE) of the song shown in the panel.")
+  (defvar my/lyrics--idle-proc nil)
+
+  (defvar my/lyrics-mode-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map "g" #'my/lyrics-refresh)
+      (define-key map "e" #'my/lyrics-edit)
+      (define-key map "R" #'my/lyrics-refetch)
+      map))
+
+  (define-derived-mode my/lyrics-mode special-mode "Lyrics"
+    "Major mode for the simple-mpc lyrics panel.")
+
+  (defun my/lyrics--playing-song ()
+    "Return (FILE ARTIST TITLE) of the playing song, or nil if nothing plays."
+    (let ((out (string-trim-right
+                (shell-command-to-string
+                 "mpc -f '%file%\\t%artist%\\t%title%' current"))))
+      (unless (string-empty-p out)
+        (pcase-let ((`(,file ,artist ,title) (split-string out "\t")))
+          (list file
+                (if (string-empty-p (or artist ""))
+                    (file-name-nondirectory (directory-file-name (or (file-name-directory file) "")))
+                  artist)
+                (if (string-empty-p (or title ""))
+                    (file-name-base file)
+                  title))))))
+
+  (defun my/lyrics--song-base (file)
+    "Absolute path of FILE without its extension, used to name lyrics files."
+    (file-name-sans-extension (expand-file-name file my/lyrics-music-dir)))
+
+  (defun my/lyrics--local-file (file)
+    (let ((base (my/lyrics--song-base file)))
+      (seq-find #'file-readable-p (list (concat base ".lrc") (concat base ".txt")))))
+
+  (defun my/lyrics--strip-timestamps (text)
+    (replace-regexp-in-string "^\\(\\[[0-9:.]+\\]\\)+" "" text))
+
+  (defun my/lyrics--read-local (path)
+    (my/lyrics--strip-timestamps
+     (with-temp-buffer
+       (insert-file-contents path)
+       (buffer-string))))
+
+  (defun my/lyrics--render (header lyrics)
+    (with-current-buffer (get-buffer-create my/lyrics-buffer)
+      (unless (derived-mode-p 'my/lyrics-mode) (my/lyrics-mode))
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize header 'face 'bold) "\n\n" (or lyrics "(未找到歌词，按 e 手动添加)"))
+        (goto-char (point-min)))))
+
+  (defun my/lyrics--search-online (params callback)
+    "Query lrclib search with PARAMS, an alist.
+  Call CALLBACK with (SYNCED . PLAIN) of the first hit that has lyrics, or nil."
+    (url-retrieve
+     (concat "https://lrclib.net/api/search?" (url-build-query-string params))
+     (lambda (status)
+       (let ((result
+              (ignore-errors
+                (unless (plist-get status :error)
+                  (goto-char url-http-end-of-headers)
+                  (let ((hit (seq-find
+                              (lambda (r) (or (alist-get 'syncedLyrics r) (alist-get 'plainLyrics r)))
+                              (json-parse-buffer :object-type 'alist :array-type 'list :null-object nil))))
+                    (when hit
+                      (cons (alist-get 'syncedLyrics hit) (alist-get 'plainLyrics hit))))))))
+         (kill-buffer)
+         (funcall callback result)))
+     nil t))
+
+  (defun my/lyrics--fetch-online (artist title callback)
+    "Search by ARTIST and TITLE, then by TITLE alone since ARTIST may be a folder name like 未归档."
+    (my/lyrics--search-online
+     `((track_name ,title) (artist_name ,artist))
+     (lambda (result)
+       (if result
+           (funcall callback result)
+         (my/lyrics--search-online `((q ,title)) callback)))))
+
+  (defun my/lyrics--save-cache (file result)
+    "Write RESULT, a (SYNCED . PLAIN) pair, next to song FILE and return the written path."
+    (let* ((synced (car result))
+           (path (concat (my/lyrics--song-base file) (if synced ".lrc" ".txt"))))
+      (with-temp-file path
+        (insert (or synced (cdr result))))
+      path))
+
+  (defun my/lyrics--show (song &optional skip-local)
+    "Display lyrics of SONG, a (FILE ARTIST TITLE) list; with SKIP-LOCAL ignore the cache."
+    (pcase-let* ((`(,file ,artist ,title) song)
+                 (header (format "%s - %s" artist title))
+                 (local (unless skip-local (my/lyrics--local-file file))))
+      (setq my/lyrics--current-song song)
+      (if local
+          (my/lyrics--render header (my/lyrics--read-local local))
+        (my/lyrics--render header "加载中...")
+        (my/lyrics--fetch-online
+         artist title
+         (lambda (result)
+           ;; Drop stale responses if the song changed meanwhile.
+           (when (equal song my/lyrics--current-song)
+             (if result
+                 (my/lyrics--render header (my/lyrics--read-local (my/lyrics--save-cache file result)))
+               (my/lyrics--render header nil))))))))
+
+  (defun my/lyrics-refresh (&optional force)
+    "Show lyrics of the playing song; skip when the song is unchanged unless FORCE."
+    (interactive (list t))
+    (let ((song (my/lyrics--playing-song)))
+      (cond ((null song)
+             (setq my/lyrics--current-song nil)
+             (my/lyrics--render "未在播放" ""))
+            ((or force (not (equal song my/lyrics--current-song)))
+             (my/lyrics--show song)))))
+
+  (defun my/lyrics-edit ()
+    "Edit the lyrics file of the shown song, creating a .lrc if none exists."
+    (interactive)
+    (let ((file (car my/lyrics--current-song)))
+      (unless file (user-error "No song is playing"))
+      (find-file-other-window
+       (or (my/lyrics--local-file file) (concat (my/lyrics--song-base file) ".lrc")))
+      (add-hook 'after-save-hook (lambda () (my/lyrics-refresh t)) nil t)))
+
+  (defun my/lyrics-refetch ()
+    "Delete the cached lyrics of the shown song and fetch them again from lrclib."
+    (interactive)
+    (let* ((song my/lyrics--current-song)
+           (local (and song (my/lyrics--local-file (car song)))))
+      (unless song (user-error "No song is playing"))
+      (when (and local (not (yes-or-no-p (format "Overwrite %s? " (file-name-nondirectory local)))))
+        (user-error "Cancelled"))
+      (when local (delete-file local))
+      (my/lyrics--show song t)))
+
+  (defun my/lyrics--start-watch ()
+    "Refresh lyrics whenever MPD's player state changes."
+    (unless (process-live-p my/lyrics--idle-proc)
+      (setq my/lyrics--idle-proc
+            (make-process :name "mpc-idle"
+                          :command '("mpc" "idleloop" "player")
+                          :noquery t
+                          :filter (lambda (_proc _out) (my/lyrics-refresh))))))
+
+  (defun my/lyrics--stop-watch ()
+    (when (process-live-p my/lyrics--idle-proc)
+      (delete-process my/lyrics--idle-proc)))
+
+  (defun my/lyrics-toggle ()
+    "Toggle the lyrics panel on the right half of the frame."
+    (interactive)
+    (let ((win (get-buffer-window my/lyrics-buffer)))
+      (if win
+          (progn (delete-window win) (my/lyrics--stop-watch))
+        (my/lyrics-refresh t)
+        (display-buffer (get-buffer-create my/lyrics-buffer)
+                        '(display-buffer-in-side-window (side . right) (window-width . 0.5)))
+        (my/lyrics--start-watch))))
+
+  (with-eval-after-load 'simple-mpc-mode
+    (define-key simple-mpc-mode-map (kbd "L") #'my/lyrics-toggle))
+#+end_src
