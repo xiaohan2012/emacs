@@ -35,14 +35,13 @@ A hit must match the title; hits by the same artist, with the exact title, and n
     "(FILE ARTIST TITLE) of the song shown in the panel.")
   (defvar my/lyrics--idle-proc nil)
 
-  (defvar my/lyrics-mode-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map "g" #'my/lyrics-refresh)
-      (define-key map "e" #'my/lyrics-edit)
-      (define-key map "R" #'my/lyrics-refetch)
-      ;; Close through the toggle so the mpc watcher stops too, unlike `quit-window'.
-      (define-key map "q" #'my/lyrics-toggle)
-      map))
+  (defvar my/lyrics-mode-map (make-sparse-keymap))
+  ;; Bind outside the defvar so re-loading this file updates the keys of a running Emacs.
+  (define-key my/lyrics-mode-map "g" #'my/lyrics-refresh)
+  (define-key my/lyrics-mode-map "e" #'my/lyrics-edit)
+  (define-key my/lyrics-mode-map "R" #'my/lyrics-refetch)
+  ;; Close through the toggle so the mpc watcher stops too, unlike `quit-window'.
+  (define-key my/lyrics-mode-map "q" #'my/lyrics-toggle)
 
   (define-derived-mode my/lyrics-mode special-mode "Lyrics"
     "Major mode for the simple-mpc lyrics panel.
