@@ -1,26 +1,26 @@
 * lyrics panel for simple-mpc
 
-Show lyrics of the playing song in a side window on the right half of the frame.
-Press =L= in simple-mpc to toggle the panel.
+Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggles it.
 
-Lyrics are read from a =.lrc= or =.txt= file next to the song.
-When there is none, they are fetched online and cached next to the song, so later plays work offline.
-NetEase Cloud Music is tried first, QQ Music second: both cover Chinese songs well and back each other up when one API breaks.
-QQ Music also has Jay Chou's catalogue and some Finnish songs NetEase lacks.
-Synced lyrics are cached as =.lrc= (timestamps kept for a future synced view), plain lyrics as =.txt=.
+*Keys (panel):*
+- =g= reload
+- =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
+- =R= drop cache, fetch again
+- =q= close (also stops the mpc watcher)
+- =?= list keys
+- hints also shown at panel top; =L= listed in simple-mpc's main screen
 
-Keys in the lyrics panel:
-- =g= reload the current song's lyrics
-- =e= edit the cached file, e.g. to fix wrong lyrics or misaligned timestamps; the panel reloads on save
-- =R= discard the cache and fetch again online
-- =q= close the panel
-- =?= list these keys
+*Lyrics source:*
+- local =.lrc= / =.txt= next to the song first
+- else online, then cached next to the song (offline afterwards)
+  - synced → =.lrc= (timestamps kept for a future synced view), plain → =.txt=
+- *NetEase* first, *QQ Music* second: both strong on Chinese songs, each backs up the other
+- QQ also has Jay Chou's catalogue and some Finnish songs NetEase lacks
 
-The keys are also shown at the top of the panel, and =L= is listed in simple-mpc's main screen.
-
-Songs downloaded by org-songs carry no tags, so the artist falls back to the parent directory and the title to the file name.
-Because the folder may not be an artist (e.g. =未归档=), each source is searched by title and artist first, then by title alone.
-A hit must match the title; hits by the same artist, with the exact title, and not live are preferred.
+*Matching:*
+- no tags on org-songs files → artist = parent dir, title = file name
+- folder may not be an artist (e.g. =未归档=) → search title + artist, then title alone
+- hit must match the title; prefer same artist > exact title > non-live
 
 #+begin_src emacs-lisp
   ;;; -*- lexical-binding: t -*-
