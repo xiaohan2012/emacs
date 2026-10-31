@@ -13,6 +13,10 @@ Keys in the lyrics panel:
 - =g= reload the current song's lyrics
 - =e= edit the cached file, e.g. to fix wrong lyrics or misaligned timestamps; the panel reloads on save
 - =R= discard the cache and fetch again online
+- =q= close the panel
+- =?= list these keys
+
+The keys are also shown at the top of the panel, and =L= is listed in simple-mpc's main screen.
 
 Songs downloaded by org-songs carry no tags, so the artist falls back to the parent directory and the title to the file name.
 Because the folder may not be an artist (e.g. =未归档=), each source is searched by title and artist first, then by title alone.
@@ -36,10 +40,14 @@ A hit must match the title; hits by the same artist, with the exact title, and n
       (define-key map "g" #'my/lyrics-refresh)
       (define-key map "e" #'my/lyrics-edit)
       (define-key map "R" #'my/lyrics-refetch)
+      ;; Close through the toggle so the mpc watcher stops too, unlike `quit-window'.
+      (define-key map "q" #'my/lyrics-toggle)
       map))
 
   (define-derived-mode my/lyrics-mode special-mode "Lyrics"
-    "Major mode for the simple-mpc lyrics panel.")
+    "Major mode for the simple-mpc lyrics panel.
+
+  \\{my/lyrics-mode-map}")
 
   (defun my/lyrics--playing-song ()
     "Return (FILE ARTIST TITLE) of the playing song, or nil if nothing plays."
@@ -81,7 +89,9 @@ A hit must match the title; hits by the same artist, with the exact title, and n
       (unless (derived-mode-p 'my/lyrics-mode) (my/lyrics-mode))
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert (propertize header 'face 'bold) "\n\n" (or lyrics "(未找到歌词，按 e 手动添加)"))
+        (insert (propertize header 'face 'bold) "\n"
+                (propertize "g 刷新  e 编辑  R 重新获取  q 关闭  ? 帮助" 'face 'shadow) "\n\n"
+                (or lyrics "(未找到歌词，按 e 手动添加)"))
         (goto-char (point-min)))))
 
   (defun my/lyrics--get-json (url callback &optional body)
@@ -284,4 +294,16 @@ A hit must match the title; hits by the same artist, with the exact title, and n
 
   (with-eval-after-load 'simple-mpc-mode
     (define-key simple-mpc-mode-map (kbd "L") #'my/lyrics-toggle))
+
+  (defun my/lyrics--add-to-main-screen (&rest _)
+    "List the lyrics key in simple-mpc's hard-coded main screen menu."
+    (when-let ((buf (get-buffer simple-mpc-main-buffer-name)))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert (propertize "\n\n   * lyrics\n" 'face 'simple-mpc-main-headers)
+                  "      * toggle [L]yrics panel")
+          (goto-char (point-min))))))
+
+  (advice-add 'simple-mpc :after #'my/lyrics--add-to-main-screen)
 #+end_src
