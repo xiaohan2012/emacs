@@ -1,0 +1,202 @@
+* add songs from YouTube to simple-mpc
+
+Search YouTube, preview, download into the org-songs library; =y= in simple-mpc starts it.
+
+*Flow:*
+- =y= → query → results buffer (title, length, channel)
+- =SPC= / =RET= preview: downloads the audio to a temp dir with =yt-dlp=, pauses MPD, plays it with =ffplay=
+- =d= add: pick a section (=*= heading of =songs.org=, or a new one), confirm the title
+  - audio moved to =downloads/<section>/<title>.<ext>= (reuses the preview file if any)
+  - =** <title>= + URL appended under the section in =songs.org=
+  - =mpc update= then appended to the playlist
+- =x= stop preview, =q= quit (stops preview)
+
+*Requires:* =yt-dlp= (=brew install yt-dlp=), =ffplay= (ffmpeg).
+Playing the stream URL directly fails (YouTube answers 403), hence download-then-play.
+
+#+begin_src emacs-lisp
+  ;;; -*- lexical-binding: t -*-
+  (require 'tabulated-list)
+  (require 'org)
+
+  (defvar my/songs-org-file (expand-file-name "~/docs/notes/songs.org")
+    "Org file listing songs: =*= section headings, =**= song headings with a YouTube URL as body.")
+  (defvar my/songs-dir (expand-file-name "~/code/org-songs/downloads/")
+    "MPD music_directory where songs are stored as <section>/<title>.<ext>.")
+  (defvar my/songs-preview-dir (expand-file-name "simple-mpc-preview/" temporary-file-directory)
+    "Where previewed audio is downloaded, named <video-id>.<ext>.")
+  (defvar my/songs-search-count 10
+    "Number of YouTube results per search.")
+  (defvar my/songs--preview-proc nil)
+  (defvar my/songs-buffer "*YouTube 搜歌*")
+
+  (defvar my/songs-search-mode-map (make-sparse-keymap))
+  (define-key my/songs-search-mode-map (kbd "SPC") #'my/songs-preview)
+  (define-key my/songs-search-mode-map (kbd "RET") #'my/songs-preview)
+  (define-key my/songs-search-mode-map "d" #'my/songs-add)
+  (define-key my/songs-search-mode-map "x" #'my/songs-stop-preview)
+  (define-key my/songs-search-mode-map "y" #'my/songs-search)
+  (define-key my/songs-search-mode-map "q" #'my/songs-quit)
+
+  (define-derived-mode my/songs-search-mode tabulated-list-mode "YouTube"
+    "Major mode listing YouTube search results to preview and add.
+
+  \\{my/songs-search-mode-map}"
+    (setq tabulated-list-format [("标题" 60 nil) ("时长" 8 nil) ("频道" 30 nil)]
+          header-line-format "SPC 试听  x 停止  d 下载并加入  y 重新搜索  q 退出")
+    (tabulated-list-init-header))
+
+  (defun my/songs--url (id)
+    (concat "https://www.youtube.com/watch?v=" id))
+
+  (defun my/songs-search (query)
+    "Search YouTube for QUERY and list the results."
+    (interactive "s搜索 YouTube: ")
+    (message "搜索中...")
+    (let ((out (generate-new-buffer " *yt-dlp-search*")))
+      (make-process
+       :name "yt-dlp-search"
+       :buffer out
+       :noquery t
+       :command (list "yt-dlp" (format "ytsearch%d:%s" my/songs-search-count query)
+                      "--flat-playlist" "--print" "%(id)s\t%(title)s\t%(duration_string)s\t%(channel)s")
+       :sentinel
+       (lambda (proc _event)
+         (unless (process-live-p proc)
+           (let ((rows (with-current-buffer out
+                         (delq nil (mapcar (lambda (line)
+                                             (pcase (split-string line "\t")
+                                               (`(,id ,title ,duration ,channel)
+                                                (list id (vector title duration channel)))))
+                                           (split-string (buffer-string) "\n" t))))))
+             (kill-buffer out)
+             (if (null rows)
+                 (message "没有搜到：%s" query)
+               (with-current-buffer (get-buffer-create my/songs-buffer)
+                 (my/songs-search-mode)
+                 (setq tabulated-list-entries rows)
+                 (tabulated-list-print))
+               (pop-to-buffer my/songs-buffer)
+               (message "找到 %d 个结果" (length rows)))))))))
+
+  (defun my/songs--entry ()
+    "Return (ID TITLE) of the result at point."
+    (let ((id (tabulated-list-get-id)))
+      (unless id (user-error "No result at point"))
+      (list id (aref (tabulated-list-get-entry) 0))))
+
+  (defun my/songs--preview-file (id)
+    (car (file-expand-wildcards (expand-file-name (concat id ".*") my/songs-preview-dir))))
+
+  (defun my/songs--fetch (id callback)
+    "Download ID's audio into `my/songs-preview-dir' unless cached; call CALLBACK with the file or nil."
+    (let ((cached (my/songs--preview-file id)))
+      (if cached
+          (funcall callback cached)
+        (make-directory my/songs-preview-dir t)
+        (message "下载音频中...")
+        (make-process
+         :name "yt-dlp-fetch"
+         :buffer (generate-new-buffer " *yt-dlp-fetch*")
+         :noquery t
+         :command (list "yt-dlp" "-f" "bestaudio[ext=m4a]/bestaudio" "--no-playlist"
+                        "-o" (expand-file-name "%(id)s.%(ext)s" my/songs-preview-dir)
+                        (my/songs--url id))
+         :sentinel (lambda (proc _event)
+                     (unless (process-live-p proc)
+                       (kill-buffer (process-buffer proc))
+                       (funcall callback (my/songs--preview-file id))))))))
+
+  (defun my/songs-stop-preview ()
+    "Stop the preview playback."
+    (interactive)
+    (when (process-live-p my/songs--preview-proc)
+      (delete-process my/songs--preview-proc)))
+
+  (defun my/songs-preview ()
+    "Play the result at point, pausing MPD."
+    (interactive)
+    (pcase-let ((`(,id ,title) (my/songs--entry)))
+      (my/songs-stop-preview)
+      (my/songs--fetch
+       id
+       (lambda (file)
+         (if (not file)
+             (message "下载失败：%s" title)
+           (call-process "mpc" nil nil nil "pause")
+           (setq my/songs--preview-proc
+                 (make-process :name "songs-preview" :noquery t
+                               :command (list "ffplay" "-nodisp" "-autoexit" "-loglevel" "quiet" file)))
+           (message "试听：%s（x 停止，d 加入）" title))))))
+
+  (defun my/songs--sections ()
+    "Return the =*= headings of `my/songs-org-file', without TODO keywords."
+    (with-current-buffer (find-file-noselect my/songs-org-file)
+      (org-with-wide-buffer
+       (let ((sections nil))
+         (org-map-entries (lambda () (push (org-get-heading t t t t) sections)) "LEVEL=1")
+         (nreverse sections)))))
+
+  (defun my/songs--append-to-org (section title url)
+    "Append a =** TITLE= entry with URL under SECTION in `my/songs-org-file', creating SECTION if needed."
+    (with-current-buffer (find-file-noselect my/songs-org-file)
+      (org-with-wide-buffer
+       (goto-char (point-min))
+       (if (re-search-forward (format "^\\* \\(?:[A-Z]+ \\)?%s[ \t]*$" (regexp-quote section)) nil t)
+           (org-end-of-subtree t t)
+         (goto-char (point-max))
+         (unless (bolp) (insert "\n"))
+         (insert "* " section "\n"))
+       (unless (bolp) (insert "\n"))
+       (insert "** " title "\n" url "\n"))
+      (save-buffer)))
+
+  (defun my/songs--safe-title (title)
+    "TITLE usable as a file name: no slashes, trimmed."
+    (string-trim (replace-regexp-in-string "/" "／" title)))
+
+  (defun my/songs-add ()
+    "Download the result at point into the library, record it in the org file and append it to the playlist."
+    (interactive)
+    (pcase-let* ((`(,id ,video-title) (my/songs--entry))
+                 (section (completing-read "分类: " (my/songs--sections)))
+                 (title (my/songs--safe-title (read-string "歌名: " video-title))))
+      (when (string-empty-p section) (user-error "分类不能为空"))
+      (when (string-empty-p title) (user-error "歌名不能为空"))
+      (when (file-expand-wildcards (expand-file-name (format "%s/%s.*" section title) my/songs-dir))
+        (user-error "已存在：%s/%s" section title))
+      (my/songs--fetch
+       id
+       (lambda (file)
+         (if (not file)
+             (message "下载失败：%s" video-title)
+           (let* ((relative (format "%s/%s.%s" section title (file-name-extension file)))
+                  (target (expand-file-name relative my/songs-dir)))
+             (make-directory (file-name-directory target) t)
+             (rename-file file target)
+             (my/songs--append-to-org section title (my/songs--url id))
+             (call-process "mpc" nil nil nil "--wait" "update" relative)
+             (call-process "mpc" nil nil nil "add" relative)
+             (message "已加入：%s" relative)))))))
+
+  (defun my/songs-quit ()
+    "Stop the preview and close the results buffer."
+    (interactive)
+    (my/songs-stop-preview)
+    (quit-window))
+
+  (with-eval-after-load 'simple-mpc-mode
+    (define-key simple-mpc-mode-map "y" #'my/songs-search))
+
+  (defun my/songs--add-to-main-screen (&rest _)
+    "List the YouTube key in simple-mpc's hard-coded main screen menu."
+    (when-let ((buf (get-buffer simple-mpc-main-buffer-name)))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (save-excursion
+            (goto-char (point-max))
+            (insert (propertize "\n\n   * youtube\n" 'face 'simple-mpc-main-headers)
+                    "      * search & add song ([y])"))))))
+
+  (advice-add 'simple-mpc :after #'my/songs--add-to-main-screen)
+#+end_src
