@@ -3441,9 +3441,26 @@ git config --global core.excludesfile ~/.gitignore
 * music player (simple-mpc)
 
 #+begin_src emacs-lisp
+  (defun my/simple-mpc-fix-menu (&rest _)
+    "Make simple-mpc's hard-coded main screen menu match the p play/pause binding."
+    (with-current-buffer simple-mpc-main-buffer-name
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char (point-min))
+          (when (search-forward "* [t]oggle" nil t)
+            (replace-match "* [p]lay/pause" t t))
+          (goto-char (point-min))
+          (when (re-search-forward "^ *\\* \\[p\\]revious track\n" nil t)
+            (replace-match "" t t))))))
+
   (use-package simple-mpc
     :ensure t
-    :bind ("<f8>" . simple-mpc-toggle))
+    :bind ("<f8>" . simple-mpc-toggle)
+    :config
+    ;; p for play/pause; t and previous-track are unbound.
+    (define-key simple-mpc-mode-map "p" #'simple-mpc-toggle)
+    (define-key simple-mpc-mode-map "t" nil)
+    (advice-add 'simple-mpc :after #'my/simple-mpc-fix-menu))
 #+end_src
 
 #+RESULTS:
