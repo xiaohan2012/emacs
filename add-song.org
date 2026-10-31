@@ -10,6 +10,7 @@ Search YouTube, preview, download into the org-songs library; =y= in simple-mpc 
   - =** <title>= + URL appended under the section in =songs.org=
   - =mpc update= then appended to the playlist
 - =x= stop preview, =q= quit (stops preview)
+- =a= in simple-mpc: add from a YouTube link directly (no search, no preview); clipboard link prefilled
 
 *Requires:* =yt-dlp= (=brew install yt-dlp=), =ffplay= (ffmpeg).
 Playing the stream URL directly fails (YouTube answers 403), hence download-then-play.
@@ -158,8 +159,28 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
   (defun my/songs-add ()
     "Download the result at point into the library, record it in the org file and append it to the playlist."
     (interactive)
-    (pcase-let* ((`(,id ,video-title) (my/songs--entry))
-                 (section (completing-read "分类: " (my/songs--sections)))
+    (apply #'my/songs--add (my/songs--entry)))
+
+  (defun my/songs--youtube-url-p (string)
+    (and (stringp string) (string-match-p "\\`https?://\\(www\\.\\|m\\.\\|music\\.\\)?\\(youtube\\.com\\|youtu\\.be\\)/" string)))
+
+  (defun my/songs-add-url (url)
+    "Add the YouTube video at URL to the library without searching or previewing."
+    (interactive
+     (let ((clip (ignore-errors (string-trim (current-kill 0 t)))))
+       (list (read-string "YouTube 链接: " (and (my/songs--youtube-url-p clip) clip)))))
+    (unless (my/songs--youtube-url-p url) (user-error "不是 YouTube 链接：%s" url))
+    (message "读取视频信息...")
+    (pcase (split-string (with-output-to-string
+                           (call-process "yt-dlp" nil standard-output nil
+                                         "--no-playlist" "--print" "%(id)s\t%(title)s" url))
+                         "[\t\n]" t)
+      (`(,id ,title . ,_) (my/songs--add id title))
+      (_ (user-error "读取失败：%s" url))))
+
+  (defun my/songs--add (id video-title)
+    "Ask for a section and title, then download video ID into the library, record it and append it to the playlist."
+    (pcase-let* ((section (completing-read "分类: " (my/songs--sections)))
                  (title (my/songs--safe-title (read-string "歌名: " video-title))))
       (when (string-empty-p section) (user-error "分类不能为空"))
       (when (string-empty-p title) (user-error "歌名不能为空"))
@@ -186,7 +207,8 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
     (quit-window))
 
   (with-eval-after-load 'simple-mpc-mode
-    (define-key simple-mpc-mode-map "y" #'my/songs-search))
+    (define-key simple-mpc-mode-map "y" #'my/songs-search)
+    (define-key simple-mpc-mode-map "a" #'my/songs-add-url))
 
   (defun my/songs--add-to-main-screen (&rest _)
     "List the YouTube key in simple-mpc's hard-coded main screen menu."
@@ -196,7 +218,8 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
           (save-excursion
             (goto-char (point-max))
             (insert (propertize "\n\n   * youtube\n" 'face 'simple-mpc-main-headers)
-                    "      * search & add song ([y])"))))))
+                    "      * search & add song ([y])\n"
+                    "      * [a]dd song from a link"))))))
 
   (advice-add 'simple-mpc :after #'my/songs--add-to-main-screen)
 #+end_src
