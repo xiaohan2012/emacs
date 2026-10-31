@@ -5,7 +5,8 @@ Press =L= in simple-mpc to toggle the panel.
 
 Lyrics are read from a =.lrc= or =.txt= file next to the song.
 When there is none, they are fetched online and cached next to the song, so later plays work offline.
-NetEase Cloud Music is tried first since most songs are Chinese; https://lrclib.net is the fallback, mostly for Western songs.
+NetEase Cloud Music is tried first, QQ Music second: both cover Chinese songs well and back each other up when one API breaks.
+QQ Music also has Jay Chou's catalogue and some Finnish songs NetEase lacks.
 Synced lyrics are cached as =.lrc= (timestamps kept for a future synced view), plain lyrics as =.txt=.
 
 Keys in the lyrics panel:
@@ -15,8 +16,7 @@ Keys in the lyrics panel:
 
 Songs downloaded by org-songs carry no tags, so the artist falls back to the parent directory and the title to the file name.
 Because the folder may not be an artist (e.g. =未归档=), each source is searched by title and artist first, then by title alone.
-A NetEase hit must match the title; hits by the same artist, with the exact title, and not live are preferred.
-Songs NetEase has no rights to (e.g. Jay Chou's) may get a cover version's lyrics.
+A hit must match the title; hits by the same artist, with the exact title, and not live are preferred.
 
 #+begin_src emacs-lisp
   ;;; -*- lexical-binding: t -*-
@@ -65,7 +65,10 @@ Songs NetEase has no rights to (e.g. Jay Chou's) may get a cover version's lyric
       (seq-find #'file-readable-p (list (concat base ".lrc") (concat base ".txt")))))
 
   (defun my/lyrics--strip-timestamps (text)
-    (replace-regexp-in-string "^\\(\\[[0-9:.]+\\]\\)+" "" text))
+    "Remove LRC timestamps and ID tag lines such as [ti:...] from TEXT."
+    (replace-regexp-in-string
+     "^\\(\\[[0-9:.]+\\]\\)+" ""
+     (replace-regexp-in-string "^\\[[a-z]+:[^]\n]*\\]\n" "" text)))
 
   (defun my/lyrics--read-local (path)
     (my/lyrics--strip-timestamps
@@ -81,9 +84,16 @@ Songs NetEase has no rights to (e.g. Jay Chou's) may get a cover version's lyric
         (insert (propertize header 'face 'bold) "\n\n" (or lyrics "(未找到歌词，按 e 手动添加)"))
         (goto-char (point-min)))))
 
-  (defun my/lyrics--get-json (url callback)
-    "Fetch URL and call CALLBACK with its parsed JSON, or nil on any failure."
-    (let ((url-request-extra-headers '(("User-Agent" . "Mozilla/5.0"))))
+  (defun my/lyrics--get-json (url callback &optional body)
+    "Fetch URL and call CALLBACK with its parsed JSON, or nil on any failure.
+  With BODY, a JSON-serializable object, send it as a POST request."
+    (let ((url-request-method (if body "POST" "GET"))
+          (url-request-data (when body (encode-coding-string (json-serialize body) 'utf-8)))
+          ;; Set the agent here, not as an extra header: url.el would then send two User-Agent headers, which QQ Music rejects.
+          (url-user-agent "Mozilla/5.0")
+          (url-request-extra-headers `(;; QQ Music rejects requests without its own Referer.
+                                       ("Referer" . "https://y.qq.com")
+                                       ,@(when body '(("Content-Type" . "application/json"))))))
       (url-retrieve
        url
        (lambda (status)
@@ -114,59 +124,82 @@ Songs NetEase has no rights to (e.g. Jay Chou's) may get a cover version's lyric
                "[^[:alnum:]]+" ""
                (replace-regexp-in-string "[(（][^)）]*[)）]" "" name))))
 
-  (defun my/lyrics--netease-score (song artist title)
-    "Rank a NetEase SONG for ARTIST and TITLE; nil when its name does not match TITLE."
-    (let ((name (my/lyrics--normalize (alist-get 'name song)))
+  (defun my/lyrics--score (name singers artist title)
+    "Rank a search hit called NAME by SINGERS for ARTIST and TITLE; nil when NAME does not match TITLE."
+    (let ((norm (my/lyrics--normalize name))
           (want (my/lyrics--normalize title)))
-      (when (and (> (length name) 0) (> (length want) 0)
-                 (or (string-search want name) (string-search name want)))
-        (+ (if (seq-some (lambda (a) (equal (alist-get 'name a) artist)) (alist-get 'artists song)) 4 0)
-           (if (equal name want) 2 0)
-           (if (string-match-p "live" (downcase (alist-get 'name song))) 0 1)))))
+      (when (and (> (length norm) 0) (> (length want) 0)
+                 (or (string-search want norm) (string-search norm want)))
+        (+ (if (member artist singers) 4 0)
+           (if (equal norm want) 2 0)
+           (if (string-match-p "live" (downcase name)) 0 1)))))
 
-  (defun my/lyrics--netease-lyric (id callback)
-    (my/lyrics--get-json
-     (format "https://music.163.com/api/song/lyric?id=%s&lv=1" id)
-     (lambda (json)
-       (let ((lrc (alist-get 'lyric (alist-get 'lrc json))))
-         (funcall callback
-                  (when (and lrc (not (string-blank-p lrc)))
-                    (if (string-match-p "^\\[[0-9]" lrc) (cons lrc nil) (cons nil lrc))))))))
+  (defun my/lyrics--try-best (hits artist title fetch-lyric callback)
+    "Try FETCH-LYRIC on matching HITS best first; call CALLBACK with the first lyrics found.
+  Each hit is (NAME SINGERS ID); FETCH-LYRIC takes an ID and a continuation."
+    (let* ((scored (delq nil (mapcar (lambda (hit)
+                                       (let ((score (my/lyrics--score (nth 0 hit) (nth 1 hit) artist title)))
+                                         (when score (cons score (nth 2 hit)))))
+                                     hits)))
+           (ids (mapcar #'cdr (seq-sort-by #'car #'> scored))))
+      (my/lyrics--first (mapcar (lambda (id) (lambda (k) (funcall fetch-lyric id k))) ids)
+                        callback)))
+
+  (defun my/lyrics--as-result (lrc)
+    "Wrap LRC text as (SYNCED . PLAIN), or nil when it is blank."
+    (when (and lrc (not (string-blank-p lrc)))
+      (if (string-match-p "^\\[[0-9]" lrc) (cons lrc nil) (cons nil lrc))))
 
   (defun my/lyrics--netease (query artist title)
-    "Return a fetcher searching NetEase for QUERY, trying matching songs best first."
+    "Return a fetcher searching NetEase Cloud Music for QUERY."
     (lambda (callback)
       (my/lyrics--get-json
        (concat "https://music.163.com/api/search/get?"
                (url-build-query-string `((s ,query) (type 1) (limit 10))))
        (lambda (json)
-         (let* ((scored (delq nil (mapcar (lambda (song)
-                                            (let ((score (my/lyrics--netease-score song artist title)))
-                                              (when score (cons score (alist-get 'id song)))))
-                                          (alist-get 'songs (alist-get 'result json)))))
-                (ids (mapcar #'cdr (seq-sort-by #'car #'> scored))))
-           (my/lyrics--first
-            (mapcar (lambda (id) (lambda (k) (my/lyrics--netease-lyric id k))) ids)
-            callback))))))
+         (my/lyrics--try-best
+          (mapcar (lambda (song)
+                    (list (alist-get 'name song)
+                          (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'artists song))
+                          (alist-get 'id song)))
+                  (alist-get 'songs (alist-get 'result json)))
+          artist title
+          (lambda (id k)
+            (my/lyrics--get-json
+             (format "https://music.163.com/api/song/lyric?id=%s&lv=1" id)
+             (lambda (json) (funcall k (my/lyrics--as-result (alist-get 'lyric (alist-get 'lrc json)))))))
+          callback)))))
 
-  (defun my/lyrics--lrclib (params)
-    "Return a fetcher searching lrclib with PARAMS, an alist of query parameters."
+  (defun my/lyrics--qq (query artist title)
+    "Return a fetcher searching QQ Music for QUERY."
     (lambda (callback)
       (my/lyrics--get-json
-       (concat "https://lrclib.net/api/search?" (url-build-query-string params))
+       "https://u.y.qq.com/cgi-bin/musicu.fcg"
        (lambda (json)
-         (let ((hit (seq-find (lambda (r) (or (alist-get 'syncedLyrics r) (alist-get 'plainLyrics r)))
-                              (and (listp json) json))))
-           (funcall callback
-                    (when hit (cons (alist-get 'syncedLyrics hit) (alist-get 'plainLyrics hit)))))))))
+         (my/lyrics--try-best
+          (mapcar (lambda (song)
+                    (list (alist-get 'name song)
+                          (mapcar (lambda (a) (alist-get 'name a)) (alist-get 'singer song))
+                          (alist-get 'mid song)))
+                  (let-alist json .req.data.body.song.list))
+          artist title
+          (lambda (mid k)
+            (my/lyrics--get-json
+             (concat "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?"
+                     (url-build-query-string `((songmid ,mid) (format "json") (nobase64 1))))
+             (lambda (json) (funcall k (my/lyrics--as-result (alist-get 'lyric json))))))
+          callback))
+       `((req . ((module . "music.search.SearchCgiService")
+                 (method . "DoSearchForQQMusicDesktop")
+                 (param . ((query . ,query) (num_per_page . 10) (page_num . 1) (search_type . 0)))))))))
 
   (defun my/lyrics--fetch-online (artist title callback)
     "Call CALLBACK with (SYNCED . PLAIN) lyrics for ARTIST and TITLE, or nil if no source has them."
     (my/lyrics--first
      (list (my/lyrics--netease (format "%s %s" title artist) artist title)
            (my/lyrics--netease title artist title)
-           (my/lyrics--lrclib `((track_name ,title) (artist_name ,artist)))
-           (my/lyrics--lrclib `((q ,title))))
+           (my/lyrics--qq (format "%s %s" title artist) artist title)
+           (my/lyrics--qq title artist title))
      callback))
 
   (defun my/lyrics--save-cache (file result)
