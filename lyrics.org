@@ -5,7 +5,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 *Keys (panel):*
 - =g= reload
 - =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
-- =s= pick lyrics: edit the search, choose a version (title - singers - length - source)
+- =s= pick lyrics: edit the search, choose a version (title - singers - length - source), closest length to the song first
 - =R= drop cache, fetch again
 - =+= / =-= show lyrics 0.5s later / earlier; saved as =[offset:]= in the =.lrc=
 - =q= close (also stops the mpc watcher)
@@ -383,19 +383,26 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
              (hits (append (my/lyrics--wait (lambda (k) (my/lyrics--netease-search query k)))
                            (my/lyrics--wait (lambda (k) (my/lyrics--qq-search query k)))))
              (duration (round (string-to-number (or (cdr (assoc "duration" (my/lyrics--mpd-status))) "0"))))
+             (gap (lambda (hit)
+                    (let ((length (plist-get hit :duration)))
+                      (if (and (> duration 0) (> length 0)) (- length duration) nil))))
+             ;; A version of about the same length is likely the same recording, so its timestamps fit.
+             (sorted (seq-sort-by (lambda (hit) (if-let ((g (funcall gap hit))) (abs g) most-positive-fixnum))
+                                  #'< hits))
              (choices (seq-map-indexed
                        (lambda (hit i)
-                         (cons (format "%2d. %s - %s  %s  [%s]" (1+ i)
+                         (cons (format "%2d. %s - %s  %s%s  [%s]" (1+ i)
                                        (plist-get hit :title)
                                        (string-join (plist-get hit :singers) "/")
                                        (my/lyrics--mmss (plist-get hit :duration))
+                                       (if-let ((g (funcall gap hit))) (format " (%+ds)" g) "")
                                        (if (eq (plist-get hit :source) 'qq) "QQ音乐" "网易云"))
                                hit))
-                       hits)))
+                       sorted)))
         (unless hits (user-error "没有搜到，换个关键词试试"))
         (let* ((label (completing-read
                        (format "选择歌词（这首歌 %s）: " (my/lyrics--mmss duration))
-                       ;; Keep the search order instead of letting the completion UI sort.
+                       ;; Keep the length-gap order instead of letting the completion UI sort.
                        (lambda (string pred action)
                          (if (eq action 'metadata)
                              '(metadata (display-sort-function . identity))
