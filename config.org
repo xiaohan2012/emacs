@@ -1845,7 +1845,10 @@ useful commands:
   #+begin_src emacs-lisp
     (use-package markdown-mode
       :ensure t
-      :mode ("README\\.md\\'" . gfm-mode))
+      :mode ("README\\.md\\'" . gfm-mode)
+      ;; Preview and export HTML has no CSS otherwise, so wide images overflow the page.
+      :config (setq markdown-xhtml-header-content
+                    "<style>body{max-width:700px;margin:auto;font-family:Georgia,serif}img{max-width:100%}</style>"))
 
 
   #+end_src
