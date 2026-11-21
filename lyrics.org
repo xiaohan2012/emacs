@@ -7,6 +7,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
 - =s= pick lyrics: edit the search, choose a version (title - singers - length - source)
 - =w= transcribe the song with OpenAI Whisper (Finnish; =C-u w= picks the language); asks before replacing cached lyrics
+- =RET= / click on a line: jump the song to that line (synced lyrics only)
 - =R= drop cache, fetch again
 - =+= / =-= show lyrics 0.5s later / earlier; saved as =[offset:]= in the =.lrc=
 - =q= close (also stops the mpc watcher)
@@ -94,6 +95,8 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (define-key my/lyrics-mode-map "e" #'my/lyrics-edit)
   (define-key my/lyrics-mode-map "s" #'my/lyrics-pick)
   (define-key my/lyrics-mode-map "w" #'my/lyrics-whisper)
+  (define-key my/lyrics-mode-map (kbd "RET") #'my/lyrics-seek-to-line)
+  (define-key my/lyrics-mode-map [mouse-1] #'my/lyrics-seek-to-line)
   (define-key my/lyrics-mode-map "R" #'my/lyrics-refetch)
   (define-key my/lyrics-mode-map "+" #'my/lyrics-delay)
   (define-key my/lyrics-mode-map "=" #'my/lyrics-delay)
@@ -211,7 +214,11 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
         (cond ((cdr parsed)
                (dolist (entry (cdr parsed))
                  (push (cons (car entry) (point)) lines)
-                 (insert (cdr entry) "\n")))
+                 (insert (propertize (cdr entry)
+                                     'my/lyrics-time (car entry)
+                                     'mouse-face 'highlight
+                                     'help-echo "点击跳到这一句")
+                         "\n")))
               (lyrics (insert (my/lyrics--strip-timestamps lyrics)))
               (t (insert "(未找到歌词，按 e 手动添加，或按 w 自动识别)")))
         (setq my/lyrics--lines (and lines (vconcat (nreverse lines)))
@@ -583,6 +590,10 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defun my/lyrics--mpd-status ()
     "Return MPD's status as an alist of (FIELD . VALUE) strings, or nil when MPD is unreachable.
   Talks to MPD directly because `mpc status' rounds the elapsed time to whole seconds."
+    (my/lyrics--mpd-command "status"))
+
+  (defun my/lyrics--mpd-command (command)
+    "Send COMMAND (one or more newline-separated MPD protocol lines) to MPD; return its response fields as an alist."
     (ignore-errors
       (with-temp-buffer
         (let ((proc (open-network-stream "mpd-status" (current-buffer)
@@ -591,7 +602,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
               (deadline (+ (float-time) 1))
               (fields nil))
           (set-process-query-on-exit-flag proc nil)
-          (process-send-string proc "status\nclose\n")
+          (process-send-string proc (concat command "\nclose\n"))
           (while (and (process-live-p proc) (< (float-time) deadline))
             (accept-process-output proc 0.05))
           (delete-process proc)
@@ -599,6 +610,19 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
           (while (re-search-forward "^\\([a-z]+\\): \\(.*\\)$" nil t)
             (push (cons (match-string 1) (match-string 2)) fields))
           fields))))
+
+  (defun my/lyrics-seek-to-line (&optional event)
+    "Jump the song to the lyrics line at point, or at the click EVENT, and resume playback."
+    (interactive (list (and (mouse-event-p last-input-event) last-input-event)))
+    (when event (mouse-set-point event))
+    (let ((time (get-text-property (point) 'my/lyrics-time)))
+      (when time
+        ;; Lines show at TIME - offset (see `my/lyrics--tick'), so seek there.
+        (my/lyrics--mpd-command (format "seekcur %.2f\npause 0" (max 0 (- time my/lyrics--offset))))
+        ;; Moving point would otherwise read as manual scrolling and pause auto-scroll.
+        (setq my/lyrics--follow-paused-until 0
+              my/lyrics--auto-view nil)
+        (my/lyrics--sync-clock))))
 
   (defun my/lyrics--sync-clock ()
     "Re-anchor the playback clock to MPD's elapsed time and state."
