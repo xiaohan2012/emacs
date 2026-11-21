@@ -303,8 +303,15 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
     (define-key simple-mpc-mode-map "y" #'my/songs-search)
     (define-key simple-mpc-mode-map "a" #'my/songs-add-url))
 
+  (defun my/songs-play-clicked (event)
+    "Play the playlist track that mouse EVENT double-clicked."
+    (interactive "e")
+    (mouse-set-point event)
+    (simple-mpc-play-current-line))
+
   (with-eval-after-load 'simple-mpc-current-playlist
-    (define-key simple-mpc-current-playlist-mode-map "m" #'my/songs-move))
+    (define-key simple-mpc-current-playlist-mode-map "m" #'my/songs-move)
+    (define-key simple-mpc-current-playlist-mode-map [double-mouse-1] #'my/songs-play-clicked))
 
   (defun my/songs--add-to-main-screen (&rest _)
     "List the YouTube key in simple-mpc's hard-coded main screen menu."
