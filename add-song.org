@@ -12,6 +12,12 @@ Search YouTube, preview, download into the org-songs library; =y= in simple-mpc 
 - =x= stop preview, =q= quit (stops preview)
 - =a= in simple-mpc: add from a YouTube link directly (no search, no preview); clipboard link prefilled
 
+*Rename / move (=m= in the current playlist):* section (existing or new) then title, both prefilled with the current ones.
+- moves the audio and its =.lrc= / =.txt= lyrics to =downloads/<section>/<title>.<ext>=; refuses an existing target
+- =songs.org=: the entry is renamed and moved under the section (created if new); if missing, one is added with =:downloaded: external= so =main.py= won't download it
+- MPD: =mpc update= on both folders, the playlist entry replaced at the same position; a playing song resumes where it was
+- an emptied old folder is deleted; its =songs.org= section is kept
+
 *Requires:* =yt-dlp= (=brew install yt-dlp=), =ffplay= (ffmpeg).
 Playing the stream URL directly fails (YouTube answers 403), hence download-then-play.
 
@@ -138,19 +144,51 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
          (org-map-entries (lambda () (push (org-get-heading t t t t) sections)) "LEVEL=1")
          (nreverse sections)))))
 
+  (defun my/songs--section-regexp (section)
+    "Regexp matching the =*= heading of SECTION, allowing a TODO keyword."
+    (format "^\\* \\(?:[A-Z]+ \\)?%s[ \t]*$" (regexp-quote section)))
+
+  (defun my/songs--insert-entry (section entry)
+    "Insert ENTRY, the text of a =**= subtree, at the end of SECTION in the current org buffer, creating SECTION if needed."
+    (goto-char (point-min))
+    (if (re-search-forward (my/songs--section-regexp section) nil t)
+        (org-end-of-subtree t t)
+      (goto-char (point-max))
+      (unless (bolp) (insert "\n"))
+      (insert "* " section "\n"))
+    (unless (bolp) (insert "\n"))
+    (insert entry))
+
   (defun my/songs--append-to-org (section title url)
     "Append a =** TITLE= entry with URL under SECTION in `my/songs-org-file', creating SECTION if needed."
     (with-current-buffer (find-file-noselect my/songs-org-file)
       (org-with-wide-buffer
-       (goto-char (point-min))
-       (if (re-search-forward (format "^\\* \\(?:[A-Z]+ \\)?%s[ \t]*$" (regexp-quote section)) nil t)
-           (org-end-of-subtree t t)
-         (goto-char (point-max))
-         (unless (bolp) (insert "\n"))
-         (insert "* " section "\n"))
-       (unless (bolp) (insert "\n"))
-       (insert "** " title "\n" url "\n"))
+       (my/songs--insert-entry section (concat "** " title "\n" url "\n")))
       (save-buffer)))
+
+  (defun my/songs--move-in-org (old-section old-title section title)
+    "Rename the entry OLD-TITLE under OLD-SECTION to TITLE and move it under SECTION in `my/songs-org-file'.
+  Return non-nil if the entry existed; otherwise add one marked =:downloaded: external= so main.py skips it."
+    (with-current-buffer (find-file-noselect my/songs-org-file)
+      (prog1
+          (org-with-wide-buffer
+           (goto-char (point-min))
+           (let ((entry nil))
+             (when (re-search-forward (my/songs--section-regexp old-section) nil t)
+               (let ((section-end (save-excursion (org-end-of-subtree t t) (point))))
+                 (when (re-search-forward (format "^\\*\\* \\(?:[A-Z]+ \\)?%s[ \t]*$" (regexp-quote old-title))
+                                          section-end t)
+                   (let ((start (line-beginning-position)))
+                     (org-end-of-subtree t t)
+                     (setq entry (buffer-substring start (point)))
+                     (delete-region start (point))))))
+             (my/songs--insert-entry
+              section
+              (if entry
+                  (replace-regexp-in-string "\\`\\*\\* \\(\\(?:[A-Z]+ \\)?\\).*$" (concat "** \\1" title) entry t)
+                (concat "** " title "\n:PROPERTIES:\n:downloaded: external\n:END:\n")))
+             entry))
+        (save-buffer))))
 
   (defun my/songs--safe-title (title)
     "TITLE usable as a file name: no slashes, trimmed."
@@ -206,9 +244,67 @@ Playing the stream URL directly fails (YouTube answers 403), hence download-then
     (my/songs-stop-preview)
     (quit-window))
 
+  (defun my/songs--mpc-lines (&rest args)
+    "Run mpc with ARGS and return its output lines."
+    (split-string (with-output-to-string (apply #'call-process "mpc" nil standard-output nil args)) "\n" t))
+
+  (defun my/songs-move ()
+    "Rename the song on the current playlist line or move it to another section, keeping everything in sync.
+  Updates the audio and lyrics files, the songs.org entry, the MPD database and the playlist entry."
+    (interactive)
+    (let* ((position (line-number-at-pos))
+           (file (nth (1- position) (my/songs--mpc-lines "-f" "%file%" "playlist"))))
+      (unless file (user-error "No song on this line"))
+      (let* ((old-section (directory-file-name (or (file-name-directory file) "")))
+             (old-title (file-name-base file))
+             (ext (file-name-extension file))
+             (sections (delete-dups
+                        (append (my/songs--sections)
+                                (seq-filter (lambda (d) (file-directory-p (expand-file-name d my/songs-dir)))
+                                            (directory-files my/songs-dir nil "\\`[^.]")))))
+             (section (completing-read (format "分类（默认 %s）: " old-section) sections nil nil nil nil old-section))
+             (title (my/songs--safe-title (read-string "歌名: " old-title)))
+             (relative (format "%s/%s.%s" section title ext))
+             (old-base (file-name-sans-extension (expand-file-name file my/songs-dir)))
+             (new-base (expand-file-name (format "%s/%s" section title) my/songs-dir)))
+        (when (or (string-empty-p section) (string-empty-p title)) (user-error "分类和歌名不能为空"))
+        (when (equal relative file) (user-error "没有变化"))
+        (when (file-exists-p (concat new-base "." ext)) (user-error "已存在：%s" relative))
+        (let* ((current (car (my/songs--mpc-lines "-f" "%position%" "current")))
+               (playing-this (equal current (number-to-string position)))
+               (status (and playing-this (fboundp 'my/lyrics--mpd-status) (my/lyrics--mpd-status)))
+               (elapsed (and status (cdr (assoc "elapsed" status))))
+               (paused (and status (not (equal (cdr (assoc "state" status)) "play")))))
+          ;; Files: audio first, then any cached lyrics with the same base name.
+          (make-directory (file-name-directory new-base) t)
+          (rename-file (concat old-base "." ext) (concat new-base "." ext))
+          (dolist (lyrics-ext '(".lrc" ".txt"))
+            (when (file-exists-p (concat old-base lyrics-ext))
+              (rename-file (concat old-base lyrics-ext) (concat new-base lyrics-ext))))
+          (let ((old-dir (file-name-directory old-base)))
+            (when (and (not (equal old-section section)) (directory-empty-p old-dir))
+              (delete-directory old-dir)))
+          (let ((found (my/songs--move-in-org old-section old-title section title)))
+            ;; MPD: rescan both folders, then swap the playlist entry in place.
+            (apply #'call-process "mpc" nil nil nil "--wait" "update" (delete-dups (list old-section section)))
+            (call-process "mpc" nil nil nil "del" (number-to-string position))
+            (call-process "mpc" nil nil nil "add" relative)
+            (let ((length (length (my/songs--mpc-lines "-f" "%file%" "playlist"))))
+              (call-process "mpc" nil nil nil "move" (number-to-string length) (number-to-string position)))
+            (when playing-this
+              (call-process "mpc" nil nil nil "play" (number-to-string position))
+              (when elapsed (my/lyrics--mpd-command (concat "seekcur " elapsed)))
+              (when paused (call-process "mpc" nil nil nil "pause")))
+            (when (fboundp 'simple-mpc-view-current-playlist)
+              (simple-mpc-view-current-playlist nil nil t))
+            (message "已改为：%s%s" relative (if found "" "（songs.org 里没有，已补一条）")))))))
+
   (with-eval-after-load 'simple-mpc-mode
     (define-key simple-mpc-mode-map "y" #'my/songs-search)
     (define-key simple-mpc-mode-map "a" #'my/songs-add-url))
+
+  (with-eval-after-load 'simple-mpc-current-playlist
+    (define-key simple-mpc-current-playlist-mode-map "m" #'my/songs-move))
 
   (defun my/songs--add-to-main-screen (&rest _)
     "List the YouTube key in simple-mpc's hard-coded main screen menu."
