@@ -36,6 +36,9 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - drops Whisper's standard no-speech segments (=no_speech_prob= > 0.6 and =avg_logprob= < -1) and subtitle credits
 - runs async; about 10–30 s and $0.006/min
 
+*Translations:* in a file tagged =[tr:zh]=, a line with the same timestamp as the line before is its translation (common bilingual LRC).
+- shown in =my/lyrics-translation= face under the line and highlighted together with it; click works on either
+
 *Matching:*
 - no tags on org-songs files → artist = parent dir, title = file name
 - folder may not be an artist (e.g. =未归档=) → search title + artist, then title alone
@@ -88,6 +91,8 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 
   (defface my/lyrics-current-line '((t :inherit font-lock-keyword-face :weight bold))
     "Face of the lyrics line being sung.")
+  (defface my/lyrics-translation '((t :inherit shadow :height 0.85))
+    "Face of translation lines under the original lyrics.")
 
   (defvar my/lyrics-mode-map (make-sparse-keymap))
   ;; Bind outside the defvar so re-loading this file updates the keys of a running Emacs.
@@ -212,13 +217,19 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
                   (if source (concat source "\n") ""))
                 (propertize "g 刷新  e 编辑  s 选歌词  w 识别  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
         (cond ((cdr parsed)
-               (dolist (entry (cdr parsed))
-                 (push (cons (car entry) (point)) lines)
-                 (insert (propertize (cdr entry)
-                                     'my/lyrics-time (car entry)
-                                     'mouse-face 'highlight
-                                     'help-echo "点击跳到这一句")
-                         "\n")))
+               (let ((translated (string-match-p "^\\[tr:" lyrics))
+                     (previous-time nil))
+                 (dolist (entry (cdr parsed))
+                   ;; In a translated file, a line with the same time as the one before is its translation.
+                   (let ((translation (and translated (eql (car entry) previous-time))))
+                     (unless translation (push (cons (car entry) (point)) lines))
+                     (insert (apply #'propertize (cdr entry)
+                                    'my/lyrics-time (car entry)
+                                    'mouse-face 'highlight
+                                    'help-echo "点击跳到这一句"
+                                    (and translation (list 'face 'my/lyrics-translation 'my/lyrics-translation t)))
+                             "\n")
+                     (setq previous-time (car entry))))))
               (lyrics (insert (my/lyrics--strip-timestamps lyrics)))
               (t (insert "(未找到歌词，按 e 手动添加，或按 w 自动识别)")))
         (setq my/lyrics--lines (and lines (vconcat (nreverse lines)))
@@ -672,7 +683,12 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
               (if index
                   (let ((start (cdr (aref my/lyrics--lines index))))
                     (move-overlay my/lyrics--overlay start
-                                  (save-excursion (goto-char start) (line-end-position))
+                                  ;; Cover the translation line under it too.
+                                  (save-excursion
+                                    (goto-char start)
+                                    (forward-line 1)
+                                    (unless (get-text-property (point) 'my/lyrics-translation) (forward-line -1))
+                                    (line-end-position))
                                   (current-buffer)))
                 (delete-overlay my/lyrics--overlay)))
             (when (and my/lyrics--need-scroll (>= now my/lyrics--follow-paused-until))
