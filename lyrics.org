@@ -6,6 +6,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - =g= reload
 - =e= edit cached file (wrong lyrics, misaligned timestamps); panel reloads on save
 - =s= pick lyrics: edit the search, choose a version (title - singers - length - source)
+- =w= transcribe the song with OpenAI Whisper (Finnish; =C-u w= picks the language); asks before replacing cached lyrics
 - =R= drop cache, fetch again
 - =+= / =-= show lyrics 0.5s later / earlier; saved as =[offset:]= in the =.lrc=
 - =q= close (also stops the mpc watcher)
@@ -28,6 +29,12 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
 - position read from MPD's =status= (ms precision) on each player event, extrapolated between events
 - you scroll or move point in the panel → auto-scroll pauses 5s
 
+*Whisper (=w=):* for songs no lyrics source has, mainly Finnish children's songs.
+- key: =OPENAI_API_KEY= in =~/code/org-songs/.env=
+- original audio (compressed to 64k mono only above 24 MB; compression made Whisper mishear) → =whisper-1= with segment + word timestamps, prompt =<title>. Laulun sanat:= → =.lrc= tagged =[re:whisper]=
+- drops Whisper's standard no-speech segments (=no_speech_prob= > 0.6 and =avg_logprob= < -1) and subtitle credits
+- runs async; about 10–30 s and $0.006/min
+
 *Matching:*
 - no tags on org-songs files → artist = parent dir, title = file name
 - folder may not be an artist (e.g. =未归档=) → search title + artist, then title alone
@@ -38,6 +45,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (require 'json)
   (require 'url)
   (require 'seq)
+  (require 'cl-lib)
 
   (defvar my/lyrics-buffer "*simple-mpc-lyrics*")
   (defvar my/lyrics-music-dir (expand-file-name "~/code/org-songs/downloads/")
@@ -74,6 +82,9 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (defvar my/lyrics-font-scale 1.8
     "Text size of the lyrics panel relative to the default face.")
 
+  (defvar my/lyrics-whisper-languages '(("芬兰语" . "fi") ("中文" . "zh") ("英语" . "en") ("瑞典语" . "sv") ("自动检测" . nil))
+    "Languages offered by C-u w, as (NAME . ISO-639-1 CODE); a nil code lets Whisper detect it.")
+
   (defface my/lyrics-current-line '((t :inherit font-lock-keyword-face :weight bold))
     "Face of the lyrics line being sung.")
 
@@ -82,6 +93,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
   (define-key my/lyrics-mode-map "g" #'my/lyrics-refresh)
   (define-key my/lyrics-mode-map "e" #'my/lyrics-edit)
   (define-key my/lyrics-mode-map "s" #'my/lyrics-pick)
+  (define-key my/lyrics-mode-map "w" #'my/lyrics-whisper)
   (define-key my/lyrics-mode-map "R" #'my/lyrics-refetch)
   (define-key my/lyrics-mode-map "+" #'my/lyrics-delay)
   (define-key my/lyrics-mode-map "=" #'my/lyrics-delay)
@@ -163,12 +175,17 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
                   (push (cons last text) entries))))))))
       (cons offset (and timed (seq-sort-by #'car #'< (nreverse entries))))))
 
-  (defun my/lyrics--source-line (text)
+  (cl-defun my/lyrics--source-line (text)
     "Describe the lyrics version in TEXT from the tags `my/lyrics--save-cache' writes, or nil if untagged."
     (let ((tag (lambda (name)
                  (when (string-match (format "^\\[%s:\\([^]\n]*\\)\\]" name) text)
                    (match-string 1 text)))))
       (let ((source (funcall tag "re")))
+        (when (equal source "whisper")
+          (cl-return-from my/lyrics--source-line
+            (propertize (format "来源：Whisper 自动识别（%s，可能有误）"
+                                (or (car (rassoc (funcall tag "la") my/lyrics-whisper-languages)) "自动检测"))
+                        'face 'shadow)))
         (when (member source '("netease" "qq"))
           (let* ((singers (or (funcall tag "ar") ""))
                  (mismatch (not (member (nth 1 my/lyrics--current-song) (split-string singers "/")))))
@@ -190,13 +207,13 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
         (insert (propertize header 'face 'bold) "\n"
                 (let ((source (my/lyrics--source-line (or lyrics ""))))
                   (if source (concat source "\n") ""))
-                (propertize "g 刷新  e 编辑  s 选歌词  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
+                (propertize "g 刷新  e 编辑  s 选歌词  w 识别  R 重新获取  +/- 推迟/提前  q 关闭  ? 帮助" 'face 'shadow) "\n\n")
         (cond ((cdr parsed)
                (dolist (entry (cdr parsed))
                  (push (cons (car entry) (point)) lines)
                  (insert (cdr entry) "\n")))
               (lyrics (insert (my/lyrics--strip-timestamps lyrics)))
-              (t (insert "(未找到歌词，按 e 手动添加)")))
+              (t (insert "(未找到歌词，按 e 手动添加，或按 w 自动识别)")))
         (setq my/lyrics--lines (and lines (vconcat (nreverse lines)))
               my/lyrics--offset (car parsed)
               my/lyrics--index nil
@@ -342,6 +359,7 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
                         (plist-get result :title)
                         (string-join (plist-get result :singers) "/")
                         (plist-get result :source))
+                (if (plist-get result :language) (format "[la:%s]\n" (plist-get result :language)) "")
                 lrc))
       path))
 
@@ -405,6 +423,132 @@ Lyrics of the playing song in a right-half side window; =L= in simple-mpc toggle
           (unless result (user-error "这个版本没有歌词，换一个"))
           (my/lyrics--save-cache file result)
           (my/lyrics--show my/lyrics--current-song)))))
+
+  (defvar my/lyrics-whisper-env-file (expand-file-name "~/code/org-songs/.env")
+    "File holding OPENAI_API_KEY=... for Whisper transcription.")
+  (defvar my/lyrics-whisper-default-language "fi")
+  (defvar my/lyrics-whisper-junk-regexp
+    "kiitos katsomisesta\\|tekstitys\\|subtitles by\\|amara\\.org\\|字幕\\|请不吝\\|订阅"
+    "Subtitle credits Whisper tends to hallucinate; matching segments are dropped.")
+
+  (defun my/lyrics--openai-key ()
+    "Return OPENAI_API_KEY from `my/lyrics-whisper-env-file', else from the environment."
+    (or (when (file-readable-p my/lyrics-whisper-env-file)
+          (with-temp-buffer
+            (insert-file-contents my/lyrics-whisper-env-file)
+            (when (re-search-forward "^\\(?:export \\)?OPENAI_API_KEY=[\"']?\\([^\"'\n]+\\)" nil t)
+              (string-trim (match-string 1)))))
+        (getenv "OPENAI_API_KEY")))
+
+  (defun my/lyrics--whisper-lines (segment words)
+    "Split Whisper SEGMENT into (START . TEXT) lines at sentence ends, timed from WORDS.
+  WORDS are Whisper's word timestamps; they carry no punctuation, so a sentence starts at the word
+  whose index equals the number of words before it in the segment text."
+    (let* ((start (alist-get 'start segment))
+           (inside (seq-filter (lambda (w) (and (>= (alist-get 'start w) (- start 0.01))
+                                                 (< (alist-get 'start w) (alist-get 'end segment))))
+                               words))
+           (sentences (split-string (string-trim (alist-get 'text segment)) "\\(?:[.?!]\\)\\s-+" t))
+           (index 0)
+           (lines nil))
+      (dolist (sentence sentences (nreverse lines))
+        (push (cons (if (< index (length inside)) (alist-get 'start (nth index inside)) start) sentence) lines)
+        (setq index (+ index (length (split-string sentence "\\s-+" t)))))))
+
+  (defun my/lyrics--whisper-lrc (json)
+    "Turn Whisper's verbose JSON into LRC lines, dropping no-speech segments and subtitle credits."
+    (let ((words (alist-get 'words json)))
+      (mapconcat
+       (lambda (line) (format "[%02d:%05.2f]%s" (floor (car line) 60) (mod (car line) 60) (cdr line)))
+       (seq-mapcat
+        (lambda (segment) (my/lyrics--whisper-lines segment words))
+        (seq-remove (lambda (segment)
+                      (let ((text (string-trim (alist-get 'text segment))))
+                        (or (string-empty-p text)
+                            (string-match-p my/lyrics-whisper-junk-regexp text)
+                            (and (> (alist-get 'no_speech_prob segment) 0.6)
+                                 (< (alist-get 'avg_logprob segment) -1.0)))))
+                    (alist-get 'segments json)))
+       "\n")))
+
+  (defvar my/lyrics-whisper-prompt-suffixes '(("fi" . "Laulun sanat:") ("zh" . "歌词：") ("en" . "Lyrics:") ("sv" . "Sångtext:"))
+    "Text after the song title in the Whisper prompt, per language; it nudges Whisper toward transcribing lyrics.")
+  (defvar my/lyrics-whisper-max-upload (* 24 1024 1024)
+    "Songs larger than this many bytes are compressed before upload (the API limit is 25 MB).")
+
+  (defun my/lyrics--whisper-upload (song audio cleanup language key)
+    "Send AUDIO to Whisper and cache the transcript as SONG's lyrics; call CLEANUP when done.
+  SONG is (FILE ARTIST TITLE); LANGUAGE is an ISO code or nil to auto-detect; KEY is the OpenAI API key."
+    (pcase-let* ((`(,file ,_artist ,title) song)
+                 (out (generate-new-buffer " *lyrics-whisper*"))
+                 (curl (make-process
+                        :name "lyrics-whisper-curl" :noquery t :buffer out
+                        :command (append
+                                  (list "curl" "-s" "-K" "-" "https://api.openai.com/v1/audio/transcriptions"
+                                        "-F" "model=whisper-1" "-F" "response_format=verbose_json"
+                                        "-F" "timestamp_granularities[]=segment" "-F" "timestamp_granularities[]=word"
+                                        "-F" (format "prompt=%s. %s" title
+                                                     (or (cdr (assoc language my/lyrics-whisper-prompt-suffixes)) ""))
+                                        "-F" (concat "file=@" audio))
+                                  (when language (list "-F" (concat "language=" language))))
+                        :sentinel
+                        (lambda (proc _event)
+                          (unless (process-live-p proc)
+                            (funcall cleanup)
+                            (let ((json (with-current-buffer out
+                                          (goto-char (point-min))
+                                          (ignore-errors (json-parse-buffer :object-type 'alist :array-type 'list
+                                                                            :null-object nil :false-object nil)))))
+                              (kill-buffer out)
+                              (if (or (null json) (alist-get 'error json))
+                                  (progn
+                                    (message "Whisper 识别失败：%s"
+                                             (or (alist-get 'message (alist-get 'error json)) "没有收到有效响应"))
+                                    (when (equal song my/lyrics--current-song) (my/lyrics--show song)))
+                                (my/lyrics--save-cache
+                                 file (list :lrc (my/lyrics--whisper-lrc json) :title title
+                                            :singers '("Whisper") :source 'whisper :language language))
+                                (message "Whisper 识别完成：%s" title)
+                                (when (equal song my/lyrics--current-song) (my/lyrics--show song)))))))))
+      ;; Pass the key through stdin so it does not show up in the process list.
+      (process-send-string curl (format "header = \"Authorization: Bearer %s\"\n" key))
+      (process-send-eof curl)))
+
+  (defun my/lyrics-whisper (choose-language)
+    "Transcribe the shown song with OpenAI Whisper and cache the result as synced lyrics.
+  With prefix argument CHOOSE-LANGUAGE, pick the language instead of `my/lyrics-whisper-default-language'."
+    (interactive "P")
+    (pcase-let* ((song my/lyrics--current-song)
+                 (`(,file ,artist ,title) song)
+                 (local (and file (my/lyrics--local-file file)))
+                 (key (my/lyrics--openai-key)))
+      (unless file (user-error "No song is playing"))
+      (unless key (user-error "OPENAI_API_KEY not found in %s" my/lyrics-whisper-env-file))
+      (when (and local (not (yes-or-no-p (format "用 Whisper 重新识别并覆盖 %s? " (file-name-nondirectory local)))))
+        (user-error "Cancelled"))
+      (let ((language (if choose-language
+                          (cdr (assoc (completing-read "语言: " my/lyrics-whisper-languages nil t)
+                                      my/lyrics-whisper-languages))
+                        my/lyrics-whisper-default-language))
+            (source (expand-file-name file my/lyrics-music-dir)))
+        (my/lyrics--render (format "%s - %s" artist title) "Whisper 识别中…（约 10–30 秒）")
+        (if (<= (file-attribute-size (file-attributes source)) my/lyrics-whisper-max-upload)
+            ;; Upload the original: compressing it first made Whisper mishear words in tests.
+            (my/lyrics--whisper-upload song source #'ignore language key)
+          (let ((compressed (make-temp-file "lyrics-whisper" nil ".mp3")))
+            (make-process
+             :name "lyrics-whisper-ffmpeg" :noquery t
+             :buffer (generate-new-buffer " *lyrics-whisper-ffmpeg*")
+             :command (list "ffmpeg" "-y" "-loglevel" "error" "-i" source "-ac" "1" "-b:a" "64k" compressed)
+             :sentinel
+             (lambda (proc _event)
+               (unless (process-live-p proc)
+                 (kill-buffer (process-buffer proc))
+                 (if (= (process-exit-status proc) 0)
+                     (my/lyrics--whisper-upload song compressed (lambda () (delete-file compressed)) language key)
+                   (delete-file compressed)
+                   (message "Whisper 识别失败：ffmpeg 压缩音频失败")
+                   (when (equal song my/lyrics--current-song) (my/lyrics--show song)))))))))))
 
   (defun my/lyrics-refresh (&optional force)
     "Show lyrics of the playing song; skip when the song is unchanged unless FORCE."
