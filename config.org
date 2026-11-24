@@ -199,6 +199,16 @@
 
    #+begin_src emacs-lisp
      (set-face-attribute 'default nil :height 150)
+
+     (defun my/set-cjk-font ()
+       "Render Han, CJK punctuation and fullwidth characters with LXGW WenKai."
+       (when (display-graphic-p)
+         (dolist (charset '(han cjk-misc kana bopomofo))
+           (set-fontset-font t charset (font-spec :family "LXGW WenKai Mono")))))
+
+     (my/set-cjk-font)
+     ;; Frames created by emacsclient do not exist yet at startup.
+     (add-hook 'server-after-make-frame-hook #'my/set-cjk-font)
    #+end_src
 
    #+RESULTS:
